@@ -8,6 +8,7 @@ import LavaLamp from './components/Effects/LavaLamp'
 import BlobStack from './components/Effects/BlobStack'
 import PostFX from './components/Effects/PostFX'
 import Ticker from './components/Ticker'
+import { useStore } from './store'
 import './index.css'
 
 function Rig() {
@@ -127,7 +128,7 @@ function UI() {
             borderColor: 'rgba(255,255,255,0.2)'
           }}
         >
-          Download
+          Download Image
         </button>
       </div>
     </>

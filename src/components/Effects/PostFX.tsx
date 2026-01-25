@@ -1,40 +1,70 @@
-import { EffectComposer, Noise, Bloom } from '@react-three/postprocessing'
+import { EffectComposer, Noise, Bloom, Scanline, ChromaticAberration, Vignette } from '@react-three/postprocessing'
 import { useControls } from 'leva'
 import { BlendFunction } from 'postprocessing'
+import { useStore } from '../../store'
+import * as THREE from 'three'
 
 export default function PostFX() {
-    const config = useControls('Effects', {
+    const { postfx, setPostFX } = useStore()
+
+    useControls('Effects', {
         // Noise / Dither
-        dither: { value: true, label: 'Enable Dither' },
-        opacity: { value: 0.5, min: 0, max: 0.5, step: 0.01, label: 'Grain Opacity' },
+        dither: { value: postfx.dither, onChange: (v) => setPostFX({ dither: v }) },
+        opacity: { value: postfx.ditherOpacity, min: 0, max: 1.0, step: 0.01, label: 'Dither Strength', onChange: (v) => setPostFX({ ditherOpacity: v }) },
 
         // Bloom
-        bloom: { value: true, label: 'Enable Bloom' },
-        intensity: { value: 1.5, min: 0, max: 5, label: 'Bloom Intensity' },
-        threshold: { value: 0.2, min: 0, max: 1, label: 'Bloom Threshold' },
-        smoothing: { value: 0.9, min: 0, max: 1, label: 'Bloom Smoothing' }
-    })
+        bloom: { value: postfx.bloom, onChange: (v) => setPostFX({ bloom: v }) },
+        intensity: { value: postfx.bloomIntensity, min: 0, max: 5, label: 'Bloom Intensity', onChange: (v) => setPostFX({ bloomIntensity: v }) },
+        threshold: { value: postfx.bloomThreshold, min: 0, max: 1, label: 'Bloom Threshold', onChange: (v) => setPostFX({ bloomThreshold: v }) },
+        smoothing: { value: postfx.bloomSmoothing, min: 0, max: 1, label: 'Bloom Smoothing', onChange: (v) => setPostFX({ bloomSmoothing: v }) },
 
-    // Strategy: Always render components but zero out effects if disabled.
-    // This bypasses strict "children must be Element" check by always providing Elements.
+        // CRT Mode
+        crt: { value: postfx.crt, label: 'CRT Mode', onChange: (v) => setPostFX({ crt: v }) },
+        scanlines: { value: postfx.scanlines, min: 0, max: 1, render: (get) => get('Effects.crt'), onChange: (v) => setPostFX({ scanlines: v }) },
+        crtAberration: { value: postfx.crtAberration, min: 0, max: 0.1, step: 0.001, label: 'Aberration', render: (get) => get('Effects.crt'), onChange: (v) => setPostFX({ crtAberration: v }) },
+        vignette: { value: postfx.vignette, min: 0, max: 1, render: (get) => get('Effects.crt'), onChange: (v) => setPostFX({ vignette: v }) },
+    }, [postfx])
 
-    const noiseOpacity = config.dither ? config.opacity : 0
-    const bloomIntensity = config.bloom ? config.intensity : 0
+    const noiseOpacity = postfx.dither ? postfx.ditherOpacity : 0
+    const bloomIntensity = postfx.bloom ? postfx.bloomIntensity : 0
 
     return (
         <EffectComposer>
+            {/* Dither / Noise */}
             <Noise
                 premultiply
                 blendFunction={BlendFunction.OVERLAY}
                 opacity={noiseOpacity}
             />
 
+            {/* Bloom */}
             <Bloom
-                luminanceThreshold={config.threshold}
+                luminanceThreshold={postfx.bloomThreshold}
                 mipmapBlur
                 intensity={bloomIntensity}
-                luminanceSmoothing={config.smoothing}
+                luminanceSmoothing={postfx.bloomSmoothing}
             />
+
+            {/* CRT Effects */}
+            {postfx.crt && (
+                <>
+                    <Scanline
+                        blendFunction={BlendFunction.OVERLAY}
+                        density={1.5}
+                        opacity={postfx.scanlines}
+                    />
+                    <ChromaticAberration
+                        blendFunction={BlendFunction.NORMAL} // Normal blending usually nice for abberation
+                        offset={new THREE.Vector2(postfx.crtAberration, postfx.crtAberration * 0.5)}
+                    />
+                    <Vignette
+                        offset={0.3}
+                        darkness={postfx.vignette}
+                        eskil={false}
+                        blendFunction={BlendFunction.NORMAL}
+                    />
+                </>
+            )}
         </EffectComposer>
     )
 }

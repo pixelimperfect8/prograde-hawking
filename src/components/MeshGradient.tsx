@@ -3,6 +3,7 @@ import { useFrame, extend } from '@react-three/fiber'
 import { Color } from 'three'
 import { shaderMaterial, Html } from '@react-three/drei'
 import { useControls, button } from 'leva'
+import { useStore, PRESETS } from '../store'
 // We don't strictly need * as THREE if we don't use it in code, 
 // but if we used it in types, we would.
 // We are using 'any' for the component type to be safe.
@@ -129,126 +130,41 @@ declare global {
   }
 }
 
-const PRESETS = {
-  'Calm': {
-    color1: '#4facfe',
-    color2: '#00f2fe',
-    color3: '#a18cd1',
-    color4: '#fbc2eb',
-    speed: 0.1,
-    noiseDensity: 1.2,
-    noiseStrength: 0.2
-  },
-  'Neon': {
-    color1: '#ff0055',
-    color2: '#00ff99',
-    color3: '#5500ff',
-    color4: '#ffaa00',
-    speed: 0.4,
-    noiseDensity: 2.0,
-    noiseStrength: 0.5
-  },
-  'Ocean': {
-    color1: '#003366',
-    color2: '#006699',
-    color3: '#33cccc',
-    color4: '#0099ff',
-    speed: 0.15,
-    noiseDensity: 0.8,
-    noiseStrength: 0.3
-  },
-  'Sunset': {
-    color1: '#ff4e50',
-    color2: '#f9d423',
-    color3: '#f12711',
-    color4: '#f5af19',
-    speed: 0.1,
-    noiseDensity: 1.5,
-    noiseStrength: 0.2
-  },
-  'Deep Space': {
-    color1: '#0f2027',
-    color2: '#203a43',
-    color3: '#2c5364',
-    color4: '#5c258d',
-    speed: 0.05,
-    noiseDensity: 2.5,
-    noiseStrength: 0.1
-  }
-}
 
-const TRENDY_PALETTES = [
-  ['#FF9A9E', '#FECFEF', '#FFD1FF', '#FAD0C4'], // Cherry Blossom
-  ['#a18cd1', '#fbc2eb', '#fad0c4', '#ffd1ff'], // Soft Lilac
-  ['#84fab0', '#8fd3f4', '#a1c4fd', '#c2e9fb'], // Mint Sky
-  ['#fccb90', '#d57eeb', '#e0c3fc', '#8ec5fc'], // Magic Hour
-  ['#e0c3fc', '#8ec5fc', '#4facfe', '#00f2fe'], // Cold Blue
-  ['#43e97b', '#38f9d7', '#2af598', '#22e4ac'], // Fresh Green
-  ['#fa709a', '#fee140', '#ff9a9e', '#fecfef'], // Fruit Punch
-  ['#30cfd0', '#330867', '#5f2c82', '#49a09d'], // Deep Teal/Purple
-  ['#667eea', '#764ba2', '#6B8DD6', '#8E37D7'], // Plum
-  ['#00c6fb', '#005bea', '#4facfe', '#00f2fe'], // Electric Blue
-  ['#FA8BFF', '#2BD2FF', '#2BFF88', '#FFFF00'], // Neon Cyber
-  // High Contrast / Pop
-  ['#FF0000', '#00FF00', '#0000FF', '#FFFF00'], // RGBY Primary
-  ['#111111', '#FF0033', '#FFFFFF', '#00FFCC'], // Dark Cyber
-  ['#FF5F6D', '#FFC371', '#2C3E50', '#FD746C'], // Coral vs Dark Blue
-  ['#833ab4', '#fd1d1d', '#fcb045', '#000000'], // Instagram vs Void
-  ['#000000', '#FFFFFF', '#FF0099', '#33CCFF'], // CMYK Vibes
-  ['#2b5876', '#4e4376', '#F0F2F0', '#000DFF'], // Deep Navy vs White/Electric
-  ['#AAFFA9', '#11FFBD', '#743477', '#B22222'], // Mint vs Deep Burgundy
-  ['#FFD700', '#202020', '#FF0000', '#FFFFFF'], // Bauhaus (Yellow/Black/Red/White)
-  ['#9D50BB', '#6E48AA', '#F3F9A7', '#CAC531'], // Purple vs Acid Green
-]
-
-import { generateMeshGradientCode } from '../utils/framerTemplates'
 
 export default function MeshGradient() {
   const materialRef = useRef<any>(null)
 
-  const [gradientConfig, setGradientConfig] = useControls('Gradient Settings', () => ({
-    'Randomize Colors': button(() => {
-      const randomPalette = TRENDY_PALETTES[Math.floor(Math.random() * TRENDY_PALETTES.length)]
-      setGradientConfig({
-        color1: randomPalette[0],
-        color2: randomPalette[1],
-        color3: randomPalette[2],
-        color4: randomPalette[3],
-        preset: 'Custom'
-      })
-    }),
+  // Connect to Global Store
+  const { gradient, setGradient, applyPreset, randomizeColors } = useStore()
+
+  // Sync Leva -> Store
+  useControls('Gradient Settings', () => ({
+    'Randomize Colors': button(() => randomizeColors()),
     preset: {
-      value: 'Neon', // Default is now Neon
+      value: 'Neon',
       options: ['Custom', ...Object.keys(PRESETS)],
       onChange: (value) => {
-        if (value !== 'Custom' && PRESETS[value as keyof typeof PRESETS]) {
-          const p = PRESETS[value as keyof typeof PRESETS]
-          setGradientConfig({
-            color1: p.color1,
-            color2: p.color2,
-            color3: p.color3,
-            color4: p.color4,
-            speed: p.speed,
-            noiseDensity: p.noiseDensity,
-            noiseStrength: p.noiseStrength
-          })
-        }
+        if (value !== 'Custom') applyPreset(value)
       }
     },
-    // DEFAULT VALUES UPDATED TO 'NEON' PRESET
-    color1: '#ff0055',
-    color2: '#00ff99',
-    color3: '#5500ff',
-    color4: '#ffaa00',
-    speed: { value: 0.4, min: 0, max: 2 },
-    noiseDensity: { value: 2.0, min: 0.1, max: 5 },
-    noiseStrength: { value: 0.5, min: 0, max: 1 },
-    wireframe: false,
+    color1: { value: gradient.color1, onChange: (v) => setGradient({ color1: v }) },
+    color2: { value: gradient.color2, onChange: (v) => setGradient({ color2: v }) },
+    color3: { value: gradient.color3, onChange: (v) => setGradient({ color3: v }) },
+    color4: { value: gradient.color4, onChange: (v) => setGradient({ color4: v }) },
+    speed: { value: gradient.speed, min: 0, max: 2, onChange: (v) => setGradient({ speed: v }) },
+    noiseDensity: { value: gradient.noiseDensity, min: 0.1, max: 5, onChange: (v) => setGradient({ noiseDensity: v }) },
+    noiseStrength: { value: gradient.noiseStrength, min: 0, max: 1, onChange: (v) => setGradient({ noiseStrength: v }) },
+    wireframe: { value: gradient.wireframe, onChange: (v) => setGradient({ wireframe: v }) },
 
-    // Kaleidoscope Controls for the gradient itself
-    kaleidoscope: false,
-    kSegments: { value: 6, min: 2, max: 20, step: 1, render: (get) => get('Gradient Settings.kaleidoscope') }
-  }))
+    kaleidoscope: { value: gradient.kaleidoscope, onChange: (v) => setGradient({ kaleidoscope: v }) },
+    kSegments: {
+      value: gradient.kSegments,
+      min: 2, max: 20, step: 1,
+      render: (get) => get('Gradient Settings.kaleidoscope'),
+      onChange: (v) => setGradient({ kSegments: v })
+    }
+  }), [gradient]) // Dependency array ensures Leva updates if store changes from other sources (like Presets)
 
   useFrame(({ clock }) => {
     if (materialRef.current) {
@@ -262,42 +178,17 @@ export default function MeshGradient() {
       {/* @ts-ignore */}
       <gradientMaterial
         ref={materialRef}
-        uColor1={new Color(gradientConfig.color1)}
-        uColor2={new Color(gradientConfig.color2)}
-        uColor3={new Color(gradientConfig.color3)}
-        uColor4={new Color(gradientConfig.color4)}
-        uSpeed={gradientConfig.speed}
-        uNoiseDensity={gradientConfig.noiseDensity}
-        uNoiseStrength={gradientConfig.noiseStrength}
-        uKaleidoEnabled={gradientConfig.kaleidoscope ? 1.0 : 0.0}
-        uKaleidoSegments={gradientConfig.kSegments}
-        wireframe={gradientConfig.wireframe}
+        uColor1={new Color(gradient.color1)}
+        uColor2={new Color(gradient.color2)}
+        uColor3={new Color(gradient.color3)}
+        uColor4={new Color(gradient.color4)}
+        uSpeed={gradient.speed}
+        uNoiseDensity={gradient.noiseDensity}
+        uNoiseStrength={gradient.noiseStrength}
+        uKaleidoEnabled={gradient.kaleidoscope ? 1.0 : 0.0}
+        uKaleidoSegments={gradient.kSegments}
+        wireframe={gradient.wireframe}
       />
-      <Html position={[0, -0.4, 0]} transform={false} style={{ pointerEvents: 'none' }}>
-        <div style={{ pointerEvents: 'auto', position: 'fixed', bottom: '20px', left: '20px', zIndex: 1000 }}>
-          <button
-            onClick={() => {
-              const code = generateMeshGradientCode(gradientConfig)
-              navigator.clipboard.writeText(code)
-              alert('Framer Code Copied! (Verified Config)')
-            }}
-            style={{
-              background: '#151515',
-              color: '#FBFF00',
-              border: '1px solid #333',
-              padding: '8px 16px',
-              fontFamily: 'Inter',
-              fontSize: '12px',
-              cursor: 'pointer',
-              borderRadius: '4px',
-              fontWeight: 'bold',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-            }}
-          >
-            COPY FRAMER CODE
-          </button>
-        </div>
-      </Html>
     </mesh>
   )
 }

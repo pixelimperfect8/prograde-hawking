@@ -106,7 +106,7 @@ declare global {
     }
 }
 
-import { generateBlobStackCode } from '../../utils/framerTemplates'
+
 
 export default function BlobStack() {
     const materialRef = useRef<any>(null)
@@ -206,31 +206,7 @@ export default function BlobStack() {
                 uFalloff3={0.0}
                 uNoiseInfo={config.Noise}
             />
-            <Html position={[0, -0.4, 0]} transform={false} style={{ pointerEvents: 'none' }}>
-                <div style={{ pointerEvents: 'auto', position: 'fixed', bottom: '20px', left: '20px', zIndex: 1000 }}>
-                    <button
-                        onClick={() => {
-                            const code = generateBlobStackCode(config, p1, p2, p3)
-                            navigator.clipboard.writeText(code)
-                            alert('Framer Code Copied!')
-                        }}
-                        style={{
-                            background: '#151515',
-                            color: '#FBFF00',
-                            border: '1px solid #333',
-                            padding: '8px 16px',
-                            fontFamily: 'Inter',
-                            fontSize: '12px',
-                            cursor: 'pointer',
-                            borderRadius: '4px',
-                            fontWeight: 'bold',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-                        }}
-                    >
-                        COPY FRAMER CODE
-                    </button>
-                </div>
-            </Html>
+
         </mesh>
     )
 }

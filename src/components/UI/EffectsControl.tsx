@@ -7,7 +7,7 @@ export default function EffectsControl() {
     const { postfx, setPostFX } = useStore()
 
     return (
-        <Section title="EFFECTS" defaultOpen={false}>
+        <Section title="Effects" defaultOpen={false}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
                 {/* Dither */}

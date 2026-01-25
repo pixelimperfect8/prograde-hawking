@@ -33,11 +33,12 @@ export default function Overlay() {
                 gap: '10px',
                 padding: '16px', // "padding: 0px" in Inner auto layout, but "padding: 16px" in Container.
 
-                background: 'rgba(0, 0, 0, 0.45)',
-                backdropFilter: 'blur(72px)',
-                WebkitBackdropFilter: 'blur(72px)',
-                borderRadius: '0px', // Figma didn't specify radius on container? Or maybe it did? "border-radius" not in snippet. Assuming sharp or small default.
-                overflowY: 'auto'
+                background: 'transparent',
+                // backdropFilter: 'blur(72px)', // Moved to Section
+                // WebkitBackdropFilter: 'blur(72px)',
+                borderRadius: '0px',
+
+                overflowY: 'auto',
             }}>
                 {/* <BrandingControl /> */}
                 <SceneControl />

@@ -6,9 +6,18 @@ export default function Section({ title, children, defaultOpen = true }: { title
 
     return (
         <div style={{
-            marginBottom: '12px',
+            marginBottom: '10px',
             width: '100%',
             overflow: 'hidden',
+            // Card Style
+            background: 'rgba(0, 0, 0, 0.45)',
+            backdropFilter: 'blur(72px)',
+            WebkitBackdropFilter: 'blur(72px)',
+            borderRadius: '8px',
+            padding: '32px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0px'
         }}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
@@ -35,11 +44,13 @@ export default function Section({ title, children, defaultOpen = true }: { title
                 }
             </button>
 
-            {isOpen && (
-                <div style={{ padding: '8px 0', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    {children}
-                </div>
-            )}
+            {
+                isOpen && (
+                    <div style={{ padding: '8px 0', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        {children}
+                    </div>
+                )
+            }
         </div>
     )
 }

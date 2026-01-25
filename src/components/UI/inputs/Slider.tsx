@@ -20,7 +20,6 @@ export default function Slider({ label, value, min, max, step = 0.01, onChange }
                 fontWeight: 500,
                 fontSize: '14px',
                 color: 'rgba(251, 255, 0, 0.76)',
-                textTransform: 'uppercase',
                 width: '120px'
             }}>
                 {label}

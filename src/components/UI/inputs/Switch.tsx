@@ -14,7 +14,6 @@ export default function Switch({ label, checked, onChange }: SwitchProps) {
                 fontWeight: 500,
                 fontSize: '14px',
                 color: 'rgba(251, 255, 0, 0.76)',
-                textTransform: 'uppercase'
             }}>
                 {label}
             </span>

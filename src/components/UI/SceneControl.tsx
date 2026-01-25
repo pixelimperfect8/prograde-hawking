@@ -8,7 +8,7 @@ export default function SceneControl() {
     const { scene, glass, setScene, setGlass } = useStore()
 
     return (
-        <Section title="SCENE">
+        <Section title="Scene">
             <Select
                 label="Background Mode"
                 value={scene.bgMode}

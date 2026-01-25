@@ -8,7 +8,7 @@ export default function GlassControl() {
     const { glass, setGlass } = useStore()
 
     return (
-        <Section title="GLASS OVERLAY" defaultOpen={false}>
+        <Section title="Glass Overlay" defaultOpen={false}>
             <Switch label="Enabled" checked={glass.enabled} onChange={(v) => setGlass({ enabled: v })} />
 
             {glass.enabled && (

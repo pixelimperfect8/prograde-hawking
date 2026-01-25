@@ -9,7 +9,7 @@ export default function GradientControl() {
     const { gradient, setGradient, applyPreset, randomizeColors } = useStore()
 
     return (
-        <Section title="GRADIENT">
+        <Section title="Gradient">
             <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                 <button
                     onClick={randomizeColors}

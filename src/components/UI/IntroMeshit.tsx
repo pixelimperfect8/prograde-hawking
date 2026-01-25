@@ -95,36 +95,19 @@ export default function IntroMeshit() {
 
             <style>{`
                 @keyframes gridExpand {
-                    /* INITIAL POP (0% -> 15%) */
+                    /* PHASE 1: EXPAND (0% -> 40%) - Single continuous bezier */
                     0% { 
                         opacity: 0; 
                         transform: translate(-50%, -50%) scale(0.5); 
                     }
-                    /* SMOOTH ARRIVAL INTO DRIFT */
-                    15% {
-                        opacity: 1;
-                        transform: translate(
-                            calc(-50% + var(--tx)), 
-                            calc(-50% + var(--ty))
-                        ) scale(1);
-                    }
-                    /* CONTINUOUS FLOW / DRIFT (No hard stop) */
-                    85% {
-                         opacity: 1;
-                         transform: translate(
-                            calc(-50% + (var(--tx) * 1.15)), 
-                            calc(-50% + (var(--ty) * 1.15))
-                        ) scale(1.02);
-                        filter: blur(0px);
-                    }
-                    /* ACCELERATE OUT */
+                    /* PHASE 2: CONTINUOUS MOTION INTO EXIT (No stop) */
                     100% { 
-                        opacity: 0; 
+                        opacity: 1; 
                         transform: translate(
-                            calc(-50% + (var(--tx) * 1.15)), 
-                            calc(-50% + (var(--ty) * 1.15) - 100vh)
+                            calc(-50% + (var(--tx) * 1.5)), 
+                            calc(-50% + (var(--ty) * 1.5) + (120vh * var(--dir)))
                         ) scale(1);
-                        filter: blur(20px);
+                        filter: blur(0px);
                     }
                 }
             `}</style>
@@ -133,6 +116,9 @@ export default function IntroMeshit() {
 }
 
 function ExplodeClone({ x, y }: { x: number, y: number }) {
+    // Alternating columns: Even X goes UP (-1), Odd X goes DOWN (1)
+    const direction = x % 2 === 0 ? -1 : 1;
+
     return (
         <h1
             style={{
@@ -141,9 +127,11 @@ function ExplodeClone({ x, y }: { x: number, y: number }) {
                 left: '50%',
                 margin: 0,
                 // @ts-ignore
-                '--tx': `${x * 85}%`, // Tighter X (was 100%) to close column gaps
+                '--tx': `${x * 85}%`,
                 // @ts-ignore
-                '--ty': `${y * 85}%`, // Match X for perfect square spacing
+                '--ty': `${y * 85}%`,
+                // @ts-ignore
+                '--dir': direction,
 
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 900,
@@ -155,8 +143,11 @@ function ExplodeClone({ x, y }: { x: number, y: number }) {
                 mixBlendMode: 'overlay',
                 pointerEvents: 'none',
                 whiteSpace: 'nowrap',
-                // Custom bezier for a very fluid "pop -> float -> fly" feel
-                animation: 'gridExpand 4s cubic-bezier(0.2, 1, 0.3, 1) forwards'
+                // Heavy eased curve that starts explosive and accelerates out endlessly
+                // cubic-bezier(0.7, 0, 0.3, 1) ? No, we want continuous.
+                // gentle start, accelerate end? cubic-bezier(0.5, 0, 1, 1)
+                // Let's try an expo ease in-out
+                animation: 'gridExpand 3.5s cubic-bezier(0.45, 0, 0.55, 1) forwards'
             }}
         >
             MESHIT

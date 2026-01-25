@@ -65,7 +65,7 @@ export default function IntroMeshit() {
                 alignItems: 'center',
                 zIndex: 50,
                 // If animating, let clicks pass through to potential clones or background
-                pointerEvents: appState === 'intro' ? 'none' : 'none' 
+                pointerEvents: 'none' 
                 // We handle clicks on the text itself
             }}
         >
@@ -159,6 +159,7 @@ function ExplodeClone({ x, y }: { x: number, y: number }) {
                 // We use CSS variables to pass grid coordinates to keyframes
                 // @ts-ignore
                 '--tx': `${ x * 100 }% `,
+                // @ts-ignore
                 '--ty': `${ y * 85 }% `, // tighter vertical packing
                 
                 fontFamily: 'Inter, sans-serif',

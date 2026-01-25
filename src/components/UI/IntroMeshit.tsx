@@ -1,47 +1,17 @@
-import { useRef, useMemo } from 'react'
 import { useStore } from '../../store'
 
 export default function IntroMeshit() {
     const { appState, setAppState } = useStore()
-    const textRef = useRef<HTMLHeadingElement>(null)
-
-    // Parallax only on hover
-    const handleMouseMove = (e: React.MouseEvent<HTMLHeadingElement>) => {
-        if (appState !== 'intro') return
-
-        // Calculate relative to the element center
-        const rect = e.currentTarget.getBoundingClientRect()
-        const x = (e.clientX - rect.left) / rect.width - 0.5
-        const y = (e.clientY - rect.top) / rect.height - 0.5
-
-        e.currentTarget.style.transform = `translate(${x * -20}px, ${y * -20}px) scale(1.05)`
-    }
-
-    const handleMouseLeave = (e: React.MouseEvent<HTMLHeadingElement>) => {
-        e.currentTarget.style.transform = `translate(0, 0) scale(1)`
-    }
 
     const handleClick = () => {
         if (appState !== 'intro') return
         setAppState('animating')
 
-        // Animation timing: 4s total (0.5s expand, 3s hold, 0.5s exit)
+        // 1s animation, then ready
         setTimeout(() => {
             setAppState('ready')
-        }, 4000)
+        }, 800)
     }
-
-    // Generate Grid Positions for "MESHIT" wall
-    const clones = useMemo(() => {
-        const arr = []
-        for (let y = -6; y <= 6; y++) {
-            for (let x = -2; x <= 2; x++) {
-                // Include center (0,0) so it's part of the cohesive grid animation
-                arr.push({ x, y })
-            }
-        }
-        return arr
-    }, [])
 
     if (appState === 'ready') return null
 
@@ -57,116 +27,141 @@ export default function IntroMeshit() {
                 justifyContent: 'center',
                 alignItems: 'center',
                 zIndex: 50,
-                pointerEvents: 'none'
+                background: appState === 'animating' ? 'rgba(0,0,0,0)' : 'transparent', // fade out hack if needed
+                transition: 'background 0.5s'
             }}
         >
-            {/* Main Text - Hidden when animating, replaced by grid clone (0,0) */}
-            {appState === 'intro' && (
+            <div className={`glitch-wrapper ${appState === 'animating' ? 'glitch-melt' : ''}`}>
                 <h1
-                    ref={textRef}
+                    className="glitch-text"
                     onClick={handleClick}
-                    onMouseMove={handleMouseMove}
-                    onMouseLeave={handleMouseLeave}
-                    style={{
-                        margin: 0,
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 900,
-                        color: '#FBFF00',
-                        fontSize: 'clamp(4rem, 7.2vw, 13rem)',
-                        letterSpacing: '-0.04em',
-                        lineHeight: 0.85,
-                        textAlign: 'center',
-                        mixBlendMode: 'overlay',
-                        transition: 'transform 0.1s ease-out',
-                        position: 'relative',
-                        cursor: 'pointer',
-                        pointerEvents: 'auto',
-                        zIndex: 10
-                    }}
+                    data-text="MESHIT"
                 >
                     MESHIT
                 </h1>
-            )}
-
-            {/* Grid Explosion (Renders EVERYTHING including center when animating) */}
-            {appState === 'animating' && clones.map((pos, i) => (
-                <ExplodeClone key={i} x={pos.x} y={pos.y} />
-            ))}
+            </div>
 
             <style>{`
-                @keyframes gridExpand {
-                    /* PHASE 1: POP TO PERFECT GRID (15%) */
-                    0% { 
-                        opacity: 0; 
-                        transform: translate(-50%, -50%) scale(0.5); 
-                    }
-                    15% {
-                        opacity: 1;
-                        // Establish the perfect grid first
-                        transform: translate(
-                            calc(-50% + var(--tx)), 
-                            calc(-50% + var(--ty))
-                        ) scale(1);
-                    }
-                    
-                    /* PHASE 2: DRIFT (15% -> 50%) - The "Floating" moment */
-                    50% {
-                        opacity: 1;
-                        transform: translate(
-                            calc(-50% + (var(--tx) * 1.1)), 
-                            calc(-50% + (var(--ty) * 1.1))
-                        ) scale(1.02);
-                    }
+                /* Container to center and handle global transforms */
+                .glitch-wrapper {
+                    position: relative;
+                }
 
-                    /* PHASE 3: ALTERNATING EXIT (100%) - Accelerate out */
-                    100% { 
-                        opacity: 1; 
-                        transform: translate(
-                            calc(-50% + (var(--tx) * 1.1)), 
-                            // Add large vertical offset based on direction
-                            calc(-50% + (var(--ty) * 1.1) + (130vh * var(--dir)))
-                        ) scale(1);
-                        filter: blur(0px);
-                    }
+                .glitch-text {
+                    margin: 0;
+                    font-family: 'Inter', sans-serif;
+                    font-weight: 900;
+                    font-size: clamp(4rem, 7.2vw, 13rem);
+                    letter-spacing: -0.04em;
+                    line-height: 0.85;
+                    color: #FBFF00;
+                    mix-blend-mode: overlay;
+                    position: relative;
+                    cursor: pointer;
+                    user-select: none;
+                }
+
+                /* Pseudo-elements for the glitch layers */
+                .glitch-text::before,
+                .glitch-text::after {
+                    content: attr(data-text);
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: transparent; /* No bg, just text */
+                    opacity: 0.8;
+                }
+
+                /* Red Shift Layer */
+                .glitch-text::before {
+                    color: #FF0055;
+                    z-index: -1;
+                    clip-path: polygon(0 0, 100% 0, 100% 33%, 0 33%);
+                    transform: translate(-2px, 2px);
+                    opacity: 0; /* Hidden by default */
+                }
+
+                /* Cyan Shift Layer */
+                .glitch-text::after {
+                    color: #00FFFF;
+                    z-index: -2;
+                    clip-path: polygon(0 67%, 100% 67%, 100% 100%, 0 100%);
+                    transform: translate(2px, -2px);
+                    opacity: 0; /* Hidden by default */
+                }
+
+                /* HOVER EFFECT: Rapid Glitching */
+                .glitch-text:hover::before {
+                    opacity: 1;
+                    animation: glitch-anim-1 0.4s infinite linear alternate-reverse;
+                }
+                .glitch-text:hover::after {
+                    opacity: 1;
+                    animation: glitch-anim-2 0.4s infinite linear alternate-reverse;
+                }
+                .glitch-text:hover {
+                    animation: glitch-shake 0.4s infinite;
+                }
+
+                /* MELTDOWN EFFECT: Click Animation */
+                .glitch-melt .glitch-text {
+                    animation: melt-exit 0.8s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+                }
+                .glitch-melt .glitch-text::before {
+                    opacity: 1;
+                    animation: glitch-anim-1 0.1s infinite linear, melt-spread 0.8s forwards;
+                }
+                .glitch-melt .glitch-text::after {
+                    opacity: 1;
+                    animation: glitch-anim-2 0.1s infinite linear, melt-spread 0.8s reverse forwards;
+                }
+
+                /* KEYFRAMES */
+
+                /* Random Clip Slices 1 */
+                @keyframes glitch-anim-1 {
+                    0% { clip-path: inset(20% 0 80% 0); transform: translate(-3px, 1px); }
+                    20% { clip-path: inset(60% 0 10% 0); transform: translate(3px, -1px); }
+                    40% { clip-path: inset(40% 0 50% 0); transform: translate(-3px, 2px); }
+                    60% { clip-path: inset(80% 0 5% 0); transform: translate(3px, -2px); }
+                    80% { clip-path: inset(10% 0 60% 0); transform: translate(-1px, 2px); }
+                    100% { clip-path: inset(30% 0 20% 0); transform: translate(2px, -1px); }
+                }
+
+                /* Random Clip Slices 2 */
+                @keyframes glitch-anim-2 {
+                    0% { clip-path: inset(10% 0 60% 0); transform: translate(3px, -1px); }
+                    20% { clip-path: inset(30% 0 20% 0); transform: translate(-3px, 2px); }
+                    40% { clip-path: inset(10% 0 80% 0); transform: translate(3px, 1px); }
+                    60% { clip-path: inset(50% 0 30% 0); transform: translate(-3px, -2px); }
+                    80% { clip-path: inset(70% 0 10% 0); transform: translate(1px, -1px); }
+                    100% { clip-path: inset(20% 0 60% 0); transform: translate(-2px, 2px); }
+                }
+
+                /* Shake Main Text */
+                @keyframes glitch-shake {
+                    0% { transform: translate(1px, 1px); }
+                    25% { transform: translate(-1px, -1px); }
+                    50% { transform: translate(-2px, 0); }
+                    75% { transform: translate(2px, 0); }
+                    100% { transform: translate(1px, -1px); }
+                }
+
+                /* Final Meltdown & Disappear */
+                @keyframes melt-exit {
+                    0% { transform: scale(1); filter: blur(0px); opacity: 1; }
+                    20% { transform: scale(1.1, 0.8) skew(10deg); filter: blur(2px); opacity: 1; }
+                    50% { transform: scale(0.5, 3) skew(-20deg); filter: blur(10px); opacity: 0.8; }
+                    100% { transform: scale(0, 10); filter: blur(20px); opacity: 0; }
+                }
+
+                @keyframes melt-spread {
+                    0% { transform: translate(0); }
+                    100% { transform: translate(50px, 0) scale(2); }
                 }
             `}</style>
         </div>
-    )
-}
-
-function ExplodeClone({ x, y }: { x: number, y: number }) {
-    // Alternating columns: Even X goes UP (-1), Odd X goes DOWN (1)
-    const direction = x % 2 === 0 ? -1 : 1;
-
-    return (
-        <h1
-            style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                margin: 0,
-                // @ts-ignore
-                '--tx': `${x * 85}%`,
-                // @ts-ignore
-                '--ty': `${y * 85}%`,
-                // @ts-ignore
-                '--dir': direction,
-
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 900,
-                color: '#FBFF00',
-                fontSize: 'clamp(4rem, 7.2vw, 13rem)',
-                letterSpacing: '-0.04em',
-                lineHeight: 0.85,
-                textAlign: 'center',
-                mixBlendMode: 'overlay',
-                pointerEvents: 'none',
-                whiteSpace: 'nowrap',
-                // Restore the smooth bezier that felt "liquid" but keep it continuous
-                animation: 'gridExpand 3s cubic-bezier(0.25, 1, 0.5, 1) forwards'
-            }}
-        >
-            MESHIT
-        </h1>
     )
 }

@@ -1,8 +1,9 @@
-import { EffectComposer, Noise, Bloom, Scanline, ChromaticAberration, Vignette } from '@react-three/postprocessing'
+import { EffectComposer, Noise, Bloom, Scanline, ChromaticAberration, Vignette, Sepia } from '@react-three/postprocessing'
 import { useControls } from 'leva'
 import { BlendFunction } from 'postprocessing'
 import { useStore } from '../../store'
 import * as THREE from 'three'
+import { VintageFilm } from './VintageFilm'
 
 export default function PostFX() {
     const { postfx, setPostFX } = useStore()
@@ -23,6 +24,13 @@ export default function PostFX() {
         scanlines: { value: postfx.scanlines, min: 0, max: 1, render: (get) => get('Effects.crt'), onChange: (v) => setPostFX({ scanlines: v }) },
         crtAberration: { value: postfx.crtAberration, min: 0, max: 0.1, step: 0.001, label: 'Aberration', render: (get) => get('Effects.crt'), onChange: (v) => setPostFX({ crtAberration: v }) },
         vignette: { value: postfx.vignette, min: 0, max: 1, render: (get) => get('Effects.crt'), onChange: (v) => setPostFX({ vignette: v }) },
+
+        // Old Film Mode
+        film: { value: postfx.film, label: 'Vintage Film', onChange: (v) => setPostFX({ film: v }) },
+        filmSepia: { value: postfx.filmSepia, min: 0, max: 1, label: 'Sepia Intensity', render: (get) => get('Effects.film'), onChange: (v) => setPostFX({ filmSepia: v }) },
+        filmScratches: { value: postfx.filmScratches, min: 0, max: 1, label: 'Scratches', render: (get) => get('Effects.film'), onChange: (v) => setPostFX({ filmScratches: v }) },
+        filmDirt: { value: postfx.filmDirt, min: 0, max: 1, label: 'Dirt & Dust', render: (get) => get('Effects.film'), onChange: (v) => setPostFX({ filmDirt: v }) },
+
     }, [postfx])
 
     const noiseOpacity = postfx.dither ? postfx.ditherOpacity : 0
@@ -32,6 +40,11 @@ export default function PostFX() {
     const scanlineOpacity = postfx.crt ? postfx.scanlines : 0
     const aberrationOffset = postfx.crt ? postfx.crtAberration : 0
     const vignetteDarkness = postfx.crt ? postfx.vignette : 0
+
+    // Film Logic
+    const sepiaIntensity = postfx.film ? postfx.filmSepia : 0
+    const scratches = postfx.film ? postfx.filmScratches : 0
+    const dirt = postfx.film ? postfx.filmDirt : 0
 
     return (
         <EffectComposer>
@@ -48,6 +61,18 @@ export default function PostFX() {
                 mipmapBlur
                 intensity={bloomIntensity}
                 luminanceSmoothing={postfx.bloomSmoothing}
+            />
+
+            {/* Sepia (Old Film) */}
+            <Sepia
+                intensity={sepiaIntensity}
+                blendFunction={BlendFunction.NORMAL}
+            />
+
+            {/* Vintage Film Artifacts */}
+            <VintageFilm
+                scratches={scratches}
+                dirt={dirt}
             />
 
             {/* CRT Effects */}

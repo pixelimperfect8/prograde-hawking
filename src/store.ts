@@ -115,10 +115,16 @@ interface State {
         scanlines: number
         crtAberration: number
         vignette: number
+        film: boolean
+        filmSepia: number
+        filmScratches: number
+        filmDirt: number
+        logo: string | null
     }
     setGradient: (partial: Partial<State['gradient']>) => void
     setGlass: (partial: Partial<State['glass']>) => void
     setPostFX: (partial: Partial<State['postfx']>) => void
+    setLogo: (logo: string | null) => void
     applyPreset: (name: string) => void
     randomizeColors: () => void
 }
@@ -158,11 +164,17 @@ export const useStore = create<State>((set) => ({
         crt: false,
         scanlines: 0.5,
         crtAberration: 0.005,
-        vignette: 0.5
+        vignette: 0.5,
+        film: false,
+        filmSepia: 0.5,
+        filmScratches: 0.5,
+        filmDirt: 0.5,
+        logo: null
     },
     setGradient: (partial) => set((state) => ({ gradient: { ...state.gradient, ...partial } })),
     setGlass: (partial) => set((state) => ({ glass: { ...state.glass, ...partial } })),
     setPostFX: (partial) => set((state) => ({ postfx: { ...state.postfx, ...partial } })),
+    setLogo: (logo) => set(() => ({ logo })),
     applyPreset: (name) => {
         const p = PRESETS[name as keyof typeof PRESETS]
         if (p) {

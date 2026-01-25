@@ -1,5 +1,6 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Leva, useControls } from 'leva'
+import { useRef } from 'react'
+import { Leva, useControls, button } from 'leva'
 import * as THREE from 'three'
 import MeshGradient from './components/MeshGradient'
 import GlassOverlay from './components/Effects/GlassOverlay'
@@ -8,7 +9,7 @@ import LavaLamp from './components/Effects/LavaLamp'
 import BlobStack from './components/Effects/BlobStack'
 import PostFX from './components/Effects/PostFX'
 import Ticker from './components/Ticker'
-
+import { useStore } from './store'
 import './index.css'
 
 function Rig() {
@@ -71,6 +72,28 @@ function Scene() {
 }
 
 function UI() {
+  const { logo, setLogo } = useStore()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setLogo(event.target.result as string)
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // Leva Controls for Logo
+  useControls('Branding', {
+    'Upload Logo': button(() => fileInputRef.current?.click()),
+    'Remove Logo': button(() => setLogo(null)),
+  }, [logo]) // Dep array to ensure it stays fresh if needed
+
   const download = () => {
     const canvas = document.querySelector('canvas')
     if (canvas) {
@@ -83,6 +106,15 @@ function UI() {
 
   return (
     <>
+      {/* Hidden File Input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleUpload}
+        accept="image/png, image/jpeg, image/svg+xml"
+        style={{ display: 'none' }}
+      />
+
       <div style={{
         position: 'absolute',
         top: '50%',
@@ -95,19 +127,33 @@ function UI() {
         alignItems: 'center',
         width: '100%',
       }}>
-        <h1 style={{
-          margin: 0,
-          fontFamily: 'Inter, sans-serif',
-          fontWeight: 900,
-          color: '#FBFF00',
-          fontSize: 'clamp(4rem, 7.2vw, 13rem)',
-          letterSpacing: '-0.04em',
-          lineHeight: 1,
-          textAlign: 'center',
-          mixBlendMode: 'overlay',
-        }}>
-          MESHIT
-        </h1>
+        {logo ? (
+          <img
+            src={logo}
+            alt="Brand Logo"
+            style={{
+              maxWidth: '80vw',
+              maxHeight: '60vh',
+              objectFit: 'contain',
+              mixBlendMode: 'overlay', // Optional: Makes it blend cool like the text
+              filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.3))'
+            }}
+          />
+        ) : (
+          <h1 style={{
+            margin: 0,
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: 900,
+            color: '#FBFF00',
+            fontSize: 'clamp(4rem, 7.2vw, 13rem)',
+            letterSpacing: '-0.04em',
+            lineHeight: 1,
+            textAlign: 'center',
+            mixBlendMode: 'overlay',
+          }}>
+            MESHIT
+          </h1>
+        )}
       </div>
 
       <Ticker />

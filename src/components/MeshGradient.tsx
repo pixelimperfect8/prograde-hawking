@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useFrame, extend } from '@react-three/fiber'
+import { useFrame, extend, useThree } from '@react-three/fiber'
 import { Color } from 'three'
 import { shaderMaterial } from '@react-three/drei'
 import { useControls, button } from 'leva'
@@ -138,6 +138,13 @@ export default function MeshGradient() {
   // Connect to Global Store
   const { gradient, setGradient, applyPreset, randomizeColors } = useStore()
 
+  const { viewport } = useThree()
+  // Calculate scale to ensure coverage even with parallax
+  // Camera moves by ~1.5 units (factor) * aspect logic
+  // A safe bet is viewport width * 1.5 to 2.0
+  const scaleX = viewport.width * 2.0
+  const scaleY = viewport.height * 2.0
+
   // Sync Leva -> Store
   useControls('Gradient Settings', () => ({
     'Randomize Colors': button(() => randomizeColors()),
@@ -173,7 +180,7 @@ export default function MeshGradient() {
   })
 
   return (
-    <mesh scale={[10, 10, 1]}>
+    <mesh scale={[scaleX, scaleY, 1]}>
       <planeGeometry args={[1, 1, 64, 64]} />
       {/* @ts-ignore */}
       <gradientMaterial

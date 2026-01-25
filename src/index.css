@@ -42,4 +42,19 @@ canvas {
   background: rgba(255, 255, 255, 0.1) !important;
   transform: translateY(-2px);
   box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
-}
+
+  /* Leva Panel Resize Override */
+  div[id^="leva__"][style*="position: fixed"] {
+    max-height: 80vh !important;
+    /* Ensure it has room to grow */
+    resize: vertical;
+    overflow: auto;
+    min-height: 200px;
+  }
+
+  /* Fallback for standard Leva root class structure if ID not present */
+  div[class*="leva-c"][style*="position: fixed"] {
+    resize: vertical;
+    overflow: auto;
+    max-height: 90vh !important;
+  }

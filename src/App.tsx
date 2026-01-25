@@ -22,31 +22,15 @@ function useLevaArrowFix() {
       buttons.forEach((btn) => {
         const svg = btn.querySelector('svg')
         if (svg) {
-          // This is a folder header button
-          const button = btn as HTMLButtonElement
-          button.style.display = 'flex'
-          button.style.flexDirection = 'row'
-          button.style.justifyContent = 'space-between'
-          button.style.alignItems = 'center'
-          button.style.width = '100%'
-
-          // Physically move SVG to the end of the button (right side)
-          if (button.lastElementChild !== svg) {
-            button.appendChild(svg)
-          }
-
-          // Style SVG
+          // Just add some breathing room between arrow and label
           const svgEl = svg as SVGElement
-          svgEl.style.marginLeft = 'auto'
-          svgEl.style.marginRight = '0'
-          svgEl.style.order = '2' // Just in case flex is used
+          svgEl.style.marginRight = '8px'
+          svgEl.style.opacity = '0.7'
 
-          // Style Label (first child usually)
-          const label = button.firstChild as HTMLElement
-          if (label && label !== svg) {
-            label.style.textAlign = 'left'
-            label.style.order = '1'
-            label.style.flex = '1'
+          // Ensure label text alignment is clean
+          const label = btn.querySelector('span')
+          if (label) {
+            label.style.paddingLeft = '4px'
           }
         }
       })

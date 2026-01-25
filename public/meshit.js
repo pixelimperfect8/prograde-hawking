@@ -9,6 +9,8 @@
 (function () {
     'use strict';
 
+    console.log('MESHIT: Script loaded');
+
     // Vertex Shader
     const vertexShader = `
         attribute vec2 a_position;
@@ -155,6 +157,9 @@
 
     // Initialize a single gradient instance
     function initGradient(container, config) {
+        console.log('MESHIT: Initializing gradient', config);
+        console.log('MESHIT: Container size:', container.offsetWidth, 'x', container.offsetHeight);
+
         // Create canvas
         const canvas = document.createElement('canvas');
         canvas.style.width = '100%';
@@ -249,7 +254,9 @@
 
     // Auto-initialize on DOM ready
     function init() {
+        console.log('MESHIT: Init called');
         const elements = document.querySelectorAll('[data-meshit]');
+        console.log('MESHIT: Found elements:', elements.length);
         elements.forEach(function (el) {
             try {
                 const config = JSON.parse(el.getAttribute('data-meshit'));

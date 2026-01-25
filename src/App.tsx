@@ -69,8 +69,9 @@ function Scene() {
 }
 
 function UI() {
-  const { logo, setLogo } = useStore()
+  const { logo, setLogo, appState } = useStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const isReady = appState === 'ready'
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -129,7 +130,13 @@ function UI() {
         )}
       </div>
 
-      <Ticker />
+      <div style={{
+        opacity: isReady ? 1 : 0,
+        transition: 'opacity 1s ease 0.5s', // Delay to sync with controls
+        pointerEvents: isReady ? 'auto' : 'none'
+      }}>
+        <Ticker />
+      </div>
 
 
     </>

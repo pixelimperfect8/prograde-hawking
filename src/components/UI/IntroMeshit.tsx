@@ -19,7 +19,7 @@ export default function IntroMeshit() {
         const intervalSpeed = resolveToOriginal ? 30 : 50
 
         intervalRef.current = window.setInterval(() => {
-            setDisplayText(prev =>
+            setDisplayText(() =>
                 ORIGINAL_TEXT
                     .split('')
                     .map((_, index) => {
@@ -113,13 +113,24 @@ export default function IntroMeshit() {
                 onMouseLeave={handleMouseLeave}
                 onClick={handleClick}
             >
-                {displayText}
+                {displayText.split('').map((char, i) => (
+                    <span
+                        key={i}
+                        style={{
+                            display: 'inline-block',
+                            // Mirror S at index 2 (MESHIT -> S is 2)
+                            transform: (i === 2 && char === 'S') ? 'scaleX(-1)' : 'none'
+                        }}
+                    >
+                        {char}
+                    </span>
+                ))}
             </h1>
 
             <style>{`
                 .cipher-text {
                     margin: 0;
-                    font-family: 'Inter', monospace;
+                    font-family: 'Inter', sans-serif; /* Back to Bold Sans */
                     font-weight: 900;
                     font-size: clamp(4rem, 7.2vw, 13rem);
                     letter-spacing: -0.04em;
@@ -132,6 +143,10 @@ export default function IntroMeshit() {
                     transition: opacity 0.4s ease;
                     /* Ensure font distinctness for glyphs */
                     font-variant-numeric: tabular-nums;
+
+                    /* Make it taller */
+                    transform: scaleY(1.3);
+                    transform-origin: center;
                 }
 
                 .fade-out {

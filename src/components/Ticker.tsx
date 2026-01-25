@@ -44,7 +44,9 @@ export default function Ticker() {
                         color: '#FBFF00',
                         letterSpacing: '-0.02em',
                         paddingRight: '16px',
-                        display: 'inline-block'
+                        display: 'inline-block',
+                        transform: 'scaleY(1.3)', // Match Intro Style
+                        transformOrigin: 'bottom'
                     }}>
                         {text}
                     </span>
@@ -56,7 +58,9 @@ export default function Ticker() {
                         color: '#FBFF00',
                         letterSpacing: '-0.02em',
                         paddingRight: '16px',
-                        display: 'inline-block'
+                        display: 'inline-block',
+                        transform: 'scaleY(1.3)',
+                        transformOrigin: 'bottom'
                     }}>
                         {text}
                     </span>

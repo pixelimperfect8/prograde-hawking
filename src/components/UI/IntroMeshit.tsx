@@ -95,11 +95,12 @@ export default function IntroMeshit() {
 
             <style>{`
                 @keyframes gridExpand {
-                    /* Rapid Expand (0.8s - Ultra Smooth Easing) */
+                    /* INITIAL POP (0% -> 15%) */
                     0% { 
                         opacity: 0; 
                         transform: translate(-50%, -50%) scale(0.5); 
                     }
+                    /* SMOOTH ARRIVAL INTO DRIFT */
                     15% {
                         opacity: 1;
                         transform: translate(
@@ -107,21 +108,21 @@ export default function IntroMeshit() {
                             calc(-50% + var(--ty))
                         ) scale(1);
                     }
-                    /* SLOW DRIFT/FLOAT (~2.5s) - moving further apart gently */
+                    /* CONTINUOUS FLOW / DRIFT (No hard stop) */
                     85% {
                          opacity: 1;
                          transform: translate(
-                            calc(-50% + (var(--tx) * 1.1)), 
-                            calc(-50% + (var(--ty) * 1.1))
+                            calc(-50% + (var(--tx) * 1.15)), 
+                            calc(-50% + (var(--ty) * 1.15))
                         ) scale(1.02);
                         filter: blur(0px);
                     }
-                    /* Smooth Exit (0.6s) */
+                    /* ACCELERATE OUT */
                     100% { 
                         opacity: 0; 
                         transform: translate(
-                            calc(-50% + (var(--tx) * 1.1)), 
-                            calc(-50% + (var(--ty) * 1.1) - 100vh)
+                            calc(-50% + (var(--tx) * 1.15)), 
+                            calc(-50% + (var(--ty) * 1.15) - 100vh)
                         ) scale(1);
                         filter: blur(20px);
                     }
@@ -140,9 +141,9 @@ function ExplodeClone({ x, y }: { x: number, y: number }) {
                 left: '50%',
                 margin: 0,
                 // @ts-ignore
-                '--tx': `${x * 100}%`, // Reduced from 120% to 100% (tighter columns)
+                '--tx': `${x * 85}%`, // Tighter X (was 100%) to close column gaps
                 // @ts-ignore
-                '--ty': `${y * 90}%`,  // Adjusted Y for even spacing visually
+                '--ty': `${y * 85}%`, // Match X for perfect square spacing
 
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 900,
@@ -154,8 +155,8 @@ function ExplodeClone({ x, y }: { x: number, y: number }) {
                 mixBlendMode: 'overlay',
                 pointerEvents: 'none',
                 whiteSpace: 'nowrap',
-                // Smoother bezier for the initial expansion and drift
-                animation: 'gridExpand 4s cubic-bezier(0.25, 1, 0.5, 1) forwards'
+                // Custom bezier for a very fluid "pop -> float -> fly" feel
+                animation: 'gridExpand 4s cubic-bezier(0.2, 1, 0.3, 1) forwards'
             }}
         >
             MESHIT

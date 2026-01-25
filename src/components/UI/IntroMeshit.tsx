@@ -7,7 +7,7 @@ export default function IntroMeshit() {
         if (appState !== 'intro') return
         setAppState('animating')
 
-        // 1s animation, then ready
+        // 0.8s animation, then ready
         setTimeout(() => {
             setAppState('ready')
         }, 800)

@@ -42,52 +42,52 @@ canvas {
   background: rgba(255, 255, 255, 0.1) !important;
   transform: translateY(-2px);
   box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+}
 
-  /* Leva Panel Resize Override */
-  div[id^="leva__"][style*="position: fixed"] {
-    max-height: 80vh !important;
-    /* Ensure it has room to grow */
-    resize: vertical;
-    overflow: auto;
-    min-height: 200px;
-  }
+/* Leva Panel Resize Override */
+div[id^="leva__"][style*="position: fixed"] {
+  max-height: 80vh !important;
+  /* Ensure it has room to grow */
+  resize: vertical;
+  overflow: auto;
+  min-height: 200px;
+}
 
-  /* Fallback for standard Leva root class structure if ID not present */
-  div[class*="leva-c"][style*="position: fixed"] {
-    resize: vertical;
-    overflow: auto;
-    max-height: 90vh !important;
-    /* original content */
-  }
+/* Fallback for standard Leva root class structure if ID not present */
+div[class*="leva-c"][style*="position: fixed"] {
+  resize: vertical;
+  overflow: auto;
+  max-height: 90vh !important;
+}
 
-  /* ------------------------------------------------------------------
+/* ------------------------------------------------------------------
    Leva Customization 
    ------------------------------------------------------------------ */
 
-  /* Remove the left vertical lines (tree structure) */
-  div[class*="leva-c-"]::before {
-    display: none !important;
-  }
+/* Remove the left vertical lines (tree structure) */
+div[class*="leva-c-"]::before {
+  display: none !important;
+}
 
-  /* Target the Folder Title Row */
-  button[class*="leva-c-"] {
-    display: flex !important;
-    flex-direction: row-reverse !important;
-    /* Move icon to right by reversing order */
-    justify-content: space-between !important;
-    /* Space them out */
-    padding-left: 8px !important;
-    /* Add some left padding since border is gone */
-  }
+/* Target the Folder Title Row */
+button[class*="leva-c-"] {
+  display: flex !important;
+  flex-direction: row-reverse !important;
+  /* Move icon to right by reversing order */
+  justify-content: space-between !important;
+  /* Space them out */
+  padding-left: 8px !important;
+  /* Add some left padding since border is gone */
+}
 
-  /* Ensure the SVG icon stays visible and sized */
-  button[class*="leva-c-"] svg {
-    margin-right: 0 !important;
-    margin-left: 8px !important;
-    opacity: 0.7;
-  }
+/* Ensure the SVG icon stays visible and sized */
+button[class*="leva-c-"] svg {
+  margin-right: 0 !important;
+  margin-left: 8px !important;
+  opacity: 0.7;
+}
 
-  /* Adjust folder indentation if needed (remove it if the lines are gone) */
-  div[class*="leva-c-"] {
-    border-left: none !important;
-  }
+/* Adjust folder indentation if needed (remove it if the lines are gone) */
+div[class*="leva-c-"] {
+  border-left: none !important;
+}

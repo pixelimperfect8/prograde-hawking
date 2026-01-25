@@ -119,8 +119,8 @@ interface State {
         filmSepia: number
         filmScratches: number
         filmDirt: number
-        logo: string | null
     }
+    logo: string | null
     setGradient: (partial: Partial<State['gradient']>) => void
     setGlass: (partial: Partial<State['glass']>) => void
     setPostFX: (partial: Partial<State['postfx']>) => void
@@ -168,13 +168,13 @@ export const useStore = create<State>((set) => ({
         film: false,
         filmSepia: 0.5,
         filmScratches: 0.5,
-        filmDirt: 0.5,
-        logo: null
+        filmDirt: 0.5
     },
+    logo: null,
     setGradient: (partial) => set((state) => ({ gradient: { ...state.gradient, ...partial } })),
     setGlass: (partial) => set((state) => ({ glass: { ...state.glass, ...partial } })),
     setPostFX: (partial) => set((state) => ({ postfx: { ...state.postfx, ...partial } })),
-    setLogo: (logo) => set(() => ({ logo })),
+    setLogo: (logo) => set({ logo }),
     applyPreset: (name) => {
         const p = PRESETS[name as keyof typeof PRESETS]
         if (p) {

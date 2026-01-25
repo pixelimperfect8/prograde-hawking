@@ -79,7 +79,7 @@ export class VintageFilmEffect extends Effect {
         })
     }
 
-    update(renderer, inputBuffer, deltaTime) {
-        this.uniforms.get('uTime').value += deltaTime
+    update(_renderer: any, _inputBuffer: any, deltaTime: number) {
+        this.uniforms.get('uTime')!.value += deltaTime
     }
 }

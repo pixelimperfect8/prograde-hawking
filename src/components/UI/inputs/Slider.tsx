@@ -13,7 +13,7 @@ export default function Slider({ label, value, min, max, step = 0.01, onChange }
     const percentage = ((value - min) / (max - min)) * 100
 
     return (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', height: '26px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '6px' }}>
             {/* Label */}
             <span style={{
                 fontFamily: 'Inter, sans-serif',

@@ -8,7 +8,7 @@ interface SwitchProps {
 
 export default function Switch({ label, checked, onChange }: SwitchProps) {
     return (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', height: '26px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '6px' }}>
             <span style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,

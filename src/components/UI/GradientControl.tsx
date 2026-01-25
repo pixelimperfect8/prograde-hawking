@@ -13,8 +13,19 @@ export default function GradientControl() {
             <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                 <button
                     onClick={randomizeColors}
-                    className="glass-btn"
-                    style={{ flex: 1, padding: '8px', fontSize: '0.8rem', background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '4px', color: 'white', cursor: 'pointer' }}
+                    style={{
+                        flex: 1,
+                        padding: '8px',
+                        fontSize: '0.8rem',
+                        background: 'transparent',
+                        border: '1px solid #FBFF00', // Outline
+                        borderRadius: '4px',
+                        color: '#FBFF00',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500
+                    }}
                 >
                     Randomize
                 </button>

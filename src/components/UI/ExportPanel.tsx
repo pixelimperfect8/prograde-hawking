@@ -6,15 +6,46 @@ interface ExportPanelProps {
 }
 
 export default function ExportPanel({ onClose }: ExportPanelProps) {
-    const { gradient } = useStore()
+    const { gradient, glass } = useStore()
     const [copied, setCopied] = useState<string | null>(null)
-    const [activeTab, setActiveTab] = useState<'framer' | 'webflow' | 'javascript'>('javascript')
+    const [activeTab, setActiveTab] = useState<'iframe' | 'framer' | 'webflow' | 'javascript'>('iframe')
 
-    // Base URL for the script - use production URL
+    // Base URL for the app
     const baseUrl = 'https://prograde-hawking-tl51-git-master-ivans-projects-bf0d2689.vercel.app'
     const scriptUrl = `${baseUrl}/meshit.js`
 
-    // Build config JSON
+    // Build URL params for iframe (includes ALL settings)
+    const buildIframeUrl = () => {
+        const params = new URLSearchParams()
+        // Gradient
+        params.set('c1', gradient.color1)
+        params.set('c2', gradient.color2)
+        params.set('c3', gradient.color3)
+        params.set('c4', gradient.color4)
+        params.set('spd', gradient.speed.toString())
+        params.set('den', gradient.noiseDensity.toString())
+        params.set('str', gradient.noiseStrength.toString())
+        params.set('wire', gradient.wireframe.toString())
+        params.set('kal', gradient.kaleidoscope.toString())
+        params.set('seg', gradient.kSegments.toString())
+        params.set('loop', gradient.loop.toString())
+        // Glass
+        params.set('glass', glass.enabled.toString())
+        // Embed mode
+        params.set('embed', 'true')
+        return `${baseUrl}/?${params.toString()}`
+    }
+
+    const iframeUrl = buildIframeUrl()
+
+    // Iframe embed (includes ALL effects)
+    const iframeCode = `<iframe 
+  src="${iframeUrl}"
+  style="width:100%; height:100%; min-height:400px; border:none; display:block;"
+  allow="accelerometer; autoplay; encrypted-media; gyroscope"
+></iframe>`
+
+    // Build config JSON for meshit.js (simplified)
     const config = JSON.stringify({
         c1: gradient.color1,
         c2: gradient.color2,
@@ -25,7 +56,7 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
         strength: gradient.noiseStrength
     })
 
-    // Embed codes for different platforms
+    // Simple JS embed (basic gradient only)
     const javascriptCode = `<div data-meshit='${config}' style="width:100%; height:400px;"></div>
 <script src="${scriptUrl}"></script>`
 
@@ -35,40 +66,20 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
 <!-- Add this as an Embed element where you want the gradient -->
 <div data-meshit='${config}' style="width:100%; height:100%;"></div>`
 
-    // Framer uses a simpler code component format
-    const framerCode = `import { useEffect, useRef } from "react"
-
-export default function MeshitGradient(props) {
-    const ref = useRef(null)
-    
-    useEffect(() => {
-        if (!ref.current) return
-        
-        // Load meshit script
-        const script = document.createElement("script")
-        script.src = "${scriptUrl}"
-        script.async = true
-        script.onload = () => {
-            if (window.Meshit) {
-                window.Meshit.render(ref.current, ${config})
-            }
-        }
-        document.head.appendChild(script)
-        
-        return () => {
-            if (ref.current) ref.current.innerHTML = ""
-        }
-    }, [])
-    
+    // Framer iframe version (simpler, includes all effects)
+    const framerCode = `export default function MeshitGradient(props) {
     return (
-        <div
-            ref={ref}
+        <iframe
+            src="${iframeUrl}"
             style={{
                 width: "100%",
                 height: "100%",
-                minHeight: 200,
+                minHeight: 400,
+                border: "none",
+                display: "block",
                 ...props.style
             }}
+            allow="accelerometer; autoplay; encrypted-media; gyroscope"
         />
     )
 }`
@@ -156,6 +167,14 @@ export default function MeshitGradient(props) {
                 {/* Quick Copy Buttons */}
                 <div style={{ marginBottom: '20px' }}>
                     <button
+                        style={{ ...buttonStyle, background: 'rgba(138, 43, 226, 0.2)', border: '1px solid rgba(138, 43, 226, 0.4)' }}
+                        onClick={() => copyToClipboard(iframeCode, 'iframe')}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(138, 43, 226, 0.3)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(138, 43, 226, 0.2)'}
+                    >
+                        {copied === 'iframe' ? '✓ Copied!' : '🎨 Copy Iframe (Full Effects)'}
+                    </button>
+                    <button
                         style={buttonStyle}
                         onClick={() => copyToClipboard(framerCode, 'framer')}
                         onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
@@ -171,21 +190,14 @@ export default function MeshitGradient(props) {
                     >
                         {copied === 'webflow' ? '✓ Copied!' : '🌐 Copy to Webflow'}
                     </button>
-                    <button
-                        style={buttonStyle}
-                        onClick={() => copyToClipboard(javascriptCode, 'js')}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                    >
-                        {copied === 'js' ? '✓ Copied!' : '</> Copy JavaScript'}
-                    </button>
                 </div>
 
                 {/* Tabs */}
                 <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: '16px' }}>
+                    <button style={tabStyle(activeTab === 'iframe')} onClick={() => setActiveTab('iframe')}>Iframe</button>
                     <button style={tabStyle(activeTab === 'framer')} onClick={() => setActiveTab('framer')}>Framer</button>
                     <button style={tabStyle(activeTab === 'webflow')} onClick={() => setActiveTab('webflow')}>Webflow</button>
-                    <button style={tabStyle(activeTab === 'javascript')} onClick={() => setActiveTab('javascript')}>JavaScript</button>
+                    <button style={tabStyle(activeTab === 'javascript')} onClick={() => setActiveTab('javascript')}>JS Only</button>
                 </div>
 
                 {/* Code Preview */}
@@ -202,6 +214,7 @@ export default function MeshitGradient(props) {
                     whiteSpace: 'pre-wrap',
                     wordBreak: 'break-all'
                 }}>
+                    {activeTab === 'iframe' && iframeCode}
                     {activeTab === 'framer' && framerCode}
                     {activeTab === 'webflow' && webflowCode}
                     {activeTab === 'javascript' && javascriptCode}

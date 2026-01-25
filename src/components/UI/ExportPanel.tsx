@@ -10,8 +10,9 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
     const [copied, setCopied] = useState<string | null>(null)
     const [activeTab, setActiveTab] = useState<'framer' | 'webflow' | 'javascript'>('javascript')
 
-    // Base URL for the script
-    const scriptUrl = `${window.location.origin}/meshit.js`
+    // Base URL for the script - use production URL
+    const baseUrl = 'https://prograde-hawking.vercel.app'
+    const scriptUrl = `${baseUrl}/meshit.js`
 
     // Build config JSON
     const config = JSON.stringify({

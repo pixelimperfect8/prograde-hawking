@@ -35,25 +35,42 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
 <!-- Add this as an Embed element where you want the gradient -->
 <div data-meshit='${config}' style="width:100%; height:100%;"></div>`
 
-    const framerCode = `import * as React from "react"
-import { useEffect, useRef } from "react"
+    // Framer uses a simpler code component format
+    const framerCode = `import { useEffect, useRef } from "react"
 
-export default function MeshitGradient() {
-    const containerRef = useRef(null)
+export default function MeshitGradient(props) {
+    const ref = useRef(null)
     
     useEffect(() => {
-        const script = document.createElement('script')
+        if (!ref.current) return
+        
+        // Load meshit script
+        const script = document.createElement("script")
         script.src = "${scriptUrl}"
+        script.async = true
         script.onload = () => {
-            if (window.Meshit && containerRef.current) {
-                window.Meshit.render(containerRef.current, ${config})
+            if (window.Meshit) {
+                window.Meshit.render(ref.current, ${config})
             }
         }
-        document.body.appendChild(script)
-        return () => script.remove()
+        document.head.appendChild(script)
+        
+        return () => {
+            if (ref.current) ref.current.innerHTML = ""
+        }
     }, [])
     
-    return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+    return (
+        <div
+            ref={ref}
+            style={{
+                width: "100%",
+                height: "100%",
+                minHeight: 200,
+                ...props.style
+            }}
+        />
+    )
 }`
 
     const copyToClipboard = (text: string, label: string) => {

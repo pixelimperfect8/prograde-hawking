@@ -57,4 +57,37 @@ canvas {
     resize: vertical;
     overflow: auto;
     max-height: 90vh !important;
+    /* original content */
+  }
+
+  /* ------------------------------------------------------------------
+   Leva Customization 
+   ------------------------------------------------------------------ */
+
+  /* Remove the left vertical lines (tree structure) */
+  div[class*="leva-c-"]::before {
+    display: none !important;
+  }
+
+  /* Target the Folder Title Row */
+  button[class*="leva-c-"] {
+    display: flex !important;
+    flex-direction: row-reverse !important;
+    /* Move icon to right by reversing order */
+    justify-content: space-between !important;
+    /* Space them out */
+    padding-left: 8px !important;
+    /* Add some left padding since border is gone */
+  }
+
+  /* Ensure the SVG icon stays visible and sized */
+  button[class*="leva-c-"] svg {
+    margin-right: 0 !important;
+    margin-left: 8px !important;
+    opacity: 0.7;
+  }
+
+  /* Adjust folder indentation if needed (remove it if the lines are gone) */
+  div[class*="leva-c-"] {
+    border-left: none !important;
   }

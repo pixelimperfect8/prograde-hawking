@@ -273,27 +273,27 @@ export const useStore = create<State>((set) => {
         setBlob: (partial) => set((state) => ({ blob: { ...state.blob, ...partial } })),
         setGlow: (partial) => set((state) => ({ glow: { ...state.glow, ...partial } })),
         setPostFX: (partial) => set((state) => ({ postfx: { ...state.postfx, ...partial } })),
-        setScene: (partial) => set((state) => ({ scene: { ...state.scene, ...partial } }
-})),
-    setLogo: (logo) => set({ logo }),
+        setScene: (partial) => set((state) => ({ scene: { ...state.scene, ...partial } })),
+        setLogo: (logo) => set({ logo }),
         setAppState: (appState) => set({ appState }),
 
-            applyPreset: (name) => {
-                const p = PRESETS[name as keyof typeof PRESETS]
-                if (p) {
-                    set((state) => ({ gradient: { ...state.gradient, ...p } }))
+        applyPreset: (name) => {
+            const p = PRESETS[name as keyof typeof PRESETS]
+            if (p) {
+                set((state) => ({ gradient: { ...state.gradient, ...p } }))
+            }
+        },
+        randomizeColors: () => {
+            const p = TRENDY_PALETTES[Math.floor(Math.random() * TRENDY_PALETTES.length)]
+            set((state) => ({
+                gradient: {
+                    ...state.gradient,
+                    color1: p[0],
+                    color2: p[1],
+                    color3: p[2],
+                    color4: p[3]
                 }
-            },
-                randomizeColors: () => {
-                    const p = TRENDY_PALETTES[Math.floor(Math.random() * TRENDY_PALETTES.length)]
-                    set((state) => ({
-                        gradient: {
-                            ...state.gradient,
-                            color1: p[0],
-                            color2: p[1],
-                            color3: p[2],
-                            color4: p[3]
-                        }
-                    }))
-                }
-    }))
+            }))
+        }
+    }
+})

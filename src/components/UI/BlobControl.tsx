@@ -6,10 +6,29 @@ import ColorPicker from './inputs/ColorPicker'
 import Switch from './inputs/Switch'
 
 export default function BlobControl() {
-    const { blob, setBlob } = useStore()
+    const { blob, setBlob, randomizeColors } = useStore()
 
     return (
         <Section title="Blob Settings">
+            <button
+                onClick={randomizeColors}
+                style={{
+                    width: '100%',
+                    marginBottom: '12px',
+                    background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    color: 'rgba(255,255,255,0.7)',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '11px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px'
+                }}
+            >
+                🎲 Randomize Colors
+            </button>
             {/* Global Direction */}
             <Select
                 label="Direction"

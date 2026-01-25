@@ -12,6 +12,7 @@ const LavaMaterial = shaderMaterial(
         uColor1: new Color('#ff0000'),
         uColor2: new Color('#00ff00'),
         uColor3: new Color('#0000ff'),
+        uBackground: new Color('#0a0a0a'),
         uSpeed: 0.2,
         uThreshold: 0.5,
         uAspectRatio: 1.0,
@@ -32,6 +33,7 @@ const LavaMaterial = shaderMaterial(
     uniform vec3 uColor1;
     uniform vec3 uColor2;
     uniform vec3 uColor3;
+    uniform vec3 uBackground;
     uniform float uSpeed;
     uniform float uThreshold;
     uniform float uAspectRatio;
@@ -114,12 +116,8 @@ const LavaMaterial = shaderMaterial(
       col += uColor2 * (i2 / total);
       col += uColor3 * (i3 / total);
       
-      // Add a background color? Or just black?
-      // Lava lamp usually floats in liquid.
-      // We'll multiply by alpha to mask the shape.
-      
-      // Let's make the background a dark version of the mix, or black.
-      vec3 bg = uColor1 * 0.05 + uColor2 * 0.05;
+      // Use the background color uniform
+      vec3 bg = uBackground;
       
       vec3 final = mix(bg, col, alpha);
       
@@ -172,6 +170,7 @@ export default function LavaLamp() {
                 uColor1={new Color(config.color1)}
                 uColor2={new Color(config.color2)}
                 uColor3={new Color(config.color3)}
+                uBackground={new Color(config.background)}
                 uSpeed={config.speed}
                 uThreshold={config.threshold}
                 uKaleidoEnabled={0.0}

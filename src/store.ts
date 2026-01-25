@@ -108,6 +108,7 @@ interface State {
         color1: string
         color2: string
         color3: string
+        background: string
         speed: number
         threshold: number
     }
@@ -234,6 +235,7 @@ export const useStore = create<State>((set) => {
             color1: '#ff0055',
             color2: '#ffff00',
             color3: '#00ccff',
+            background: '#0a0a0a',
             speed: 0.3,
             threshold: 1.0
         },
@@ -311,15 +313,21 @@ export const useStore = create<State>((set) => {
         },
         randomizeColors: () => {
             const p = TRENDY_PALETTES[Math.floor(Math.random() * TRENDY_PALETTES.length)]
-            set((state) => ({
-                gradient: {
-                    ...state.gradient,
-                    color1: p[0],
-                    color2: p[1],
-                    color3: p[2],
-                    color4: p[3]
+            set((state) => {
+                const mode = state.scene.bgMode
+                if (mode === 'Gradient') {
+                    return { gradient: { ...state.gradient, color1: p[0], color2: p[1], color3: p[2], color4: p[3] } }
+                } else if (mode === 'Lava Lamp') {
+                    return { lava: { ...state.lava, color1: p[0], color2: p[1], color3: p[2] } }
+                } else if (mode === 'Blob Stack') {
+                    return { blob: { ...state.blob, blob1: { ...state.blob.blob1, color: p[0] }, blob2: { ...state.blob.blob2, color: p[1] }, background: { color: p[2] } } }
+                } else if (mode === 'Orbs') {
+                    return { orbs: { ...state.orbs, color1: p[0], color2: p[1], color3: p[2], color4: p[3] } }
+                } else if (mode === 'Solid + Glow') {
+                    return { glow: { ...state.glow, color1: p[0], color2: p[1] } }
                 }
-            }))
+                return {}
+            })
         }
     }
 })

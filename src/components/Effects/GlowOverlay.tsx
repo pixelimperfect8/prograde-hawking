@@ -125,11 +125,11 @@ export default function GlowOverlay() {
         preset: 'Diagonal',
         // Orb 1
         color1: glow.color1,
-        pos1: { x: 0.3, y: 0.7 },
+        pos1: glow.pos1,
         radius1: glow.radius1,
         // Orb 2
         color2: glow.color2,
-        pos2: { x: 0.7, y: 0.3 },
+        pos2: glow.pos2,
         radius2: glow.radius2,
 
         intensity: glow.intensity,

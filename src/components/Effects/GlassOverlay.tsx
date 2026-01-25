@@ -140,19 +140,20 @@ export default function GlassOverlay() {
     }, [config.rippleDensity, config.waveFreq, config.waviness, config.patternType, config.segments, config.ridgeProfile])
 
     useFrame((_state, delta) => {
-        if (!flutedNormalMap || !config.animate) return
+        if (!flutedNormalMap) return
 
-        // Apply rotation
+        // Always apply rotation
         flutedNormalMap.rotation = (config.patternRotation * Math.PI) / 180
 
-        // Update Offset
-        const rad = (config.flowDirection * Math.PI) / 180
+        if (config.animate) {
+            // Update Offset
+            const rad = (config.flowDirection * Math.PI) / 180
+            const moveX = Math.cos(rad) * config.flowSpeed * delta
+            const moveY = Math.sin(rad) * config.flowSpeed * delta
 
-        const moveX = Math.cos(rad) * config.flowSpeed * delta
-        const moveY = Math.sin(rad) * config.flowSpeed * delta
-
-        flutedNormalMap.offset.x += moveX
-        flutedNormalMap.offset.y += moveY
+            flutedNormalMap.offset.x += moveX
+            flutedNormalMap.offset.y += moveY
+        }
     })
 
     if (!config.enabled || !flutedNormalMap) return null

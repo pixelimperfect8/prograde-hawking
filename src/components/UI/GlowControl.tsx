@@ -9,7 +9,12 @@ export default function GlowControl() {
     return (
         <Section title="Glow Settings">
             <ColorPicker label="Color 1" value={glow.color1} onChange={(v) => setGlow({ color1: v })} />
+            <Slider label="Pos 1 X" value={glow.pos1.x} min={0} max={1} onChange={(v) => setGlow({ pos1: { ...glow.pos1, x: v } })} />
+            <Slider label="Pos 1 Y" value={glow.pos1.y} min={0} max={1} onChange={(v) => setGlow({ pos1: { ...glow.pos1, y: v } })} />
+
             <ColorPicker label="Color 2" value={glow.color2} onChange={(v) => setGlow({ color2: v })} />
+            <Slider label="Pos 2 X" value={glow.pos2.x} min={0} max={1} onChange={(v) => setGlow({ pos2: { ...glow.pos2, x: v } })} />
+            <Slider label="Pos 2 Y" value={glow.pos2.y} min={0} max={1} onChange={(v) => setGlow({ pos2: { ...glow.pos2, y: v } })} />
 
             <Slider label="Radius 1" value={glow.radius1} min={0} max={2} onChange={(v) => setGlow({ radius1: v })} />
             <Slider label="Radius 2" value={glow.radius2} min={0} max={2} onChange={(v) => setGlow({ radius2: v })} />

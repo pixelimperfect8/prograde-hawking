@@ -115,6 +115,9 @@ interface State {
         color2: string
         color3: string
         noise: number
+        direction: 'Top-to-Bottom' | 'Bottom-to-Top' | 'Left-to-Right' | 'Right-to-Left'
+        offset1: { x: number, y: number }
+        offset2: { x: number, y: number }
     }
     glow: {
         color1: string
@@ -123,6 +126,8 @@ interface State {
         radius2: number
         intensity: number
         pulseSpeed: number
+        pos1: { x: number, y: number }
+        pos2: { x: number, y: number }
     }
     // New PostFX Slice
     postfx: {
@@ -195,7 +200,10 @@ export const useStore = create<State>((set) => ({
         color1: '#8db39a',
         color2: '#ebff94',
         color3: '#79ba59',
-        noise: 0.05
+        noise: 0.05,
+        direction: 'Left-to-Right',
+        offset1: { x: 0, y: 0 },
+        offset2: { x: 0, y: 0 }
     },
     glow: {
         color1: '#4facfe',
@@ -203,7 +211,9 @@ export const useStore = create<State>((set) => ({
         radius1: 0.8,
         radius2: 0.6,
         intensity: 1.2,
-        pulseSpeed: 1.0
+        pulseSpeed: 1.0,
+        pos1: { x: 0.3, y: 0.7 },
+        pos2: { x: 0.7, y: 0.3 }
     },
     postfx: {
         dither: true,

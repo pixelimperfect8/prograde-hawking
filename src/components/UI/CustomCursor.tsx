@@ -50,7 +50,7 @@ export default function CustomCursor() {
                     borderRadius: '50%',
                     transform: 'translate(-50%, -50%)',
                     mixBlendMode: 'difference', // Cool blend
-                    boxShadow: '0 0 10px #FBFF00'
+                    // boxShadow removed
                 }}
             />
         </div>

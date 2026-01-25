@@ -122,17 +122,17 @@ export default function BlobStack() {
 
     // Static config for positions, dynamic for colors
     const config = {
-        Direction: 'Left-to-Right',
+        Direction: blob.direction,
         // Layer 1
         Color1: blob.color1,
         Radius1: 0.44,
         Falloff1: 0.5,
-        Offset1: { x: 0, y: 0 },
+        Offset1: blob.offset1,
         // Layer 2
         Color2: blob.color2,
         Radius2: 0.26,
         Falloff2: 0.66,
-        Offset2: { x: 0, y: 0 },
+        Offset2: blob.offset2,
         // Layer 3
         Color3: blob.color3,
         Radius3: 2.18,

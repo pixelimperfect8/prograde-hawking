@@ -10,6 +10,7 @@ import PostFX from './components/Effects/PostFX'
 import Ticker from './components/Ticker'
 import Overlay from './components/UI/Overlay'
 import CustomCursor from './components/UI/CustomCursor'
+import IntroMeshit from './components/UI/IntroMeshit'
 import { useStore } from './store'
 import './index.css'
 
@@ -124,19 +125,7 @@ function UI() {
             }}
           />
         ) : (
-          <h1 style={{
-            margin: 0,
-            fontFamily: 'Inter, sans-serif',
-            fontWeight: 900,
-            color: '#FBFF00',
-            fontSize: 'clamp(4rem, 7.2vw, 13rem)',
-            letterSpacing: '-0.04em',
-            lineHeight: 1,
-            textAlign: 'center',
-            mixBlendMode: 'overlay',
-          }}>
-            MESHIT
-          </h1>
+          <IntroMeshit />
         )}
       </div>
 

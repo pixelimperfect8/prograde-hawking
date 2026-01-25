@@ -9,8 +9,9 @@ import BlobControl from './BlobControl'
 import GlowControl from './GlowControl'
 
 export default function Overlay() {
-    const { scene } = useStore()
+    const { scene, appState } = useStore()
     const { bgMode } = scene
+    const isReady = appState === 'ready'
 
     // Custom Momentum Scroll Logic (Ref-based, no re-renders)
     const containerRef = useRef<HTMLDivElement>(null)
@@ -93,7 +94,13 @@ export default function Overlay() {
                 borderLeft: '1px solid rgba(255, 255, 255, 0.08)',
                 boxShadow: '-20px 0 60px rgba(0,0,0,0.5)',
                 // Hide overflow, we handle it manually
-                overflow: 'hidden'
+                overflow: 'hidden',
+
+                // Entrance Animation
+                opacity: isReady ? 1 : 0,
+                transform: isReady ? 'translateX(0)' : 'translateX(100px)',
+                pointerEvents: isReady ? 'auto' : 'none',
+                transition: 'opacity 1s ease 0.5s, transform 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s', // Delay slightly after explosion
             }}
             ref={containerRef}
         >

@@ -146,12 +146,15 @@ interface State {
         filmScratches: number
         filmDirt: number
     }
-    // New Scene Slice
+    // Scene Slice
     scene: {
         bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack'
         solidColor: string
     }
     logo: string | null
+    // Intro State
+    appState: 'intro' | 'animating' | 'ready'
+
     setGradient: (partial: Partial<State['gradient']>) => void
     setGlass: (partial: Partial<State['glass']>) => void
     setLava: (partial: Partial<State['lava']>) => void
@@ -160,6 +163,7 @@ interface State {
     setPostFX: (partial: Partial<State['postfx']>) => void
     setScene: (partial: Partial<State['scene']>) => void
     setLogo: (logo: string | null) => void
+    setAppState: (state: 'intro' | 'animating' | 'ready') => void
     applyPreset: (name: string) => void
     randomizeColors: () => void
 }
@@ -236,6 +240,7 @@ export const useStore = create<State>((set) => ({
         solidColor: '#a3b48b'
     },
     logo: null,
+    appState: 'intro',
 
     // Actions
     setGradient: (partial) => set((state) => ({ gradient: { ...state.gradient, ...partial } })),
@@ -246,6 +251,7 @@ export const useStore = create<State>((set) => ({
     setPostFX: (partial) => set((state) => ({ postfx: { ...state.postfx, ...partial } })),
     setScene: (partial) => set((state) => ({ scene: { ...state.scene, ...partial } })),
     setLogo: (logo) => set({ logo }),
+    setAppState: (appState) => set({ appState }),
 
     applyPreset: (name) => {
         const p = PRESETS[name as keyof typeof PRESETS]

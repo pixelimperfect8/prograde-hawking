@@ -1,6 +1,6 @@
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useRef, useEffect } from 'react'
-import { Leva, useControls, button } from 'leva'
+import { Leva, useControls } from 'leva'
 import * as THREE from 'three'
 import MeshGradient from './components/MeshGradient'
 import GlassOverlay from './components/Effects/GlassOverlay'
@@ -9,6 +9,7 @@ import LavaLamp from './components/Effects/LavaLamp'
 import BlobStack from './components/Effects/BlobStack'
 import PostFX from './components/Effects/PostFX'
 import Ticker from './components/Ticker'
+import Overlay from './components/UI/Overlay'
 import { useStore } from './store'
 import './index.css'
 
@@ -70,6 +71,12 @@ function Rig() {
 }
 
 function Scene() {
+  /* 
+   * Custom UI now handles Branding.
+   * Removing 'Branding' folder from Leva to avoid duplication. 
+   */
+  // const { logo, uploadLogo, removeLogo } = useControls('Branding', { ... }) 
+
   const { showGlass, bgMode, solidColor } = useControls('Scene', {
     showGlass: true,
     bgMode: {
@@ -126,11 +133,7 @@ function UI() {
     }
   }
 
-  // Leva Controls for Logo
-  useControls('Branding', {
-    'Upload Logo': button(() => fileInputRef.current?.click()),
-    'Remove Logo': button(() => setLogo(null)),
-  }, [logo]) // Dep array to ensure it stays fresh if needed
+  /* Leva Controls moved to custom UI */
 
   const download = () => {
     const canvas = document.querySelector('canvas')
@@ -225,6 +228,7 @@ function App() {
 
   return (
     <>
+      <Overlay />
       <Leva
         collapsed={false}
         flat

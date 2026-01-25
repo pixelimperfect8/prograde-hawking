@@ -1,13 +1,10 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect } from 'react'
 import { useStore } from '../../store'
 
 export default function IntroMeshit() {
     const { appState, setAppState } = useStore()
     const containerRef = useRef<HTMLDivElement>(null)
     const textRef = useRef<HTMLHeadingElement>(null)
-
-    // Parallax State
-    const mouse = useRef({ x: 0, y: 0 })
 
     useEffect(() => {
         const handleMove = (e: MouseEvent) => {

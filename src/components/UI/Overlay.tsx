@@ -7,6 +7,7 @@ import EffectsControl from './EffectsControl'
 import LavaControl from './LavaControl'
 import BlobControl from './BlobControl'
 import GlowControl from './GlowControl'
+import OrbsControl from './OrbsControl'
 
 export default function Overlay() {
     const { scene, appState } = useStore()
@@ -124,6 +125,7 @@ export default function Overlay() {
                 {bgMode === 'Lava Lamp' && <LavaControl />}
                 {bgMode === 'Blob Stack' && <BlobControl />}
                 {bgMode === 'Solid + Glow' && <GlowControl />}
+                {bgMode === 'Orbs' && <OrbsControl />}
 
                 <GlassControl />
                 <EffectsControl />

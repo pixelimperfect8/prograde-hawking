@@ -133,6 +133,15 @@ interface State {
         pos1: { x: number, y: number }
         pos2: { x: number, y: number }
     }
+    orbs: {
+        color1: string
+        color2: string
+        color3: string
+        color4: string
+        speed: number
+        blur: number
+        scale: number
+    }
     // New PostFX Slice
     postfx: {
         dither: boolean
@@ -152,7 +161,7 @@ interface State {
     }
     // Scene Slice
     scene: {
-        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack'
+        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs'
         solidColor: string
     }
     logo: string | null
@@ -164,6 +173,7 @@ interface State {
     setLava: (partial: Partial<State['lava']>) => void
     setBlob: (partial: Partial<State['blob']>) => void
     setGlow: (partial: Partial<State['glow']>) => void
+    setOrbs: (partial: Partial<State['orbs']>) => void
     setPostFX: (partial: Partial<State['postfx']>) => void
     setScene: (partial: Partial<State['scene']>) => void
     setLogo: (logo: string | null) => void
@@ -249,6 +259,15 @@ export const useStore = create<State>((set) => {
             pos1: { x: 0.3, y: 0.7 },
             pos2: { x: 0.7, y: 0.3 }
         },
+        orbs: {
+            color1: '#4f46e5',
+            color2: '#7c3aed',
+            color3: '#06b6d4',
+            color4: '#8b5cf6',
+            speed: 0.3,
+            blur: 0.4,
+            scale: 1.0
+        },
         postfx: {
             dither: true,
             ditherOpacity: 0.5,
@@ -278,6 +297,7 @@ export const useStore = create<State>((set) => {
         setLava: (partial) => set((state) => ({ lava: { ...state.lava, ...partial } })),
         setBlob: (partial) => set((state) => ({ blob: { ...state.blob, ...partial } })),
         setGlow: (partial) => set((state) => ({ glow: { ...state.glow, ...partial } })),
+        setOrbs: (partial) => set((state) => ({ orbs: { ...state.orbs, ...partial } })),
         setPostFX: (partial) => set((state) => ({ postfx: { ...state.postfx, ...partial } })),
         setScene: (partial) => set((state) => ({ scene: { ...state.scene, ...partial } })),
         setLogo: (logo) => set({ logo }),

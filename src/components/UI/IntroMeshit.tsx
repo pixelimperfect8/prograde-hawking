@@ -28,7 +28,8 @@ export default function IntroMeshit() {
                 alignItems: 'center',
                 zIndex: 50,
                 background: appState === 'animating' ? 'rgba(0,0,0,0)' : 'transparent', // fade out hack if needed
-                transition: 'background 0.5s'
+                transition: 'background 0.5s',
+                pointerEvents: 'auto' // FORCE EVENTS ON
             }}
         >
             <div className={`glitch-wrapper ${appState === 'animating' ? 'glitch-melt' : ''}`}>

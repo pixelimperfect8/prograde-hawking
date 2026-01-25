@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useEffect } from 'react'
 import { useStore } from '../../store'
 import SceneControl from './SceneControl'
 import GradientControl from './GradientControl'
@@ -12,35 +12,36 @@ export default function Overlay() {
     const { scene } = useStore()
     const { bgMode } = scene
 
-    // Custom Momentum Scroll Logic
+    // Custom Momentum Scroll Logic (Ref-based, no re-renders)
     const containerRef = useRef<HTMLDivElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
-    const [templateScroll, setTemplateScroll] = useState(0) // target scroll
-    const [currentScroll, setCurrentScroll] = useState(0) // actual scroll (lerped)
+
+    // Use refs instead of state for the loop
+    const targetScroll = useRef(0)
+    const currentScrollRef = useRef(0)
 
     useEffect(() => {
         let animationFrameId: number
 
         const loop = () => {
             // Lerp formula: current = current + (target - current) * factor
-            // 0.08 factor for that "heavy" smooth feel
-            setCurrentScroll(prev => {
-                const diff = templateScroll - prev
-                if (Math.abs(diff) < 0.5) return templateScroll
-                return prev + diff * 0.05
-            })
+            const diff = targetScroll.current - currentScrollRef.current
+
+            // Only update DOM if there's significant movement
+            if (Math.abs(diff) > 0.1) {
+                currentScrollRef.current += diff * 0.05
+                if (contentRef.current) {
+                    contentRef.current.style.transform = `translateY(${-currentScrollRef.current}px)`
+                }
+            }
+
             animationFrameId = requestAnimationFrame(loop)
         }
         loop()
         return () => cancelAnimationFrame(animationFrameId)
-    }, [templateScroll])
+    }, [])
 
-    // Apply scroll to element
-    useEffect(() => {
-        if (contentRef.current) {
-            contentRef.current.style.transform = `translateY(${-currentScroll}px)`
-        }
-    }, [currentScroll])
+    // No need for separate useEffect to apply scroll, done in loop
 
     // Handle Wheel
     useEffect(() => {
@@ -53,10 +54,8 @@ export default function Overlay() {
             const maxScroll = (contentRef.current?.offsetHeight || 0) - (containerRef.current?.offsetHeight || 0) + 144 // + padding
             const clampedMax = Math.max(0, maxScroll)
 
-            setTemplateScroll(prev => {
-                const next = prev + e.deltaY * 0.8 // 0.8 speed factor
-                return Math.max(0, Math.min(next, clampedMax))
-            })
+            const next = targetScroll.current + e.deltaY * 0.8 // 0.8 speed factor
+            targetScroll.current = Math.max(0, Math.min(next, clampedMax))
         }
 
         const container = containerRef.current

@@ -158,7 +158,7 @@ function App() {
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
         <Canvas
           gl={{ preserveDrawingBuffer: true, antialias: true }}
-          dpr={[1, 2]}
+          dpr={[1, 1.5]}
           camera={{ position: [0, 0, 5], fov: 45 }}
         >
           <color attach="background" args={['#000']} />

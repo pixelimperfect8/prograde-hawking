@@ -35,6 +35,7 @@ export default function Ticker() {
                     // This creates a seamless loop.
                     animation: 'ticker-scroll 45s linear infinite',
                     width: 'max-content',
+                    willChange: 'transform'
                 }}>
                     <span style={{
                         fontFamily: 'Inter, sans-serif',

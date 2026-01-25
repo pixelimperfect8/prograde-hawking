@@ -166,7 +166,7 @@ export default function GlassOverlay() {
                 background={new THREE.Color('#000000')}
                 normalMap={flutedNormalMap}
                 normalScale={new THREE.Vector2(config.fluteScale, config.fluteScale)}
-                resolution={1024}
+                resolution={512}
             />
         </mesh>
     )

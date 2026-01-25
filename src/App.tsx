@@ -1,5 +1,5 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import { Leva, useControls, button } from 'leva'
 import * as THREE from 'three'
 import MeshGradient from './components/MeshGradient'
@@ -11,6 +11,47 @@ import PostFX from './components/Effects/PostFX'
 import Ticker from './components/Ticker'
 import { useStore } from './store'
 import './index.css'
+
+// Custom hook to fix Leva folder arrow positions
+function useLevaArrowFix() {
+  useEffect(() => {
+    const fixArrows = () => {
+      // Find all buttons with SVGs (folder headers)
+      const buttons = document.querySelectorAll('[class*="leva"] button')
+
+      buttons.forEach((btn) => {
+        const svg = btn.querySelector('svg')
+        if (svg) {
+          // This is a folder header button
+          const button = btn as HTMLButtonElement
+          button.style.display = 'flex'
+          button.style.flexDirection = 'row'
+          button.style.justifyContent = 'space-between'
+          button.style.alignItems = 'center'
+          button.style.width = '100%'
+
+          // Move SVG to right
+          const svgEl = svg as SVGElement
+          svgEl.style.order = '999'
+          svgEl.style.marginLeft = 'auto'
+          svgEl.style.marginRight = '0'
+        }
+      })
+    }
+
+    // Run initially after a small delay for Leva to render
+    const timer = setTimeout(fixArrows, 100)
+
+    // Also run on any DOM changes (for when folders expand/collapse)
+    const observer = new MutationObserver(fixArrows)
+    observer.observe(document.body, { childList: true, subtree: true })
+
+    return () => {
+      clearTimeout(timer)
+      observer.disconnect()
+    }
+  }, [])
+}
 
 function Rig() {
   useFrame((state) => {
@@ -182,6 +223,9 @@ function UI() {
 }
 
 function App() {
+  // Apply JS-based arrow position fix for Leva folders
+  useLevaArrowFix()
+
   return (
     <>
       <Leva

@@ -11,7 +11,7 @@ export default function IntroMeshit() {
     const isAnimatingRef = useRef(false)
 
     // Scramble Logic
-    const scramble = useCallback((duration = 0, resolveToOriginal = false) => {
+    const scramble = useCallback((resolveToOriginal = false) => {
         if (intervalRef.current) clearInterval(intervalRef.current)
 
         let iteration = 0
@@ -22,7 +22,7 @@ export default function IntroMeshit() {
             setDisplayText(prev =>
                 ORIGINAL_TEXT
                     .split('')
-                    .map((char, index) => {
+                    .map((_, index) => {
                         // If resolving, keep original char if we've passed enough iterations for it
                         if (resolveToOriginal) {
                             if (index < iteration) return ORIGINAL_TEXT[index]
@@ -58,7 +58,7 @@ export default function IntroMeshit() {
     const handleMouseLeave = () => {
         if (appState !== 'intro' || isAnimatingRef.current) return
         // Resolve back to "MESHIT"
-        scramble(0, true)
+        scramble(true)
     }
 
     const handleClick = () => {

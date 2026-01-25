@@ -83,6 +83,7 @@ interface State {
         wireframe: boolean
         kaleidoscope: boolean
         kSegments: number
+        loop: boolean
     }
     // Existing slices...
     glass: {
@@ -173,7 +174,8 @@ export const useStore = create<State>((set) => ({
         ...PRESETS['Neon'],
         wireframe: false,
         kaleidoscope: false,
-        kSegments: 6
+        kSegments: 6,
+        loop: false // Default to infinite
     },
     glass: {
         enabled: true,

@@ -8,7 +8,8 @@ import { useStore } from '../store'
 // but if we used it in types, we would.
 // We are using 'any' for the component type to be safe.
 
-// Simple noise function (Simplex Noise) or similar will be embedded
+// Simplex 4D Noise for seamless loops
+// Based on standard implementation
 const GradientMaterial = shaderMaterial(
   {
     uTime: 0,
@@ -21,6 +22,8 @@ const GradientMaterial = shaderMaterial(
     uNoiseStrength: 0.2,
     uKaleidoEnabled: 0.0,
     uKaleidoSegments: 6.0,
+    uLoop: 0.0, // 0 = Infinite, 1 = Loop
+    uLoopDuration: 10.0 // Seconds
   },
   // Vertex Shader
   `

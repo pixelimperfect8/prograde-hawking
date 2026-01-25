@@ -68,6 +68,56 @@ export default function GradientControl() {
             <Switch label="Wireframe" checked={gradient.wireframe} onChange={(v) => setGradient({ wireframe: v })} />
             <Switch label="Kaleidoscope" checked={gradient.kaleidoscope} onChange={(v) => setGradient({ kaleidoscope: v })} />
             <Switch label="Seamless Loop (10s)" checked={gradient.loop} onChange={(v) => setGradient({ loop: v })} />
+
+            {gradient.loop && (
+                <button
+                    onClick={() => {
+                        // Find the canvas
+                        const canvas = document.querySelector('canvas')
+                        if (!canvas) return
+
+                        const stream = canvas.captureStream(60) // 60 FPS
+                        const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' }) // WebM usually supported
+                        const chunks: Blob[] = []
+
+                        recorder.ondataavailable = (e) => {
+                            if (e.data.size > 0) chunks.push(e.data)
+                        }
+
+                        recorder.onstop = () => {
+                            const blob = new Blob(chunks, { type: 'video/webm' })
+                            const url = URL.createObjectURL(blob)
+                            const a = document.createElement('a')
+                            a.href = url
+                            a.download = `gradient-loop-${Date.now()}.webm`
+                            a.click()
+                        }
+
+                        recorder.start()
+                        // Stop after 10s exactly + tiny buffer
+                        setTimeout(() => {
+                            recorder.stop()
+                        }, 10000)
+                    }}
+                    style={{
+                        marginTop: '16px',
+                        width: '100%',
+                        padding: '12px',
+                        background: 'rgba(255, 0, 0, 0.2)',
+                        border: '1px solid rgba(255, 0, 0, 0.4)',
+                        color: '#ff3333',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontFamily: 'Inter',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '1px'
+                    }}
+                >
+                    REC • 10s MP4 (WEBM)
+                </button>
+            )}
         </Section>
     )
 }

@@ -194,6 +194,68 @@ export default function GradientControl() {
             >
                 Copy Embed Code &lt;/&gt;
             </button>
+
+            <button
+                onClick={() => {
+                    // Generate Framer component code with current settings
+                    const framerCode = `import * as React from "react"
+import { addPropertyControls, ControlType } from "framer"
+
+export default function MeshitGradient() {
+    const embedUrl = "${window.location.origin}/?c1=${encodeURIComponent(gradient.color1)}&c2=${encodeURIComponent(gradient.color2)}&c3=${encodeURIComponent(gradient.color3)}&c4=${encodeURIComponent(gradient.color4)}&spd=${gradient.speed}&den=${gradient.noiseDensity}&str=${gradient.noiseStrength}&kal=${gradient.kaleidoscope}&loop=${gradient.loop}&embed=true"
+
+    return (
+        <iframe
+            src={embedUrl}
+            style={{
+                width: "100%",
+                height: "100%",
+                border: "none",
+                display: "block",
+            }}
+        />
+    )
+}
+
+addPropertyControls(MeshitGradient, {})`
+
+                    navigator.clipboard.writeText(framerCode).then(() => {
+                        const btn = document.getElementById('copy-framer-btn')
+                        if (btn) {
+                            const original = btn.innerText
+                            btn.innerText = 'COPIED!'
+                            setTimeout(() => btn.innerText = original, 2000)
+                        }
+                    })
+                }}
+                id="copy-framer-btn"
+                style={{
+                    width: '100%',
+                    marginTop: '8px',
+                    background: 'transparent',
+                    border: '1px solid rgba(0, 153, 255, 0.3)',
+                    color: 'rgba(0, 153, 255, 0.8)',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '11px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                    fontWeight: 500,
+                    transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(0, 153, 255, 0.6)'
+                    e.currentTarget.style.color = '#0099ff'
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(0, 153, 255, 0.3)'
+                    e.currentTarget.style.color = 'rgba(0, 153, 255, 0.8)'
+                }}
+            >
+                Copy Framer Code
+            </button>
         </Section>
     )
 }

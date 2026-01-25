@@ -1,16 +1,81 @@
+```javascript
+import { useRef, useState, useEffect, useCallback } from 'react'
 import { useStore } from '../../store'
+
+const CYBER_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;:,.<>?'
+const ORIGINAL_TEXT = 'MESHIT'
 
 export default function IntroMeshit() {
     const { appState, setAppState } = useStore()
+    const [displayText, setDisplayText] = useState(ORIGINAL_TEXT)
+    const intervalRef = useRef<number | null>(null)
+    const isAnimatingRef = useRef(false)
+
+    // Scramble Logic
+    const scramble = useCallback((duration = 0, resolveToOriginal = false) => {
+        if (intervalRef.current) clearInterval(intervalRef.current)
+        
+        let iteration = 0
+        const maxIterations = 10 // How many times to scramble per letter
+        
+        intervalRef.current = window.setInterval(() => {
+            setDisplayText(prev => 
+                ORIGINAL_TEXT
+                    .split('')
+                    .map((char, index) => {
+                        // If resolving, keep original char if we've passed enough iterations for it
+                        if (resolveToOriginal) {
+                            if (index < iteration) return ORIGINAL_TEXT[index]
+                        }
+                        // Otherwise return random char
+                        return CYBER_CHARS[Math.floor(Math.random() * CYBER_CHARS.length)]
+                    })
+                    .join('')
+            )
+
+            if (resolveToOriginal) {
+                iteration += 1 / 3 // Speed of resolution
+                if (iteration >= ORIGINAL_TEXT.length) {
+                    if (intervalRef.current) clearInterval(intervalRef.current)
+                    setDisplayText(ORIGINAL_TEXT)
+                }
+            }
+        }, 30) // 30ms refresh rate
+    }, [])
+
+    const handleMouseEnter = () => {
+        if (appState !== 'intro' || isAnimatingRef.current) return
+        // Continuous chaos mode
+        if (intervalRef.current) clearInterval(intervalRef.current)
+        intervalRef.current = window.setInterval(() => {
+             setDisplayText(
+                ORIGINAL_TEXT.split('').map(() => CYBER_CHARS[Math.floor(Math.random() * CYBER_CHARS.length)]).join('')
+             )
+        }, 50)
+    }
+
+    const handleMouseLeave = () => {
+        if (appState !== 'intro' || isAnimatingRef.current) return
+        // Resolve back to "MESHIT"
+        scramble(0, true)
+    }
 
     const handleClick = () => {
         if (appState !== 'intro') return
+        isAnimatingRef.current = true
         setAppState('animating')
 
-        // 0.8s animation, then ready
+        // Intense scramble then clear
+        if (intervalRef.current) clearInterval(intervalRef.current)
+        intervalRef.current = window.setInterval(() => {
+             setDisplayText(
+                ORIGINAL_TEXT.split('').map(() => CYBER_CHARS[Math.floor(Math.random() * CYBER_CHARS.length)]).join('')
+             )
+        }, 20) // Faster chaos
+
         setTimeout(() => {
+            if (intervalRef.current) clearInterval(intervalRef.current)
             setAppState('ready')
-        }, 800)
     }
 
     if (appState === 'ready') return null
@@ -47,7 +112,7 @@ export default function IntroMeshit() {
                 </defs>
             </svg>
 
-            <div className={`cyber-wrapper ${appState === 'animating' ? 'cyber-melt' : ''}`}>
+            <div className={`cyber - wrapper ${ appState === 'animating' ? 'cyber-melt' : '' } `}>
                 <h1
                     className="cyber-text"
                     onClick={handleClick}
@@ -59,143 +124,147 @@ export default function IntroMeshit() {
             </div>
 
             <style>{`
-                /* Container */
-                .cyber-wrapper {
-                    position: relative;
-                    /* Base Subtle Distortion */
-                    filter: url(#mesh-distort); 
-                }
+    /* Container */
+    .cyber - wrapper {
+    position: relative;
+    /* Base Subtle Distortion */
+    filter: url(#mesh - distort);
+}
 
-                .cyber-text {
-                    margin: 0;
-                    font-family: 'Inter', sans-serif;
-                    font-weight: 900;
-                    font-size: clamp(4rem, 7.2vw, 13rem);
-                    letter-spacing: -0.04em;
-                    line-height: 0.85;
-                    color: #FBFF00;
-                    position: relative;
-                    cursor: pointer;
-                    user-select: none;
-                    mix-blend-mode: hard-light;
-                }
+                .cyber - text {
+    margin: 0;
+    font - family: 'Inter', sans - serif;
+    font - weight: 900;
+    font - size: clamp(4rem, 7.2vw, 13rem);
+    letter - spacing: -0.04em;
+    line - height: 0.85;
+    color: #FBFF00;
+    position: relative;
+    cursor: pointer;
+    user - select: none;
+    mix - blend - mode: hard - light;
+}
 
                 /* Layers for RGB Split */
-                .cyber-text::before,
-                .cyber-text::after {
-                    content: attr(data-text);
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: #111; /* Mask background for 'cutout' feel */
-                    mix-blend-mode: exclusion;
-                    opacity: 0.8;
-                }
+                .cyber - text:: before,
+                .cyber - text::after {
+    content: attr(data - text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100 %;
+    height: 100 %;
+    background: #111; /* Mask background for 'cutout' feel */
+    mix - blend - mode: exclusion;
+    opacity: 0.8;
+}
 
                 /* Red Layer */
-                .cyber-text::before {
-                    color: red;
-                    z-index: -1;
-                    transform: translate(-3px, 0);
-                    opacity: 0;
-                }
+                .cyber - text::before {
+    color: red;
+    z - index: -1;
+    transform: translate(-3px, 0);
+    opacity: 0;
+}
 
                 /* Cyan Layer */
-                .cyber-text::after {
-                    color: cyan;
-                    z-index: -2;
-                    transform: translate(3px, 0);
-                    opacity: 0;
-                }
+                .cyber - text::after {
+    color: cyan;
+    z - index: -2;
+    transform: translate(3px, 0);
+    opacity: 0;
+}
 
                 /* Scanlines Overlay */
                 .scanlines {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: linear-gradient(
-                        to bottom,
-                        transparent 50%,
-                        rgba(0, 0, 0, 0.4) 51%
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100 %;
+    height: 100 %;
+    background: linear - gradient(
+        to bottom,
+        transparent 50 %,
+        rgba(0, 0, 0, 0.4) 51 %
                     );
-                    background-size: 100% 4px;
-                    pointer-events: none;
-                    opacity: 0;
-                }
+    background - size: 100 % 4px;
+    pointer - events: none;
+    opacity: 0;
+}
 
                 /* HOVER: Chaos Mode */
-                .cyber-text:hover {
-                    animation: cyber-shake 0.2s infinite;
-                    filter: brightness(1.2) contrast(1.2);
-                }
-                .cyber-text:hover::before {
-                    opacity: 1;
-                    animation: rgb-shift-1 0.1s infinite steps(2);
-                }
-                .cyber-text:hover::after {
-                    opacity: 1;
-                    animation: rgb-shift-2 0.1s infinite steps(2);
-                }
-                .cyber-wrapper:hover .scanlines {
-                    opacity: 0.3;
-                }
+                .cyber - text:hover {
+    animation: cyber - shake 0.2s infinite;
+    filter: brightness(1.2) contrast(1.2);
+}
+                .cyber - text: hover::before {
+    opacity: 1;
+    animation: rgb - shift - 1 0.1s infinite steps(2);
+}
+                .cyber - text: hover::after {
+    opacity: 1;
+    animation: rgb - shift - 2 0.1s infinite steps(2);
+}
+                .cyber - wrapper: hover.scanlines {
+    opacity: 0.3;
+}
 
                 /* MELTDOWN CLICK */
-                .cyber-melt .cyber-text {
-                    animation: vertical-collapse 0.6s cubic-bezier(0.8, 0, 0.2, 1) forwards;
-                }
-                .cyber-melt .scanlines {
-                    opacity: 0.8;
-                    animation: scanline-flash 0.2s forwards;
+                .cyber - melt.cyber - text {
+    animation: vertical - collapse 0.6s cubic - bezier(0.8, 0, 0.2, 1) forwards;
+}
+                .cyber - melt.scanlines {
+    opacity: 0.8;
+    animation: scanline - flash 0.2s forwards;
+}
+
+/* ANIMATIONS */
+@keyframes cyber - shake {
+    0 % { transform: translate(1px, 1px) skew(0deg); }
+    25 % { transform: translate(-1px, -1px) skew(2deg); }
+    50 % { transform: translate(-2px, 0) skew(- 1deg);
+}
+75 % { transform: translate(2px, 0) skew(1deg); }
+100 % { transform: translate(1px, -1px) skew(0deg); }
                 }
 
-                /* ANIMATIONS */
-                @keyframes cyber-shake {
-                    0% { transform: translate(1px, 1px) skew(0deg); }
-                    25% { transform: translate(-1px, -1px) skew(2deg); }
-                    50% { transform: translate(-2px, 0) skew(-1deg); }
-                    75% { transform: translate(2px, 0) skew(1deg); }
-                    100% { transform: translate(1px, -1px) skew(0deg); }
+@keyframes rgb - shift - 1 {
+    0 % { transform: translate(-4px, 2px); clip- path: inset(10 % 0 10 % 0);
+}
+50 % { transform: translate(-6px, -2px); clip- path: inset(50 % 0 30 % 0); }
+100 % { transform: translate(-2px, 4px); clip- path: inset(20 % 0 60 % 0); }
                 }
 
-                @keyframes rgb-shift-1 {
-                    0% { transform: translate(-4px, 2px); clip-path: inset(10% 0 10% 0); }
-                    50% { transform: translate(-6px, -2px); clip-path: inset(50% 0 30% 0); }
-                    100% { transform: translate(-2px, 4px); clip-path: inset(20% 0 60% 0); }
+@keyframes rgb - shift - 2 {
+    0 % { transform: translate(4px, -2px); clip- path: inset(80 % 0 5 % 0);
+}
+50 % { transform: translate(6px, 2px); clip- path: inset(10 % 0 70 % 0); }
+100 % { transform: translate(2px, -4px); clip- path: inset(5 % 0 80 % 0); }
                 }
 
-                @keyframes rgb-shift-2 {
-                    0% { transform: translate(4px, -2px); clip-path: inset(80% 0 5% 0); }
-                    50% { transform: translate(6px, 2px); clip-path: inset(10% 0 70% 0); }
-                    100% { transform: translate(2px, -4px); clip-path: inset(5% 0 80% 0); }
-                }
-
-                @keyframes vertical-collapse {
-                    0% { 
-                        transform: scaleY(1); 
-                        filter: blur(0) contrast(1);
-                    }
-                    30% {
-                        transform: scaleY(1.5) scaleX(0.9);
-                        filter: blur(2px) contrast(2) hue-rotate(90deg);
-                    }
-                    100% { 
-                        transform: scaleY(0.01) scaleX(2); 
+@keyframes vertical - collapse {
+    0 % {
+        transform: scaleY(1);
+        filter: blur(0) contrast(1);
+    }
+    30 % {
+        transform: scaleY(1.5) scaleX(0.9);
+                        filter: blur(2px) contrast(2) hue- rotate(90deg);
+}
+100 % {
+    transform: scaleY(0.01) scaleX(2); 
                         opacity: 0;
-                        filter: blur(10px) contrast(5);
-                    }
+    filter: blur(10px) contrast(5);
+}
                 }
 
-                @keyframes scanline-flash {
-                    0% { background-color: transparent; }
-                    50% { background-color: rgba(255, 255, 255, 0.2); }
-                    100% { background-color: transparent; }
+@keyframes scanline - flash {
+    0 % { background- color: transparent;
+}
+50 % { background- color: rgba(255, 255, 255, 0.2); }
+100 % { background- color: transparent; }
                 }
-            `}</style>
+`}</style>
         </div>
     )
 }

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
 import { MeshTransmissionMaterial } from '@react-three/drei'
-import { useControls } from 'leva'
+
 import { useStore } from '../../store'
 import * as THREE from 'three'
 
@@ -116,44 +116,9 @@ function generateFlutedNormalMap(
 export default function GlassOverlay() {
     const { width, height } = useThree((state) => state.viewport)
 
-    const { glass, setGlass } = useStore()
+    const { glass } = useStore()
 
-    // Sync Leva -> Store
-    useControls('Glass Effect', {
-        enabled: { value: glass.enabled, onChange: (v) => setGlass({ enabled: v }) },
-        transmission: { value: glass.transmission, min: 0, max: 1, onChange: (v) => setGlass({ transmission: v }) },
-        thickness: { value: glass.thickness, min: 0, max: 3, onChange: (v) => setGlass({ thickness: v }) },
-        roughness: { value: glass.roughness, min: 0, max: 1, onChange: (v) => setGlass({ roughness: v }) },
-        chromaticAberration: { value: glass.chromaticAberration, min: 0, max: 1, onChange: (v) => setGlass({ chromaticAberration: v }) },
-        fluteScale: { value: glass.fluteScale, min: 0.1, max: 5, onChange: (v) => setGlass({ fluteScale: v }) },
-
-        patternType: {
-            value: glass.patternType,
-            options: ['Linear', 'Kaleidoscope'],
-            onChange: (v) => setGlass({ patternType: v })
-        },
-        ridgeProfile: {
-            value: glass.ridgeProfile,
-            options: ['Round', 'Sharp', 'Square'],
-            onChange: (v) => setGlass({ ridgeProfile: v })
-        },
-
-        segments: {
-            value: glass.segments,
-            min: 1, max: 20, step: 1,
-            render: (get) => get('Glass Effect.patternType') === 'Kaleidoscope',
-            onChange: (v) => setGlass({ segments: v })
-        },
-
-        rippleDensity: { value: glass.rippleDensity, min: 1, max: 50, step: 1, onChange: (v) => setGlass({ rippleDensity: v }) },
-        waviness: { value: glass.waviness, min: 0, max: 0.1, step: 0.001, onChange: (v) => setGlass({ waviness: v }) },
-        waveFreq: { value: glass.waveFreq, min: 0, max: 10, step: 0.1, onChange: (v) => setGlass({ waveFreq: v }) },
-
-        animate: { value: glass.animate, onChange: (v) => setGlass({ animate: v }) },
-        patternRotation: { value: glass.patternRotation, min: -180, max: 180, step: 1, onChange: (v) => setGlass({ patternRotation: v }) },
-        flowSpeed: { value: glass.flowSpeed, min: 0, max: 2, step: 0.01, onChange: (v) => setGlass({ flowSpeed: v }) },
-        flowDirection: { value: glass.flowDirection, min: 0, max: 360, onChange: (v) => setGlass({ flowDirection: v }) },
-    }, [glass])
+    // Leva Removed
 
     // Use "glass" from store instead of "config"
     const config = glass

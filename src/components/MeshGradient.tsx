@@ -2,8 +2,8 @@ import { useRef } from 'react'
 import { useFrame, extend, useThree } from '@react-three/fiber'
 import { Color } from 'three'
 import { shaderMaterial } from '@react-three/drei'
-import { useControls, button } from 'leva'
-import { useStore, PRESETS } from '../store'
+
+import { useStore } from '../store'
 // We don't strictly need * as THREE if we don't use it in code, 
 // but if we used it in types, we would.
 // We are using 'any' for the component type to be safe.
@@ -136,7 +136,7 @@ export default function MeshGradient() {
   const materialRef = useRef<any>(null)
 
   // Connect to Global Store
-  const { gradient, setGradient, applyPreset, randomizeColors } = useStore()
+  const { gradient } = useStore()
 
   const { viewport } = useThree()
   // Calculate scale to ensure coverage even with parallax
@@ -145,33 +145,7 @@ export default function MeshGradient() {
   const scaleX = viewport.width * 2.0
   const scaleY = viewport.height * 2.0
 
-  // Sync Leva -> Store
-  useControls('Gradient Settings', () => ({
-    'Randomize Colors': button(() => randomizeColors()),
-    preset: {
-      value: 'Neon',
-      options: ['Custom', ...Object.keys(PRESETS)],
-      onChange: (value) => {
-        if (value !== 'Custom') applyPreset(value)
-      }
-    },
-    color1: { value: gradient.color1, onChange: (v) => setGradient({ color1: v }) },
-    color2: { value: gradient.color2, onChange: (v) => setGradient({ color2: v }) },
-    color3: { value: gradient.color3, onChange: (v) => setGradient({ color3: v }) },
-    color4: { value: gradient.color4, onChange: (v) => setGradient({ color4: v }) },
-    speed: { value: gradient.speed, min: 0, max: 2, onChange: (v) => setGradient({ speed: v }) },
-    noiseDensity: { value: gradient.noiseDensity, min: 0.1, max: 5, onChange: (v) => setGradient({ noiseDensity: v }) },
-    noiseStrength: { value: gradient.noiseStrength, min: 0, max: 1, onChange: (v) => setGradient({ noiseStrength: v }) },
-    wireframe: { value: gradient.wireframe, onChange: (v) => setGradient({ wireframe: v }) },
-
-    kaleidoscope: { value: gradient.kaleidoscope, onChange: (v) => setGradient({ kaleidoscope: v }) },
-    kSegments: {
-      value: gradient.kSegments,
-      min: 2, max: 20, step: 1,
-      render: (get) => get('Gradient Settings.kaleidoscope'),
-      onChange: (v) => setGradient({ kSegments: v })
-    }
-  }), [gradient]) // Dependency array ensures Leva updates if store changes from other sources (like Presets)
+  // Leva Removed
 
   useFrame(({ clock }) => {
     if (materialRef.current) {

@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useFrame, extend, useThree } from '@react-three/fiber'
 import { shaderMaterial } from '@react-three/drei'
-import { useControls } from 'leva'
+
 import { Color } from 'three'
 import * as THREE from 'three'
 
@@ -116,31 +116,25 @@ export default function BlobStack() {
     const height = viewport.height
     const aspect = width / height
 
-    const [config] = useControls('Blob Stack', () => ({
+    // Leva Removed - Using hardcoded defaults
+    const config = {
+        Direction: 'Left-to-Right',
+        // Layer 1
+        Color1: '#8db39a',
+        Radius1: 0.44,
+        Falloff1: 0.5,
+        Offset1: { x: 0, y: 0 },
+        // Layer 2
+        Color2: '#ebff94',
+        Radius2: 0.26,
+        Falloff2: 0.66,
+        Offset2: { x: 0, y: 0 },
+        // Layer 3
+        Color3: '#79ba59',
+        Radius3: 2.18,
 
-        Direction: {
-            options: ['Top-to-Bottom', 'Bottom-to-Top', 'Left-to-Right', 'Right-to-Left'],
-            value: 'Left-to-Right' // Updated Default
-        },
-
-        // Layer 1 (Top / Front)
-        Color1: '#8db39a', // Updated From Screenshot
-        Radius1: { value: 0.44, min: 0.1, max: 2 }, // Updated From Screenshot
-        Falloff1: { value: 0.5, min: 0, max: 1 },
-        Offset1: { value: { x: 0, y: 0 }, label: 'Pos Adjust 1' },
-
-        // Layer 2 (Middle)
-        Color2: '#ebff94', // Updated From Screenshot
-        Radius2: { value: 0.26, min: 0.1, max: 2 }, // Updated From Screenshot
-        Falloff2: { value: 0.66, min: 0, max: 1 }, // Updated From Screenshot
-        Offset2: { value: { x: 0, y: 0 }, label: 'Pos Adjust 2' },
-
-        // Layer 3 (Bottom / Base)
-        Color3: '#79ba59', // Updated From Screenshot
-        Radius3: { value: 2.18, min: 0.1, max: 3 }, // Updated From Screenshot
-
-        Noise: { value: 0.05, min: 0, max: 0.2 },
-    }))
+        Noise: 0.05,
+    }
 
     // Derived positions based on direction + offsets
     const getPositions = () => {

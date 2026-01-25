@@ -1,4 +1,8 @@
 import BrandingControl from './BrandingControl'
+import SceneControl from './SceneControl'
+import GradientControl from './GradientControl'
+import GlassControl from './GlassControl'
+import EffectsControl from './EffectsControl'
 
 export default function Overlay() {
     return (
@@ -9,20 +13,23 @@ export default function Overlay() {
                 left: 0,
                 width: '100%',
                 height: '100%',
-                pointerEvents: 'none', // Allow clicks to pass through to canvas
+                pointerEvents: 'none',
                 zIndex: 10,
                 padding: '24px',
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'flex-start', // Place controls on the left
+                alignItems: 'flex-start',
+                gap: '12px',
+                overflowY: 'auto' // Allow scrolling if controls get too tall
             }}
         >
-            <div style={{ pointerEvents: 'auto' }}>
+            <div style={{ pointerEvents: 'auto', width: '280px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <BrandingControl />
+                <SceneControl />
+                <GradientControl />
+                <GlassControl />
+                <EffectsControl />
             </div>
-
-            {/* Placeholder for future controls */}
-            {/* <div style={{ marginTop: '20px', pointerEvents: 'auto' }}><PresetsControl /></div> */}
         </div>
     )
 }

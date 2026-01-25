@@ -1,37 +1,15 @@
 import { EffectComposer, Noise, Bloom, Scanline, ChromaticAberration, Vignette, Sepia } from '@react-three/postprocessing'
-import { useControls } from 'leva'
+
 import { BlendFunction } from 'postprocessing'
 import { useStore } from '../../store'
 import * as THREE from 'three'
 import { VintageFilm } from './VintageFilm'
 
 export default function PostFX() {
-    const { postfx, setPostFX } = useStore()
+    const { postfx } = useStore()
 
-    useControls('Effects', {
-        // Noise / Dither
-        dither: { value: postfx.dither, onChange: (v) => setPostFX({ dither: v }) },
-        opacity: { value: postfx.ditherOpacity, min: 0, max: 1.0, step: 0.01, label: 'Dither Strength', onChange: (v) => setPostFX({ ditherOpacity: v }) },
-
-        // Bloom
-        bloom: { value: postfx.bloom, onChange: (v) => setPostFX({ bloom: v }) },
-        intensity: { value: postfx.bloomIntensity, min: 0, max: 5, label: 'Bloom Intensity', onChange: (v) => setPostFX({ bloomIntensity: v }) },
-        threshold: { value: postfx.bloomThreshold, min: 0, max: 1, label: 'Bloom Threshold', onChange: (v) => setPostFX({ bloomThreshold: v }) },
-        smoothing: { value: postfx.bloomSmoothing, min: 0, max: 1, label: 'Bloom Smoothing', onChange: (v) => setPostFX({ bloomSmoothing: v }) },
-
-        // CRT Mode
-        crt: { value: postfx.crt, label: 'CRT Mode', onChange: (v) => setPostFX({ crt: v }) },
-        scanlines: { value: postfx.scanlines, min: 0, max: 1, render: (get) => get('Effects.crt'), onChange: (v) => setPostFX({ scanlines: v }) },
-        crtAberration: { value: postfx.crtAberration, min: 0, max: 0.1, step: 0.001, label: 'Aberration', render: (get) => get('Effects.crt'), onChange: (v) => setPostFX({ crtAberration: v }) },
-        vignette: { value: postfx.vignette, min: 0, max: 1, render: (get) => get('Effects.crt'), onChange: (v) => setPostFX({ vignette: v }) },
-
-        // Old Film Mode
-        film: { value: postfx.film, label: 'Vintage Film', onChange: (v) => setPostFX({ film: v }) },
-        filmSepia: { value: postfx.filmSepia, min: 0, max: 1, label: 'Sepia Intensity', render: (get) => get('Effects.film'), onChange: (v) => setPostFX({ filmSepia: v }) },
-        filmScratches: { value: postfx.filmScratches, min: 0, max: 1, label: 'Scratches', render: (get) => get('Effects.film'), onChange: (v) => setPostFX({ filmScratches: v }) },
-        filmDirt: { value: postfx.filmDirt, min: 0, max: 1, label: 'Dirt & Dust', render: (get) => get('Effects.film'), onChange: (v) => setPostFX({ filmDirt: v }) },
-
-    }, [postfx])
+    // Leva controls removed
+    // const { postfx, setPostFX } = useStore() is already above
 
     const noiseOpacity = postfx.dither ? postfx.ditherOpacity : 0
     const bloomIntensity = postfx.bloom ? postfx.bloomIntensity : 0

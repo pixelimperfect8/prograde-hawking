@@ -1,6 +1,5 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useRef, useEffect } from 'react'
-import { Leva, useControls } from 'leva'
+import { useRef } from 'react'
 import * as THREE from 'three'
 import MeshGradient from './components/MeshGradient'
 import GlassOverlay from './components/Effects/GlassOverlay'
@@ -13,43 +12,8 @@ import Overlay from './components/UI/Overlay'
 import { useStore } from './store'
 import './index.css'
 
-// Custom hook to fix Leva folder arrow positions
-function useLevaArrowFix() {
-  useEffect(() => {
-    const fixArrows = () => {
-      // Find all buttons with SVGs (folder headers)
-      const buttons = document.querySelectorAll('[class*="leva"] button')
-
-      buttons.forEach((btn) => {
-        const svg = btn.querySelector('svg')
-        if (svg) {
-          // Just add some breathing room between arrow and label
-          const svgEl = svg as SVGElement
-          svgEl.style.marginRight = '8px'
-          svgEl.style.opacity = '0.7'
-
-          // Ensure label text alignment is clean
-          const label = btn.querySelector('span')
-          if (label) {
-            label.style.paddingLeft = '4px'
-          }
-        }
-      })
-    }
-
-    // Run initially after a small delay for Leva to render
-    const timer = setTimeout(fixArrows, 100)
-
-    // Also run on any DOM changes (for when folders expand/collapse)
-    const observer = new MutationObserver(fixArrows)
-    observer.observe(document.body, { childList: true, subtree: true })
-
-    return () => {
-      clearTimeout(timer)
-      observer.disconnect()
-    }
-  }, [])
-}
+// Custom hook no longer needed
+// function useLevaArrowFix() ...
 
 function Rig() {
   useFrame((state) => {
@@ -71,23 +35,9 @@ function Rig() {
 }
 
 function Scene() {
-  /* 
-   * Custom UI now handles Branding.
-   * Removing 'Branding' folder from Leva to avoid duplication. 
-   */
-  // const { logo, uploadLogo, removeLogo } = useControls('Branding', { ... }) 
-
-  const { showGlass, bgMode, solidColor } = useControls('Scene', {
-    showGlass: true,
-    bgMode: {
-      options: ['Gradient', 'Solid + Glow', 'Lava Lamp', 'Blob Stack'],
-      value: 'Gradient'
-    },
-    solidColor: {
-      value: '#a3b48b', // Updated to Sage Green
-      render: (get) => get('Scene.bgMode') === 'Solid + Glow'
-    }
-  })
+  const { scene, glass } = useStore()
+  const { bgMode, solidColor } = scene
+  const showGlass = glass.enabled
 
   return (
     <>
@@ -223,51 +173,11 @@ function UI() {
 }
 
 function App() {
-  // Apply JS-based arrow position fix for Leva folders
-  useLevaArrowFix()
-
   return (
     <>
       <Overlay />
-      <Leva
-        collapsed={false}
-        flat
-        titleBar={{ drag: true, title: 'Controls' }}
-        theme={{
-          sizes: {
-            rootWidth: '360px',
-            controlWidth: '160px',
-          },
-          colors: {
-            elevation1: '#151515',
-            elevation2: '#1f1f1f',
-            elevation3: '#2a2a2a',
-            accent1: '#FBFF00',
-            accent2: '#888888',
-            accent3: '#555555',
-            highlight1: '#cccccc',
-            highlight2: '#aaaaaa',
-            highlight3: '#FBFF00',
-            vivid1: '#FBFF00',
-          },
-          radii: {
-            xs: '2px',
-            sm: '4px',
-            lg: '8px',
-          },
-          space: {
-            rowGap: '8px',
-            colGap: '8px',
-          },
-          borderWidths: {
-            folder: '0px', // Try to remove folder border lines
-          },
-          fonts: {
-            mono: `'Inter', monospace`,
-            sans: `'Inter', sans - serif`,
-          }
-        }}
-      />
+
+      {/* Leva Removed */}
 
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
         <Canvas

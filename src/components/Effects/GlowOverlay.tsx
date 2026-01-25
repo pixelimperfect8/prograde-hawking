@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react'
 import { useFrame, extend, useThree } from '@react-three/fiber'
 import { shaderMaterial } from '@react-three/drei'
-import { useControls } from 'leva'
+
 import { Color } from 'three'
 import * as THREE from 'three'
 
@@ -106,28 +106,7 @@ declare global {
     }
 }
 
-const PRESETS_DATA = {
-    'Diagonal': {
-        color1: '#4facfe', pos1: { x: 0.3, y: 0.7 }, radius1: 0.8,
-        color2: '#f093fb', pos2: { x: 0.7, y: 0.3 }, radius2: 0.6,
-        intensity: 1.2
-    },
-    'Sunrise': {
-        color1: '#f83600', pos1: { x: 0.5, y: 0.5 }, radius1: 1.0,
-        color2: '#f9d423', pos2: { x: 0.5, y: 0.2 }, radius2: 1.2,
-        intensity: 1.0
-    },
-    'Midnight': {
-        color1: '#0f2027', pos1: { x: 0.2, y: 0.8 }, radius1: 1.5,
-        color2: '#2c5364', pos2: { x: 0.8, y: 0.2 }, radius2: 1.5,
-        intensity: 0.8
-    },
-    'Spotlight': {
-        color1: '#ffffff', pos1: { x: 0.5, y: 0.8 }, radius1: 0.4,
-        color2: '#000000', pos2: { x: 0.5, y: 0.2 }, radius2: 0.1,
-        intensity: 2.0
-    }
-}
+
 
 export default function GlowOverlay() {
     const materialRef = useRef<any>(null)
@@ -137,47 +116,29 @@ export default function GlowOverlay() {
     const visibleHeight = viewport.height * 2.0
     const aspect = visibleWidth / visibleHeight
 
-    const [config, setConfig] = useControls('Glow Effect (Pro)', () => ({
+    // Leva Removed - Using hardcoded defaults
+    const config = {
         enabled: true,
-        preset: {
-            options: ['Custom', 'Diagonal', 'Sunrise', 'Midnight', 'Spotlight'],
-            value: 'Diagonal'
-        },
-
+        preset: 'Diagonal',
         // Orb 1
         color1: '#4facfe',
-        pos1: { value: { x: 0.3, y: 0.7 }, step: 0.05, label: 'Orb 1 Pos' },
-        radius1: { value: 0.8, min: 0.1, max: 2.0 },
-
+        pos1: { x: 0.3, y: 0.7 },
+        radius1: 0.8,
         // Orb 2
         color2: '#f093fb',
-        pos2: { value: { x: 0.7, y: 0.3 }, step: 0.05, label: 'Orb 2 Pos' },
-        radius2: { value: 0.6, min: 0.1, max: 2.0 },
+        pos2: { x: 0.7, y: 0.3 },
+        radius2: 0.6,
 
-        intensity: { value: 1.2, min: 0, max: 3 },
-        pulseSpeed: { value: 1.0, min: 0, max: 5 },
-
-        // Kaleidoscope
+        intensity: 1.2,
+        pulseSpeed: 1.0,
         kaleidoscope: false,
-        kSegments: { value: 6, min: 2, max: 20, step: 1, render: (get) => get('Glow Effect (Pro).kaleidoscope') }
-    }))
+        kSegments: 6
+    }
 
+    // Preset logic removed as it was tied to Leva state
     useEffect(() => {
-        if (config.preset !== 'Custom') {
-            const p = PRESETS_DATA[config.preset as keyof typeof PRESETS_DATA]
-            if (p) {
-                setConfig({
-                    color1: p.color1,
-                    pos1: p.pos1,
-                    radius1: p.radius1,
-                    color2: p.color2,
-                    pos2: p.pos2,
-                    radius2: p.radius2,
-                    intensity: p.intensity
-                })
-            }
-        }
-    }, [config.preset, setConfig])
+        // Placeholder for future store integration
+    }, [])
 
     useFrame(({ clock }) => {
         if (materialRef.current) {

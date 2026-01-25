@@ -74,6 +74,22 @@ export default function ColorPicker({ label, value, onChange }: ColorPickerProps
                     type="text"
                     value={value}
                     onChange={handleHexChange}
+                    spellCheck={false}
+                    style={{
+                        background: 'transparent',
+                        border: 'none',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
+                        color: '#FFFFFF',
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        width: '56px',
+                        textAlign: 'right',
+                        outline: 'none',
+                        padding: '0',
+                        transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.5)'}
                     onBlur={(e) => {
                         handleBlur()
                         e.target.style.borderColor = 'rgba(255, 255, 255, 0.15)'

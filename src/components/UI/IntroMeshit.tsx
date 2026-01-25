@@ -1,4 +1,3 @@
-import { useRef, useState, useEffect } from 'react'
 import { useStore } from '../../store'
 
 export default function IntroMeshit() {

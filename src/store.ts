@@ -169,108 +169,131 @@ interface State {
     randomizeColors: () => void
 }
 
-export const useStore = create<State>((set) => ({
-    gradient: {
-        ...PRESETS['Neon'],
-        wireframe: false,
-        kaleidoscope: false,
-        kSegments: 6,
-        loop: false // Default to infinite
-    },
-    glass: {
-        enabled: true,
-        transmission: 1,
-        thickness: 0.5,
-        roughness: 0.1,
-        chromaticAberration: 0.05,
-        fluteScale: 1,
-        patternType: 'Linear',
-        ridgeProfile: 'Round',
-        segments: 6,
-        rippleDensity: 11,
-        waviness: 0,
-        waveFreq: 5.8,
-        animate: true,
-        patternRotation: 45,
-        flowSpeed: 0.2,
-        flowDirection: 135
-    },
-    lava: {
-        color1: '#ff0055',
-        color2: '#ffff00',
-        color3: '#00ccff',
-        speed: 0.3,
-        threshold: 1.0
-    },
-    blob: {
-        color1: '#8db39a',
-        color2: '#ebff94',
-        color3: '#79ba59',
-        noise: 0.05,
-        direction: 'Left-to-Right',
-        offset1: { x: 0, y: 0 },
-        offset2: { x: 0, y: 0 }
-    },
-    glow: {
-        color1: '#4facfe',
-        color2: '#f093fb',
-        radius1: 0.8,
-        radius2: 0.6,
-        intensity: 1.2,
-        pulseSpeed: 1.0,
-        pos1: { x: 0.3, y: 0.7 },
-        pos2: { x: 0.7, y: 0.3 }
-    },
-    postfx: {
-        dither: true,
-        ditherOpacity: 0.5,
-        bloom: true,
-        bloomIntensity: 1.5,
-        bloomThreshold: 0.2,
-        bloomSmoothing: 0.9,
-        crt: false,
-        scanlines: 0.5,
-        crtAberration: 0.005,
-        vignette: 0.5,
-        film: false,
-        filmSepia: 0.5,
-        filmScratches: 0.5,
-        filmDirt: 0.5
-    },
-    scene: {
-        bgMode: 'Gradient',
-        solidColor: '#a3b48b'
-    },
-    logo: null,
-    appState: 'intro',
-
-    // Actions
-    setGradient: (partial) => set((state) => ({ gradient: { ...state.gradient, ...partial } })),
-    setGlass: (partial) => set((state) => ({ glass: { ...state.glass, ...partial } })),
-    setLava: (partial) => set((state) => ({ lava: { ...state.lava, ...partial } })),
-    setBlob: (partial) => set((state) => ({ blob: { ...state.blob, ...partial } })),
-    setGlow: (partial) => set((state) => ({ glow: { ...state.glow, ...partial } })),
-    setPostFX: (partial) => set((state) => ({ postfx: { ...state.postfx, ...partial } })),
-    setScene: (partial) => set((state) => ({ scene: { ...state.scene, ...partial } })),
-    setLogo: (logo) => set({ logo }),
-    setAppState: (appState) => set({ appState }),
-
-    applyPreset: (name) => {
-        const p = PRESETS[name as keyof typeof PRESETS]
-        if (p) {
-            set((state) => ({ gradient: { ...state.gradient, ...p } }))
-        }
-    },
-    randomizeColors: () => {
-        const p = TRENDY_PALETTES[Math.floor(Math.random() * TRENDY_PALETTES.length)]
-        set((state) => ({
-            gradient: {
-                ...state.gradient,
-                color1: p[0],
-                color2: p[1],
-                color3: p[2],
-                color4: p[3]
-            }
-        }))
+export const useStore = create<State>((set) => {
+    // URL Hydration Logic
+    const params = new URLSearchParams(window.location.search)
+    const getParam = (key: string, defaultVal: any) => {
+        const val = params.get(key)
+        if (val === null) return defaultVal
+        if (typeof defaultVal === 'number') return parseFloat(val)
+        if (typeof defaultVal === 'boolean') return val === 'true'
+        return val // String (colors)
     }
-}))
+
+    // Check for 'embed' mode implies we skip intro? 
+    // Actually appState handles intro. If embed=true, we might want 'ready' immediately.
+    // We'll handle that in appState init.
+
+    return {
+        gradient: {
+            ...PRESETS['Neon'],
+            color1: getParam('c1', PRESETS['Neon'].color1),
+            color2: getParam('c2', PRESETS['Neon'].color2),
+            color3: getParam('c3', PRESETS['Neon'].color3),
+            color4: getParam('c4', PRESETS['Neon'].color4),
+            speed: getParam('spd', PRESETS['Neon'].speed),
+            noiseDensity: getParam('den', PRESETS['Neon'].noiseDensity),
+            noiseStrength: getParam('str', PRESETS['Neon'].noiseStrength),
+            wireframe: getParam('wire', false),
+            kaleidoscope: getParam('kal', false),
+            kSegments: getParam('seg', 6),
+            loop: getParam('loop', false)
+        },
+        glass: {
+            enabled: true,
+            transmission: 1,
+            thickness: 0.5,
+            roughness: 0.1,
+            chromaticAberration: 0.05,
+            fluteScale: 1,
+            patternType: 'Linear',
+            ridgeProfile: 'Round',
+            segments: 6,
+            rippleDensity: 11,
+            waviness: 0,
+            waveFreq: 5.8,
+            animate: true,
+            patternRotation: 45,
+            flowSpeed: 0.2,
+            flowDirection: 135
+        },
+        lava: {
+            color1: '#ff0055',
+            color2: '#ffff00',
+            color3: '#00ccff',
+            speed: 0.3,
+            threshold: 1.0
+        },
+        blob: {
+            color1: '#8db39a',
+            color2: '#ebff94',
+            color3: '#79ba59',
+            noise: 0.05,
+            direction: 'Left-to-Right',
+            offset1: { x: 0, y: 0 },
+            offset2: { x: 0, y: 0 }
+        },
+        glow: {
+            color1: '#4facfe',
+            color2: '#f093fb',
+            radius1: 0.8,
+            radius2: 0.6,
+            intensity: 1.2,
+            pulseSpeed: 1.0,
+            pos1: { x: 0.3, y: 0.7 },
+            pos2: { x: 0.7, y: 0.3 }
+        },
+        postfx: {
+            dither: true,
+            ditherOpacity: 0.5,
+            bloom: true,
+            bloomIntensity: 1.5,
+            bloomThreshold: 0.2,
+            bloomSmoothing: 0.9,
+            crt: false,
+            scanlines: 0.5,
+            crtAberration: 0.005,
+            vignette: 0.5,
+            film: false,
+            filmSepia: 0.5,
+            filmScratches: 0.5,
+            filmDirt: 0.5
+        },
+        scene: {
+            bgMode: 'Gradient',
+            solidColor: '#a3b48b'
+        },
+        logo: null,
+        appState: new URLSearchParams(window.location.search).get('embed') === 'true' ? 'ready' : 'intro',
+
+        // Actions
+        setGradient: (partial) => set((state) => ({ gradient: { ...state.gradient, ...partial } })),
+        setGlass: (partial) => set((state) => ({ glass: { ...state.glass, ...partial } })),
+        setLava: (partial) => set((state) => ({ lava: { ...state.lava, ...partial } })),
+        setBlob: (partial) => set((state) => ({ blob: { ...state.blob, ...partial } })),
+        setGlow: (partial) => set((state) => ({ glow: { ...state.glow, ...partial } })),
+        setPostFX: (partial) => set((state) => ({ postfx: { ...state.postfx, ...partial } })),
+        setScene: (partial) => set((state) => ({ scene: { ...state.scene, ...partial } }
+})),
+    setLogo: (logo) => set({ logo }),
+        setAppState: (appState) => set({ appState }),
+
+            applyPreset: (name) => {
+                const p = PRESETS[name as keyof typeof PRESETS]
+                if (p) {
+                    set((state) => ({ gradient: { ...state.gradient, ...p } }))
+                }
+            },
+                randomizeColors: () => {
+                    const p = TRENDY_PALETTES[Math.floor(Math.random() * TRENDY_PALETTES.length)]
+                    set((state) => ({
+                        gradient: {
+                            ...state.gradient,
+                            color1: p[0],
+                            color2: p[1],
+                            color3: p[2],
+                            color4: p[3]
+                        }
+                    }))
+                }
+    }))

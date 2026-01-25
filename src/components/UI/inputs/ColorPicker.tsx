@@ -1,5 +1,6 @@
 
 
+
 interface ColorPickerProps {
     label: string
     value: string
@@ -8,24 +9,26 @@ interface ColorPickerProps {
 
 export default function ColorPicker({ label, value, onChange }: ColorPickerProps) {
     return (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '6px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '8px' }}>
             <span style={{
                 fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: '14px',
-                color: 'rgba(251, 255, 0, 0.76)',
+                fontWeight: 400,
+                fontSize: '12px',
+                color: 'rgba(255, 255, 255, 0.6)',
             }}>
                 {label}
             </span>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {/* Circle Preview */}
                 <div style={{
-                    width: '24px',
-                    height: '24px',
+                    width: '16px',
+                    height: '16px',
                     background: value,
-                    borderRadius: '2px',
+                    borderRadius: '50%',
                     position: 'relative',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    border: '1px solid rgba(255,255,255,0.2)'
                 }}>
                     <input
                         type="color"
@@ -46,10 +49,11 @@ export default function ColorPicker({ label, value, onChange }: ColorPickerProps
                 <span style={{
                     fontFamily: 'Inter, sans-serif',
                     fontWeight: 500,
-                    fontSize: '14px',
-                    color: '#FBFF00',
-                    width: '70px',
-                    textAlign: 'right'
+                    fontSize: '12px',
+                    color: '#FFFFFF',
+                    width: '60px',
+                    textAlign: 'right',
+                    fontVariantNumeric: 'tabular-nums'
                 }}>
                     {value}
                 </span>

@@ -15,16 +15,16 @@ export default function GradientControl() {
                     onClick={randomizeColors}
                     style={{
                         flex: 1,
-                        padding: '8px',
-                        fontSize: '0.8rem',
-                        background: 'transparent',
-                        border: '1px solid #FBFF00', // Outline
+                        border: '1px solid rgba(255,255,255,0.3)', // Minimal White Outline
                         borderRadius: '4px',
-                        color: '#FBFF00',
+                        color: '#FFFFFF',
                         cursor: 'pointer',
                         textTransform: 'uppercase',
                         fontFamily: 'Inter, sans-serif',
-                        fontWeight: 500
+                        fontSize: '11px',
+                        letterSpacing: '0.5px',
+                        fontWeight: 500,
+                        transition: 'all 0.2s'
                     }}
                 >
                     Randomize

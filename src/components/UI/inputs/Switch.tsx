@@ -8,12 +8,12 @@ interface SwitchProps {
 
 export default function Switch({ label, checked, onChange }: SwitchProps) {
     return (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '6px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '8px' }}>
             <span style={{
                 fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: '14px',
-                color: 'rgba(251, 255, 0, 0.76)',
+                fontWeight: 400,
+                fontSize: '12px',
+                color: 'rgba(255, 255, 255, 0.6)',
             }}>
                 {label}
             </span>
@@ -21,26 +21,27 @@ export default function Switch({ label, checked, onChange }: SwitchProps) {
             <button
                 onClick={() => onChange(!checked)}
                 style={{
-                    width: '43px',
-                    height: '24px',
-                    background: 'rgba(0, 0, 0, 0.32)',
-                    borderRadius: '2px',
+                    width: '32px',
+                    height: '18px',
+                    background: checked ? '#FFFFFF' : 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px', // Full pill
                     position: 'relative',
                     border: 'none',
                     cursor: 'pointer',
-                    padding: 0
+                    padding: 0,
+                    transition: 'background 0.3s ease'
                 }}
             >
                 <div style={{
                     position: 'absolute',
-                    top: '3px',
-                    left: checked ? '22px' : '3px',
-                    width: '18px',
-                    height: '18px',
-                    background: checked ? 'rgba(251, 255, 0, 0.76)' : '#444',
-                    borderRadius: '2px',
-                    transition: 'left 0.2s, background 0.2s',
-                    boxShadow: 'none'
+                    top: '2px',
+                    left: checked ? '16px' : '2px',
+                    width: '14px',
+                    height: '14px',
+                    background: checked ? '#000000' : '#FFFFFF', // Contrast: Black dot on White, White dot on Grey
+                    borderRadius: '50%',
+                    transition: 'left 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
                 }} />
             </button>
         </div>

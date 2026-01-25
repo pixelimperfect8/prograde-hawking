@@ -9,45 +9,42 @@ interface SelectProps {
 
 export default function Select({ label, value, options, onChange }: SelectProps) {
     return (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%', marginBottom: '6px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '8px' }}>
             <span style={{
                 fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: '14px',
-                color: 'rgba(251, 255, 0, 0.76)',
-                marginBottom: '4px'
+                fontWeight: 400,
+                fontSize: '12px',
+                color: 'rgba(255, 255, 255, 0.6)',
             }}>
                 {label}
             </span>
 
-            <div style={{ position: 'relative', width: '156px' }}>
+            <div style={{ position: 'relative', width: 'auto' }}>
                 <select
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     style={{
-                        width: '100%',
+                        appearance: 'none',
                         background: 'transparent',
                         border: 'none',
-                        color: '#FBFF00',
+                        color: '#FFFFFF',
                         fontFamily: 'Inter, sans-serif',
-                        fontSize: '14px',
+                        fontSize: '12px',
                         fontWeight: 500,
-                        outline: 'none',
-                        cursor: 'pointer',
-                        appearance: 'none',
                         textAlign: 'right',
-                        paddingRight: '30px',
-                        paddingBottom: '4px',
-                        borderBottom: '1px solid rgba(251, 255, 0, 0.15)'
+                        paddingRight: '18px',
+                        cursor: 'pointer',
+                        outline: 'none'
                     }}
                 >
                     {options.map(opt => (
-                        <option key={opt} value={opt} style={{ background: '#222', color: '#FFF' }}>{opt}</option>
+                        <option key={opt} value={opt} style={{ background: '#111', color: '#FFF' }}>{opt}</option>
                     ))}
                 </select>
 
-                <div style={{ position: 'absolute', right: 0, bottom: '6px', pointerEvents: 'none' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 15L7 10H17L12 15Z" fill="#FBFF00" /></svg>
+                <div style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', opacity: 0.5 }}>
+                    {/* Minimal chevron down */}
+                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </div>
             </div>
         </div>

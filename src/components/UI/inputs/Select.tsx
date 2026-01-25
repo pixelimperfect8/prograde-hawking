@@ -9,7 +9,7 @@ interface SelectProps {
 
 export default function Select({ label, value, options, onChange }: SelectProps) {
     return (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
             <span style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 400,

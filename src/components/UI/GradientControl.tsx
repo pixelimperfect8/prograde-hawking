@@ -15,18 +15,36 @@ export default function GradientControl() {
                     onClick={randomizeColors}
                     style={{
                         flex: 1,
-                        border: '1px solid rgba(255,255,255,0.3)', // Minimal White Outline
-                        borderRadius: '4px',
-                        color: '#FFFFFF',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'rgba(255, 255, 255, 0.5)',
                         cursor: 'pointer',
                         textTransform: 'uppercase',
                         fontFamily: 'Inter, sans-serif',
                         fontSize: '11px',
                         letterSpacing: '0.5px',
                         fontWeight: 500,
-                        transition: 'all 0.2s'
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        gap: '6px',
+                        padding: '0'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.color = '#FFFFFF'
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.color = 'rgba(255, 255, 255, 0.5)'
                     }}
                 >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="16 3 21 3 21 8" />
+                        <line x1="4" y1="20" x2="21" y2="3" />
+                        <polyline points="21 16 21 21 16 21" />
+                        <line x1="15" y1="15" x2="21" y2="21" />
+                        <line x1="4" y1="4" x2="9" y2="9" />
+                    </svg>
                     Randomize
                 </button>
             </div>
@@ -38,12 +56,10 @@ export default function GradientControl() {
                 onChange={(val) => applyPreset(val)}
             />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <ColorPicker label="Color 1" value={gradient.color1} onChange={(v) => setGradient({ color1: v })} />
-                <ColorPicker label="Color 2" value={gradient.color2} onChange={(v) => setGradient({ color2: v })} />
-                <ColorPicker label="Color 3" value={gradient.color3} onChange={(v) => setGradient({ color3: v })} />
-                <ColorPicker label="Color 4" value={gradient.color4} onChange={(v) => setGradient({ color4: v })} />
-            </div>
+            <ColorPicker label="Color 1" value={gradient.color1} onChange={(v) => setGradient({ color1: v })} />
+            <ColorPicker label="Color 2" value={gradient.color2} onChange={(v) => setGradient({ color2: v })} />
+            <ColorPicker label="Color 3" value={gradient.color3} onChange={(v) => setGradient({ color3: v })} />
+            <ColorPicker label="Color 4" value={gradient.color4} onChange={(v) => setGradient({ color4: v })} />
 
             <Slider label="Speed" value={gradient.speed} min={0} max={2} onChange={(v) => setGradient({ speed: v })} />
             <Slider label="Noise Density" value={gradient.noiseDensity} min={0} max={5} onChange={(v) => setGradient({ noiseDensity: v })} />

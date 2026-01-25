@@ -13,7 +13,7 @@ export default function Slider({ label, value, min, max, step = 0.01, onChange }
     const percentage = ((value - min) / (max - min)) * 100
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
             {/* Header Row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{

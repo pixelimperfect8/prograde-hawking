@@ -85,15 +85,7 @@ function UI() {
 
   /* Leva Controls moved to custom UI */
 
-  const download = () => {
-    const canvas = document.querySelector('canvas')
-    if (canvas) {
-      const link = document.createElement('a')
-      link.download = 'meshit-' + Date.now() + '.png'
-      link.href = canvas.toDataURL('image/png')
-      link.click()
-    }
-  }
+
 
   return (
     <>
@@ -149,25 +141,7 @@ function UI() {
 
       <Ticker />
 
-      <div style={{
-        position: 'absolute',
-        bottom: 40,
-        right: 40,
-        zIndex: 10
-      }}>
-        <button
-          onClick={download}
-          className="glass-btn"
-          style={{
-            padding: '12px 24px',
-            fontSize: '0.9rem',
-            background: 'rgba(0,0,0,0.5)',
-            borderColor: 'rgba(255,255,255,0.2)'
-          }}
-        >
-          Download Image
-        </button>
-      </div>
+
     </>
   )
 }

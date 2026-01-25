@@ -28,6 +28,11 @@ export default function PostFX() {
     const noiseOpacity = postfx.dither ? postfx.ditherOpacity : 0
     const bloomIntensity = postfx.bloom ? postfx.bloomIntensity : 0
 
+    // CRT Logic: Render always but set values to 0 if disabled
+    const scanlineOpacity = postfx.crt ? postfx.scanlines : 0
+    const aberrationOffset = postfx.crt ? postfx.crtAberration : 0
+    const vignetteDarkness = postfx.crt ? postfx.vignette : 0
+
     return (
         <EffectComposer>
             {/* Dither / Noise */}
@@ -46,25 +51,21 @@ export default function PostFX() {
             />
 
             {/* CRT Effects */}
-            {postfx.crt && (
-                <>
-                    <Scanline
-                        blendFunction={BlendFunction.OVERLAY}
-                        density={1.5}
-                        opacity={postfx.scanlines}
-                    />
-                    <ChromaticAberration
-                        blendFunction={BlendFunction.NORMAL} // Normal blending usually nice for abberation
-                        offset={new THREE.Vector2(postfx.crtAberration, postfx.crtAberration * 0.5)}
-                    />
-                    <Vignette
-                        offset={0.3}
-                        darkness={postfx.vignette}
-                        eskil={false}
-                        blendFunction={BlendFunction.NORMAL}
-                    />
-                </>
-            )}
+            <Scanline
+                blendFunction={BlendFunction.OVERLAY}
+                density={1.5}
+                opacity={scanlineOpacity}
+            />
+            <ChromaticAberration
+                blendFunction={BlendFunction.NORMAL}
+                offset={new THREE.Vector2(aberrationOffset, aberrationOffset * 0.5)}
+            />
+            <Vignette
+                offset={0.3}
+                darkness={vignetteDarkness}
+                eskil={false}
+                blendFunction={BlendFunction.NORMAL}
+            />
         </EffectComposer>
     )
 }

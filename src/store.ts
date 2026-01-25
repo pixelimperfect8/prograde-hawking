@@ -123,7 +123,7 @@ interface State {
     randomizeColors: () => void
 }
 
-export const useStore = create<State>((set, get) => ({
+export const useStore = create<State>((set) => ({
     gradient: {
         ...PRESETS['Neon'],
         wireframe: false,

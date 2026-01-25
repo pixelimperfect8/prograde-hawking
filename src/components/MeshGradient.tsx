@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useFrame, extend } from '@react-three/fiber'
 import { Color } from 'three'
-import { shaderMaterial, Html } from '@react-three/drei'
+import { shaderMaterial } from '@react-three/drei'
 import { useControls, button } from 'leva'
 import { useStore, PRESETS } from '../store'
 // We don't strictly need * as THREE if we don't use it in code, 

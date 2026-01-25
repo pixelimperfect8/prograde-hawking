@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { useFrame, extend, useThree } from '@react-three/fiber'
-import { shaderMaterial, Html } from '@react-three/drei'
+import { shaderMaterial } from '@react-three/drei'
 import { useControls } from 'leva'
 import { Color } from 'three'
 import * as THREE from 'three'

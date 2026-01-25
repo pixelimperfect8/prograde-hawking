@@ -1,4 +1,4 @@
-import BrandingControl from './BrandingControl'
+// import BrandingControl from './BrandingControl'
 import SceneControl from './SceneControl'
 import GradientControl from './GradientControl'
 import GlassControl from './GlassControl'
@@ -24,7 +24,7 @@ export default function Overlay() {
             }}
         >
             <div style={{ pointerEvents: 'auto', width: '280px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <BrandingControl />
+                {/* <BrandingControl /> */}
                 <SceneControl />
                 <GradientControl />
                 <GlassControl />

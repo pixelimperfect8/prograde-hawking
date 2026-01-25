@@ -22,6 +22,7 @@ const BlobStackMaterial = shaderMaterial(
         uFalloff3: 0.5,
         uAspect: 1.0,
         uNoiseInfo: 0.05,
+        uTime: 0.0,
     },
     // Vertex
     `
@@ -47,6 +48,7 @@ const BlobStackMaterial = shaderMaterial(
     uniform float uFalloff3;
     uniform float uAspect;
     uniform float uNoiseInfo;
+    uniform float uTime;
     varying vec2 vUv;
 
     // Random
@@ -107,8 +109,6 @@ declare global {
     }
 }
 
-
-
 export default function BlobStack() {
     const materialRef = useRef<any>(null)
 
@@ -117,40 +117,20 @@ export default function BlobStack() {
     const height = viewport.height
     const aspect = width / height
 
-    // Leva Removed - Using hardcoded defaults
     const { blob } = useStore()
 
-    // Static config for positions, dynamic for colors
-    const config = {
-        Direction: blob.direction,
-        // Layer 1
-        Color1: blob.color1,
-        Radius1: 0.44,
-        Falloff1: 0.5,
-        Offset1: blob.offset1,
-        // Layer 2
-        Color2: blob.color2,
-        Radius2: 0.26,
-        Falloff2: 0.66,
-        Offset2: blob.offset2,
-        // Layer 3
-        Color3: blob.color3,
-        Radius3: 2.18,
-
-        Noise: blob.noise,
-    }
 
     // Derived positions based on direction + offsets
-    const getPositions = () => {
+    const getPositions = (animOffset: { x1: number, y1: number, x2: number, y2: number, r1: number, r2: number }) => {
         let p1 = { x: 0.5, y: 0.5 }
         let p2 = { x: 0.5, y: 0.5 }
         let p3 = { x: 0.5, y: 0.5 }
 
-        switch (config.Direction) {
+        switch (blob.direction) {
             case 'Top-to-Bottom':
-                p1 = { x: 0.5, y: 0.9 } // Top
-                p2 = { x: 0.5, y: 0.5 } // Center
-                p3 = { x: 0.5, y: 0.1 } // Bottom
+                p1 = { x: 0.5, y: 0.9 }
+                p2 = { x: 0.5, y: 0.5 }
+                p3 = { x: 0.5, y: 0.1 }
                 break;
             case 'Bottom-to-Top':
                 p1 = { x: 0.5, y: 0.1 }
@@ -169,18 +149,69 @@ export default function BlobStack() {
                 break;
         }
 
-        // Apply manual offsets
-        p1.x += config.Offset1.x; p1.y += config.Offset1.y;
-        p2.x += config.Offset2.x; p2.y += config.Offset2.y;
+        // Apply manual offsets + animation offsets
+        p1.x += blob.blob1.offsetX + animOffset.x1
+        p1.y += blob.blob1.offsetY + animOffset.y1
+        p2.x += blob.blob2.offsetX + animOffset.x2
+        p2.y += blob.blob2.offsetY + animOffset.y2
 
         return { p1, p2, p3 }
     }
 
-    const { p1, p2, p3 } = getPositions()
-
-    useFrame(() => {
+    useFrame(({ clock }) => {
         if (materialRef.current) {
             materialRef.current.uAspect = aspect
+            materialRef.current.uTime = clock.getElapsedTime()
+
+            // Animation logic
+            if (blob.animation.enabled) {
+                const t = clock.getElapsedTime() * blob.animation.speed
+                let animOffset = { x1: 0, y1: 0, x2: 0, y2: 0, r1: 0, r2: 0 }
+
+                switch (blob.animation.type) {
+                    case 'Pulse':
+                        // Oscillate radius
+                        animOffset.r1 = Math.sin(t) * 0.1
+                        animOffset.r2 = Math.sin(t + 1) * 0.08
+                        break
+                    case 'Float':
+                        // Oscillate position
+                        animOffset.x1 = Math.sin(t * 0.7) * 0.05
+                        animOffset.y1 = Math.cos(t * 0.5) * 0.05
+                        animOffset.x2 = Math.cos(t * 0.6) * 0.04
+                        animOffset.y2 = Math.sin(t * 0.8) * 0.04
+                        break
+                    case 'Breathe':
+                        // Both radius and position
+                        animOffset.r1 = Math.sin(t) * 0.08
+                        animOffset.r2 = Math.sin(t + 0.5) * 0.06
+                        animOffset.x1 = Math.sin(t * 0.5) * 0.03
+                        animOffset.y1 = Math.cos(t * 0.3) * 0.03
+                        animOffset.x2 = Math.cos(t * 0.4) * 0.025
+                        animOffset.y2 = Math.sin(t * 0.6) * 0.025
+                        break
+                }
+
+                const { p1, p2, p3 } = getPositions(animOffset)
+                materialRef.current.uPos1 = new THREE.Vector2(p1.x, p1.y)
+                materialRef.current.uPos2 = new THREE.Vector2(p2.x, p2.y)
+                materialRef.current.uPos3 = new THREE.Vector2(p3.x, p3.y)
+                materialRef.current.uRadius1 = blob.blob1.size + animOffset.r1
+                materialRef.current.uRadius2 = blob.blob2.size + animOffset.r2
+            } else {
+                const { p1, p2, p3 } = getPositions({ x1: 0, y1: 0, x2: 0, y2: 0, r1: 0, r2: 0 })
+                materialRef.current.uPos1 = new THREE.Vector2(p1.x, p1.y)
+                materialRef.current.uPos2 = new THREE.Vector2(p2.x, p2.y)
+                materialRef.current.uPos3 = new THREE.Vector2(p3.x, p3.y)
+                materialRef.current.uRadius1 = blob.blob1.size
+                materialRef.current.uRadius2 = blob.blob2.size
+            }
+
+            // Static values
+            materialRef.current.uColor1 = new Color(blob.blob1.color)
+            materialRef.current.uColor2 = new Color(blob.blob2.color)
+            materialRef.current.uColor3 = new Color(blob.background.color)
+            materialRef.current.uNoiseInfo = blob.noise
         }
     })
 
@@ -190,21 +221,11 @@ export default function BlobStack() {
             {/* @ts-ignore */}
             <blobStackMaterial
                 ref={materialRef}
-                uColor1={new Color(config.Color1)}
-                uColor2={new Color(config.Color2)}
-                uColor3={new Color(config.Color3)}
-                uPos1={new THREE.Vector2(p1.x, p1.y)}
-                uPos2={new THREE.Vector2(p2.x, p2.y)}
-                uPos3={new THREE.Vector2(p3.x, p3.y)}
-                uRadius1={config.Radius1}
-                uRadius2={config.Radius2}
-                uRadius3={config.Radius3}
-                uFalloff1={config.Falloff1}
-                uFalloff2={config.Falloff2}
+                uRadius3={2.18}
+                uFalloff1={0.5}
+                uFalloff2={0.66}
                 uFalloff3={0.0}
-                uNoiseInfo={config.Noise}
             />
-
         </mesh>
     )
 }

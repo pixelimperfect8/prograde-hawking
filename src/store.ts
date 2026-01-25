@@ -112,13 +112,16 @@ interface State {
         threshold: number
     }
     blob: {
-        color1: string
-        color2: string
-        color3: string
+        blob1: { color: string, size: number, offsetX: number, offsetY: number }
+        blob2: { color: string, size: number, offsetX: number, offsetY: number }
+        background: { color: string }
         noise: number
         direction: 'Top-to-Bottom' | 'Bottom-to-Top' | 'Left-to-Right' | 'Right-to-Left'
-        offset1: { x: number, y: number }
-        offset2: { x: number, y: number }
+        animation: {
+            enabled: boolean
+            type: 'Pulse' | 'Float' | 'Breathe'
+            speed: number
+        }
     }
     glow: {
         color1: string
@@ -225,13 +228,16 @@ export const useStore = create<State>((set) => {
             threshold: 1.0
         },
         blob: {
-            color1: '#8db39a',
-            color2: '#ebff94',
-            color3: '#79ba59',
+            blob1: { color: '#8db39a', size: 0.44, offsetX: 0, offsetY: 0 },
+            blob2: { color: '#ebff94', size: 0.26, offsetX: 0, offsetY: 0 },
+            background: { color: '#79ba59' },
             noise: 0.05,
             direction: 'Left-to-Right',
-            offset1: { x: 0, y: 0 },
-            offset2: { x: 0, y: 0 }
+            animation: {
+                enabled: false,
+                type: 'Pulse',
+                speed: 1.0
+            }
         },
         glow: {
             color1: '#4facfe',

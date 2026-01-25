@@ -51,7 +51,7 @@ export default function GradientControl() {
 
             <Select
                 label="Preset"
-                value="Custom" // Naive implementation, purely for switching
+                value="Custom"
                 options={Object.keys(PRESETS)}
                 onChange={(val) => applyPreset(val)}
             />
@@ -71,13 +71,9 @@ export default function GradientControl() {
 
             {gradient.loop && (
                 <button
-                    <button
                     onClick={() => {
                         const canvas = document.querySelector('canvas')
                         if (!canvas) return
-
-                        // Notify user (simple console for now or minimal visual?)
-                        // Ideally we'd have a toast, but keeping it simple.
 
                         const stream = canvas.captureStream(60)
                         const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' })
@@ -106,7 +102,7 @@ export default function GradientControl() {
                         marginTop: '16px',
                         background: 'transparent',
                         border: 'none',
-                        color: '#ff3333', // Slight red tint for Record
+                        color: '#ff3333',
                         cursor: 'pointer',
                         textTransform: 'uppercase',
                         fontFamily: 'Inter, sans-serif',

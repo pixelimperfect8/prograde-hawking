@@ -214,6 +214,9 @@ function App() {
             rowGap: '8px',
             colGap: '8px',
           },
+          borderWidths: {
+            folder: '0px', // Try to remove folder border lines
+          },
           fonts: {
             mono: `'Inter', monospace`,
             sans: `'Inter', sans - serif`,

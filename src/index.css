@@ -61,39 +61,60 @@ div[class*="leva-c"][style*="position: fixed"] {
 }
 
 /* ------------------------------------------------------------------
-   Leva Customization (Robust Selectors)
+   Leva Customization (Ultra-Aggressive Selectors)
    ------------------------------------------------------------------ */
 
-/* 1. Remove Vertical Lines (Tree Structure) 
-   Target generic divs inside Leva root to kill the left border. */
-#leva__root div {
+/* 
+ * NUCLEAR OPTION: Remove ALL border-left from EVERYTHING inside any 
+ * element containing 'leva' in its class name.
+ * This should catch the tree lines regardless of specificity.
+ */
+[class*="leva"] * {
   border-left: none !important;
+  border-left-width: 0 !important;
+  border-left-style: none !important;
 }
 
-/* 2. Folder Headers (Buttons WITH Arrows)
-   Use :has(svg) to target only the folder toggles.
-   Move arrow to right using row-reverse. */
-#leva__root button:has(svg) {
+/* Also target pseudo-elements that might create the line */
+[class*="leva"] *::before,
+[class*="leva"] *::after {
+  border-left: none !important;
+  border-left-width: 0 !important;
+  display: block;
+  /* Keep visible but remove border */
+}
+
+/* 
+ * Folder Headers - Move arrow to right
+ * Target any button inside leva that contains an SVG 
+ */
+[class*="leva"] button:has(svg) {
   display: flex !important;
   flex-direction: row-reverse !important;
   justify-content: space-between !important;
-  width: 100%;
+  width: 100% !important;
 }
 
-#leva__root button:has(svg) svg {
-  margin-left: 8px !important;
+[class*="leva"] button:has(svg) svg {
+  order: 2 !important;
+  margin-left: auto !important;
   margin-right: 0 !important;
 }
 
-/* 3. Action Buttons (Buttons WITHOUT Arrows) 
-   Like 'Upload Logo' - Left Align Text */
-#leva__root button:not(:has(svg)) {
-  justify-content: flex-start !important;
-  text-align: left !important;
-  padding-left: 12px !important;
+[class*="leva"] button:has(svg)>*:not(svg) {
+  order: 1 !important;
 }
 
-/* 4. Fix Label Alignment inside buttons */
-#leva__root button span {
-  text-align: left;
+/* 
+ * Action Buttons (no SVG) - Left align text
+ */
+[class*="leva"] button:not(:has(svg)) {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+/* Force all text inside buttons to left align */
+[class*="leva"] button span,
+[class*="leva"] button div {
+  text-align: left !important;
 }

@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { useStore } from '../../store'
 import { useFrame, extend, useThree } from '@react-three/fiber'
 import { shaderMaterial } from '@react-three/drei'
 
@@ -152,15 +153,8 @@ export default function LavaLamp() {
     const aspect = width / height
 
     // Leva Removed - Using hardcoded defaults for now as this mode is less critical
-    const config = {
-        color1: '#ff0055',
-        color2: '#ffff00',
-        color3: '#00ccff',
-        speed: 0.3,
-        threshold: 1.0,
-        kaleidoscope: false,
-        kSegments: 6
-    }
+    const { lava } = useStore()
+    const config = lava
 
     useFrame(({ clock }) => {
         if (materialRef.current) {
@@ -180,8 +174,8 @@ export default function LavaLamp() {
                 uColor3={new Color(config.color3)}
                 uSpeed={config.speed}
                 uThreshold={config.threshold}
-                uKaleidoEnabled={config.kaleidoscope ? 1.0 : 0.0}
-                uKaleidoSegments={config.kSegments}
+                uKaleidoEnabled={0.0}
+                uKaleidoSegments={6.0}
             />
         </mesh>
     )

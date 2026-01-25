@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react'
+import { useStore } from '../../store'
 import { useFrame, extend, useThree } from '@react-three/fiber'
 import { shaderMaterial } from '@react-three/drei'
 
@@ -117,20 +118,22 @@ export default function GlowOverlay() {
     const aspect = visibleWidth / visibleHeight
 
     // Leva Removed - Using hardcoded defaults
+    const { glow } = useStore()
+
     const config = {
         enabled: true,
         preset: 'Diagonal',
         // Orb 1
-        color1: '#4facfe',
+        color1: glow.color1,
         pos1: { x: 0.3, y: 0.7 },
-        radius1: 0.8,
+        radius1: glow.radius1,
         // Orb 2
-        color2: '#f093fb',
+        color2: glow.color2,
         pos2: { x: 0.7, y: 0.3 },
-        radius2: 0.6,
+        radius2: glow.radius2,
 
-        intensity: 1.2,
-        pulseSpeed: 1.0,
+        intensity: glow.intensity,
+        pulseSpeed: glow.pulseSpeed,
         kaleidoscope: false,
         kSegments: 6
     }
@@ -166,8 +169,8 @@ export default function GlowOverlay() {
                 uIntensity={config.intensity}
                 uPulseSpeed={config.pulseSpeed}
                 uAspect={aspect}
-                uKaleidoEnabled={config.kaleidoscope ? 1.0 : 0.0}
-                uKaleidoSegments={config.kSegments}
+                uKaleidoEnabled={0.0}
+                uKaleidoSegments={6.0}
             />
         </mesh>
     )

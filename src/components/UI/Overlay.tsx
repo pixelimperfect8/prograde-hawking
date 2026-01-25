@@ -1,9 +1,16 @@
+import { useStore } from '../../store'
 import SceneControl from './SceneControl'
 import GradientControl from './GradientControl'
 import GlassControl from './GlassControl'
 import EffectsControl from './EffectsControl'
+import LavaControl from './LavaControl'
+import BlobControl from './BlobControl'
+import GlowControl from './GlowControl'
 
 export default function Overlay() {
+    const { scene } = useStore()
+    const { bgMode } = scene
+
     return (
         <div
             style={{
@@ -40,11 +47,18 @@ export default function Overlay() {
                 paddingBottom: '120px', // Space for fade
                 height: '100%',
                 scrollbarWidth: 'thin', // Firefox
-                scrollbarColor: 'rgba(255,255,255,0.15) transparent' // Firefox
+                scrollbarColor: 'rgba(255,255,255,0.15) transparent', // Firefox
+                scrollBehavior: 'smooth' // Smooth scroll
             }}>
                 {/* <BrandingControl /> */}
                 <SceneControl />
-                <GradientControl />
+
+                {/* Dynamic Controls based on Background Mode */}
+                {bgMode === 'Gradient' && <GradientControl />}
+                {bgMode === 'Lava Lamp' && <LavaControl />}
+                {bgMode === 'Blob Stack' && <BlobControl />}
+                {bgMode === 'Solid + Glow' && <GlowControl />}
+
                 <GlassControl />
                 <EffectsControl />
             </div>

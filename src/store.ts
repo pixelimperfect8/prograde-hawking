@@ -103,6 +103,27 @@ interface State {
         flowSpeed: number
         flowDirection: number
     }
+    lava: {
+        color1: string
+        color2: string
+        color3: string
+        speed: number
+        threshold: number
+    }
+    blob: {
+        color1: string
+        color2: string
+        color3: string
+        noise: number
+    }
+    glow: {
+        color1: string
+        color2: string
+        radius1: number
+        radius2: number
+        intensity: number
+        pulseSpeed: number
+    }
     // New PostFX Slice
     postfx: {
         dither: boolean
@@ -128,6 +149,9 @@ interface State {
     logo: string | null
     setGradient: (partial: Partial<State['gradient']>) => void
     setGlass: (partial: Partial<State['glass']>) => void
+    setLava: (partial: Partial<State['lava']>) => void
+    setBlob: (partial: Partial<State['blob']>) => void
+    setGlow: (partial: Partial<State['glow']>) => void
     setPostFX: (partial: Partial<State['postfx']>) => void
     setScene: (partial: Partial<State['scene']>) => void
     setLogo: (logo: string | null) => void
@@ -160,6 +184,27 @@ export const useStore = create<State>((set) => ({
         flowSpeed: 0.2,
         flowDirection: 135
     },
+    lava: {
+        color1: '#ff0055',
+        color2: '#ffff00',
+        color3: '#00ccff',
+        speed: 0.3,
+        threshold: 1.0
+    },
+    blob: {
+        color1: '#8db39a',
+        color2: '#ebff94',
+        color3: '#79ba59',
+        noise: 0.05
+    },
+    glow: {
+        color1: '#4facfe',
+        color2: '#f093fb',
+        radius1: 0.8,
+        radius2: 0.6,
+        intensity: 1.2,
+        pulseSpeed: 1.0
+    },
     postfx: {
         dither: true,
         ditherOpacity: 0.5,
@@ -185,6 +230,9 @@ export const useStore = create<State>((set) => ({
     // Actions
     setGradient: (partial) => set((state) => ({ gradient: { ...state.gradient, ...partial } })),
     setGlass: (partial) => set((state) => ({ glass: { ...state.glass, ...partial } })),
+    setLava: (partial) => set((state) => ({ lava: { ...state.lava, ...partial } })),
+    setBlob: (partial) => set((state) => ({ blob: { ...state.blob, ...partial } })),
+    setGlow: (partial) => set((state) => ({ glow: { ...state.glow, ...partial } })),
     setPostFX: (partial) => set((state) => ({ postfx: { ...state.postfx, ...partial } })),
     setScene: (partial) => set((state) => ({ scene: { ...state.scene, ...partial } })),
     setLogo: (logo) => set({ logo }),

@@ -9,6 +9,7 @@ import BlobStack from './components/Effects/BlobStack'
 import PostFX from './components/Effects/PostFX'
 import Ticker from './components/Ticker'
 import Overlay from './components/UI/Overlay'
+import CustomCursor from './components/UI/CustomCursor'
 import { useStore } from './store'
 import './index.css'
 
@@ -150,6 +151,7 @@ function App() {
   return (
     <>
       <Overlay />
+      <CustomCursor />
 
       {/* Leva Removed */}
 

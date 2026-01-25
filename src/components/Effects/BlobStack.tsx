@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { useStore } from '../../store'
 import { useFrame, extend, useThree } from '@react-three/fiber'
 import { shaderMaterial } from '@react-three/drei'
 
@@ -117,23 +118,26 @@ export default function BlobStack() {
     const aspect = width / height
 
     // Leva Removed - Using hardcoded defaults
+    const { blob } = useStore()
+
+    // Static config for positions, dynamic for colors
     const config = {
         Direction: 'Left-to-Right',
         // Layer 1
-        Color1: '#8db39a',
+        Color1: blob.color1,
         Radius1: 0.44,
         Falloff1: 0.5,
         Offset1: { x: 0, y: 0 },
         // Layer 2
-        Color2: '#ebff94',
+        Color2: blob.color2,
         Radius2: 0.26,
         Falloff2: 0.66,
         Offset2: { x: 0, y: 0 },
         // Layer 3
-        Color3: '#79ba59',
+        Color3: blob.color3,
         Radius3: 2.18,
 
-        Noise: 0.05,
+        Noise: blob.noise,
     }
 
     // Derived positions based on direction + offsets

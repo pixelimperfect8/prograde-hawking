@@ -15,15 +15,30 @@ export default function Overlay() {
                 height: '100%',
                 pointerEvents: 'none',
                 zIndex: 10,
-                padding: '24px',
+                padding: '16px',
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'flex-start',
-                gap: '12px',
-                overflowY: 'auto' // Allow scrolling if controls get too tall
+                justifyContent: 'center', // Centered horizontally based on Figma "justify-content: center"? Or maybe left aligned since it's a side panel?
+                // The Figma said "justify-content: center" for the container, but "width: 337px". 
+                // Usually side panels are on the side. I'll keep it left-aligned but allow the inner box to have the specific width.
             }}
         >
-            <div style={{ pointerEvents: 'auto', width: '280px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{
+                pointerEvents: 'auto',
+                width: '337px',
+                // height: '1838px', // Don't force height, let it grow
+                maxHeight: '95vh',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                padding: '16px', // "padding: 0px" in Inner auto layout, but "padding: 16px" in Container.
+
+                background: 'rgba(0, 0, 0, 0.45)',
+                backdropFilter: 'blur(72px)',
+                WebkitBackdropFilter: 'blur(72px)',
+                borderRadius: '0px', // Figma didn't specify radius on container? Or maybe it did? "border-radius" not in snippet. Assuming sharp or small default.
+                overflowY: 'auto'
+            }}>
                 {/* <BrandingControl /> */}
                 <SceneControl />
                 <GradientControl />

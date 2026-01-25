@@ -7,10 +7,8 @@ export default function Section({ title, children, defaultOpen = true }: { title
     return (
         <div style={{
             marginBottom: '12px',
-            background: 'rgba(255, 255, 255, 0.03)',
-            borderRadius: '8px',
+            width: '100%',
             overflow: 'hidden',
-            border: '1px solid rgba(255, 255, 255, 0.05)'
         }}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
@@ -19,26 +17,26 @@ export default function Section({ title, children, defaultOpen = true }: { title
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    padding: '10px 12px',
+                    padding: '12px 0px',
                     background: 'transparent',
                     border: 'none',
-                    color: '#EEE',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
+                    color: '#FFFFFF',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    fontFamily: 'Inter, sans-serif',
                     cursor: 'pointer',
                     textAlign: 'left',
-                    fontFamily: 'Inter, sans-serif'
                 }}
             >
-                {title}
+                <span>{title}</span>
                 {isOpen ?
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg> :
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M7 14L12 9L17 14" stroke="#FBFF00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg> :
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M7 10L12 15L17 10" stroke="#FBFF00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 }
             </button>
 
             {isOpen && (
-                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ padding: '8px 0', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     {children}
                 </div>
             )}

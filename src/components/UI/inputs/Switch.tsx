@@ -8,31 +8,40 @@ interface SwitchProps {
 
 export default function Switch({ label, checked, onChange }: SwitchProps) {
     return (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: '#CCC', fontFamily: 'Inter, sans-serif' }}>
-            <span>{label}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', height: '26px' }}>
+            <span style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                color: 'rgba(251, 255, 0, 0.76)',
+                textTransform: 'uppercase'
+            }}>
+                {label}
+            </span>
+
             <button
                 onClick={() => onChange(!checked)}
                 style={{
-                    width: '36px',
-                    height: '20px',
-                    background: checked ? '#4facfe' : 'rgba(255,255,255,0.1)',
-                    borderRadius: '10px',
+                    width: '43px',
+                    height: '24px',
+                    background: 'rgba(0, 0, 0, 0.32)',
+                    borderRadius: '2px',
                     position: 'relative',
                     border: 'none',
                     cursor: 'pointer',
-                    transition: 'background 0.2s'
+                    padding: 0
                 }}
             >
                 <div style={{
                     position: 'absolute',
-                    top: '2px',
-                    left: checked ? '18px' : '2px',
-                    width: '16px',
-                    height: '16px',
-                    background: 'white',
-                    borderRadius: '50%',
-                    transition: 'left 0.2s',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+                    top: '3px',
+                    left: checked ? '22px' : '3px',
+                    width: '18px',
+                    height: '18px',
+                    background: checked ? 'rgba(251, 255, 0, 0.76)' : '#444',
+                    borderRadius: '2px',
+                    transition: 'left 0.2s, background 0.2s',
+                    boxShadow: 'none'
                 }} />
             </button>
         </div>

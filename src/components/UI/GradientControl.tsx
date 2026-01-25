@@ -194,5 +194,8 @@ export default function GradientControl() {
             >
                 Copy Embed Code &lt;/&gt;
             </button>
+        </Section>
+    )
+}
 
 

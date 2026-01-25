@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from 'react'
 import { useStore } from '../../store'
 
 export default function IntroMeshit() {
@@ -27,28 +28,46 @@ export default function IntroMeshit() {
                 justifyContent: 'center',
                 alignItems: 'center',
                 zIndex: 50,
-                background: appState === 'animating' ? 'rgba(0,0,0,0)' : 'transparent', // fade out hack if needed
-                transition: 'background 0.5s',
-                pointerEvents: 'auto' // FORCE EVENTS ON
+                pointerEvents: 'auto',
+                background: appState === 'animating' ? 'rgba(0,0,0,0)' : 'transparent',
+                transition: 'background 0.5s'
             }}
         >
-            <div className={`glitch-wrapper ${appState === 'animating' ? 'glitch-melt' : ''}`}>
+            {/* SVG Filter Definition */}
+            <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+                <defs>
+                    <filter id="mesh-distort">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.01 0.002" numOctaves="1" result="warp" />
+                        <feDisplacementMap xChannelSelector="R" yChannelSelector="G" scale="30" in="SourceGraphic" in2="warp" />
+                    </filter>
+                    <filter id="mesh-noise">
+                        <feTurbulence type="turbulence" baseFrequency="0.5" numOctaves="2" result="noise" />
+                        <feColorMatrix type="saturate" values="0" />
+                        <feBlend mode="multiply" in="SourceGraphic" />
+                    </filter>
+                </defs>
+            </svg>
+
+            <div className={`cyber-wrapper ${appState === 'animating' ? 'cyber-melt' : ''}`}>
                 <h1
-                    className="glitch-text"
+                    className="cyber-text"
                     onClick={handleClick}
                     data-text="MESHIT"
                 >
                     MESHIT
                 </h1>
+                <div className="scanlines"></div>
             </div>
 
             <style>{`
-                /* Container to center and handle global transforms */
-                .glitch-wrapper {
+                /* Container */
+                .cyber-wrapper {
                     position: relative;
+                    /* Base Subtle Distortion */
+                    filter: url(#mesh-distort); 
                 }
 
-                .glitch-text {
+                .cyber-text {
                     margin: 0;
                     font-family: 'Inter', sans-serif;
                     font-weight: 900;
@@ -56,111 +75,126 @@ export default function IntroMeshit() {
                     letter-spacing: -0.04em;
                     line-height: 0.85;
                     color: #FBFF00;
-                    mix-blend-mode: overlay;
                     position: relative;
                     cursor: pointer;
                     user-select: none;
+                    mix-blend-mode: hard-light;
                 }
 
-                /* Pseudo-elements for the glitch layers */
-                .glitch-text::before,
-                .glitch-text::after {
+                /* Layers for RGB Split */
+                .cyber-text::before,
+                .cyber-text::after {
                     content: attr(data-text);
                     position: absolute;
                     top: 0;
                     left: 0;
                     width: 100%;
                     height: 100%;
-                    background: transparent; /* No bg, just text */
+                    background: #111; /* Mask background for 'cutout' feel */
+                    mix-blend-mode: exclusion;
                     opacity: 0.8;
                 }
 
-                /* Red Shift Layer */
-                .glitch-text::before {
-                    color: #FF0055;
+                /* Red Layer */
+                .cyber-text::before {
+                    color: red;
                     z-index: -1;
-                    clip-path: polygon(0 0, 100% 0, 100% 33%, 0 33%);
-                    transform: translate(-2px, 2px);
-                    opacity: 0; /* Hidden by default */
+                    transform: translate(-3px, 0);
+                    opacity: 0;
                 }
 
-                /* Cyan Shift Layer */
-                .glitch-text::after {
-                    color: #00FFFF;
+                /* Cyan Layer */
+                .cyber-text::after {
+                    color: cyan;
                     z-index: -2;
-                    clip-path: polygon(0 67%, 100% 67%, 100% 100%, 0 100%);
-                    transform: translate(2px, -2px);
-                    opacity: 0; /* Hidden by default */
+                    transform: translate(3px, 0);
+                    opacity: 0;
                 }
 
-                /* HOVER EFFECT: Rapid Glitching */
-                .glitch-text:hover::before {
+                /* Scanlines Overlay */
+                .scanlines {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(
+                        to bottom,
+                        transparent 50%,
+                        rgba(0, 0, 0, 0.4) 51%
+                    );
+                    background-size: 100% 4px;
+                    pointer-events: none;
+                    opacity: 0;
+                }
+
+                /* HOVER: Chaos Mode */
+                .cyber-text:hover {
+                    animation: cyber-shake 0.2s infinite;
+                    filter: brightness(1.2) contrast(1.2);
+                }
+                .cyber-text:hover::before {
                     opacity: 1;
-                    animation: glitch-anim-1 0.4s infinite linear alternate-reverse;
+                    animation: rgb-shift-1 0.1s infinite steps(2);
                 }
-                .glitch-text:hover::after {
+                .cyber-text:hover::after {
                     opacity: 1;
-                    animation: glitch-anim-2 0.4s infinite linear alternate-reverse;
+                    animation: rgb-shift-2 0.1s infinite steps(2);
                 }
-                .glitch-text:hover {
-                    animation: glitch-shake 0.4s infinite;
-                }
-
-                /* MELTDOWN EFFECT: Click Animation */
-                .glitch-melt .glitch-text {
-                    animation: melt-exit 0.8s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
-                }
-                .glitch-melt .glitch-text::before {
-                    opacity: 1;
-                    animation: glitch-anim-1 0.1s infinite linear, melt-spread 0.8s forwards;
-                }
-                .glitch-melt .glitch-text::after {
-                    opacity: 1;
-                    animation: glitch-anim-2 0.1s infinite linear, melt-spread 0.8s reverse forwards;
+                .cyber-wrapper:hover .scanlines {
+                    opacity: 0.3;
                 }
 
-                /* KEYFRAMES */
-
-                /* Random Clip Slices 1 */
-                @keyframes glitch-anim-1 {
-                    0% { clip-path: inset(20% 0 80% 0); transform: translate(-3px, 1px); }
-                    20% { clip-path: inset(60% 0 10% 0); transform: translate(3px, -1px); }
-                    40% { clip-path: inset(40% 0 50% 0); transform: translate(-3px, 2px); }
-                    60% { clip-path: inset(80% 0 5% 0); transform: translate(3px, -2px); }
-                    80% { clip-path: inset(10% 0 60% 0); transform: translate(-1px, 2px); }
-                    100% { clip-path: inset(30% 0 20% 0); transform: translate(2px, -1px); }
+                /* MELTDOWN CLICK */
+                .cyber-melt .cyber-text {
+                    animation: vertical-collapse 0.6s cubic-bezier(0.8, 0, 0.2, 1) forwards;
+                }
+                .cyber-melt .scanlines {
+                    opacity: 0.8;
+                    animation: scanline-flash 0.2s forwards;
                 }
 
-                /* Random Clip Slices 2 */
-                @keyframes glitch-anim-2 {
-                    0% { clip-path: inset(10% 0 60% 0); transform: translate(3px, -1px); }
-                    20% { clip-path: inset(30% 0 20% 0); transform: translate(-3px, 2px); }
-                    40% { clip-path: inset(10% 0 80% 0); transform: translate(3px, 1px); }
-                    60% { clip-path: inset(50% 0 30% 0); transform: translate(-3px, -2px); }
-                    80% { clip-path: inset(70% 0 10% 0); transform: translate(1px, -1px); }
-                    100% { clip-path: inset(20% 0 60% 0); transform: translate(-2px, 2px); }
+                /* ANIMATIONS */
+                @keyframes cyber-shake {
+                    0% { transform: translate(1px, 1px) skew(0deg); }
+                    25% { transform: translate(-1px, -1px) skew(2deg); }
+                    50% { transform: translate(-2px, 0) skew(-1deg); }
+                    75% { transform: translate(2px, 0) skew(1deg); }
+                    100% { transform: translate(1px, -1px) skew(0deg); }
                 }
 
-                /* Shake Main Text */
-                @keyframes glitch-shake {
-                    0% { transform: translate(1px, 1px); }
-                    25% { transform: translate(-1px, -1px); }
-                    50% { transform: translate(-2px, 0); }
-                    75% { transform: translate(2px, 0); }
-                    100% { transform: translate(1px, -1px); }
+                @keyframes rgb-shift-1 {
+                    0% { transform: translate(-4px, 2px); clip-path: inset(10% 0 10% 0); }
+                    50% { transform: translate(-6px, -2px); clip-path: inset(50% 0 30% 0); }
+                    100% { transform: translate(-2px, 4px); clip-path: inset(20% 0 60% 0); }
                 }
 
-                /* Final Meltdown & Disappear */
-                @keyframes melt-exit {
-                    0% { transform: scale(1); filter: blur(0px); opacity: 1; }
-                    20% { transform: scale(1.1, 0.8) skew(10deg); filter: blur(2px); opacity: 1; }
-                    50% { transform: scale(0.5, 3) skew(-20deg); filter: blur(10px); opacity: 0.8; }
-                    100% { transform: scale(0, 10); filter: blur(20px); opacity: 0; }
+                @keyframes rgb-shift-2 {
+                    0% { transform: translate(4px, -2px); clip-path: inset(80% 0 5% 0); }
+                    50% { transform: translate(6px, 2px); clip-path: inset(10% 0 70% 0); }
+                    100% { transform: translate(2px, -4px); clip-path: inset(5% 0 80% 0); }
                 }
 
-                @keyframes melt-spread {
-                    0% { transform: translate(0); }
-                    100% { transform: translate(50px, 0) scale(2); }
+                @keyframes vertical-collapse {
+                    0% { 
+                        transform: scaleY(1); 
+                        filter: blur(0) contrast(1);
+                    }
+                    30% {
+                        transform: scaleY(1.5) scaleX(0.9);
+                        filter: blur(2px) contrast(2) hue-rotate(90deg);
+                    }
+                    100% { 
+                        transform: scaleY(0.01) scaleX(2); 
+                        opacity: 0;
+                        filter: blur(10px) contrast(5);
+                    }
+                }
+
+                @keyframes scanline-flash {
+                    0% { background-color: transparent; }
+                    50% { background-color: rgba(255, 255, 255, 0.2); }
+                    100% { background-color: transparent; }
                 }
             `}</style>
         </div>

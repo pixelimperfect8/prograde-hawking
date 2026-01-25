@@ -88,28 +88,18 @@ div[class*="leva-c"][style*="position: fixed"] {
  * Folder Headers - Move arrow to right
  * Target any button inside leva that contains an SVG 
  */
+/* 
+ * Folder Headers (Buttons WITH Arrows)
+ * JS hook handles physical DOM reordering now.
+ * We just ensure flex behavior here as a backup.
+ */
 [class*="leva"] button:has(svg) {
   display: flex !important;
-  flex-direction: row !important;
-  justify-content: flex-start !important;
-  align-items: center !important;
   width: 100% !important;
-  position: relative !important;
 }
 
-/* Force SVG to the right using absolute positioning */
 [class*="leva"] button:has(svg) svg {
-  position: absolute !important;
-  right: 8px !important;
-  left: auto !important;
-  margin: 0 !important;
-}
-
-/* Ensure the label text stays on the left */
-[class*="leva"] button:has(svg)>div,
-[class*="leva"] button:has(svg)>span {
-  margin-right: auto !important;
-  padding-left: 4px !important;
+  /* JS sets margin-left: auto */
 }
 
 /* 

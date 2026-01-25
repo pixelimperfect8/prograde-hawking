@@ -30,11 +30,24 @@ function useLevaArrowFix() {
           button.style.alignItems = 'center'
           button.style.width = '100%'
 
-          // Move SVG to right
+          // Physically move SVG to the end of the button (right side)
+          if (button.lastElementChild !== svg) {
+            button.appendChild(svg)
+          }
+
+          // Style SVG
           const svgEl = svg as SVGElement
-          svgEl.style.order = '999'
           svgEl.style.marginLeft = 'auto'
           svgEl.style.marginRight = '0'
+          svgEl.style.order = '2' // Just in case flex is used
+
+          // Style Label (first child usually)
+          const label = button.firstChild as HTMLElement
+          if (label && label !== svg) {
+            label.style.textAlign = 'left'
+            label.style.order = '1'
+            label.style.flex = '1'
+          }
         }
       })
     }

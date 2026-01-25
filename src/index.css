@@ -61,33 +61,39 @@ div[class*="leva-c"][style*="position: fixed"] {
 }
 
 /* ------------------------------------------------------------------
-   Leva Customization 
+   Leva Customization (Robust Selectors)
    ------------------------------------------------------------------ */
 
-/* Remove the left vertical lines (tree structure) */
-div[class*="leva-c-"]::before {
-  display: none !important;
+/* 1. Remove Vertical Lines (Tree Structure) 
+   Target generic divs inside Leva root to kill the left border. */
+#leva__root div {
+  border-left: none !important;
 }
 
-/* Target the Folder Title Row */
-button[class*="leva-c-"] {
+/* 2. Folder Headers (Buttons WITH Arrows)
+   Use :has(svg) to target only the folder toggles.
+   Move arrow to right using row-reverse. */
+#leva__root button:has(svg) {
   display: flex !important;
   flex-direction: row-reverse !important;
-  /* Move icon to right by reversing order */
   justify-content: space-between !important;
-  /* Space them out */
-  padding-left: 8px !important;
-  /* Add some left padding since border is gone */
+  width: 100%;
 }
 
-/* Ensure the SVG icon stays visible and sized */
-button[class*="leva-c-"] svg {
-  margin-right: 0 !important;
+#leva__root button:has(svg) svg {
   margin-left: 8px !important;
-  opacity: 0.7;
+  margin-right: 0 !important;
 }
 
-/* Adjust folder indentation if needed (remove it if the lines are gone) */
-div[class*="leva-c-"] {
-  border-left: none !important;
+/* 3. Action Buttons (Buttons WITHOUT Arrows) 
+   Like 'Upload Logo' - Left Align Text */
+#leva__root button:not(:has(svg)) {
+  justify-content: flex-start !important;
+  text-align: left !important;
+  padding-left: 12px !important;
+}
+
+/* 4. Fix Label Alignment inside buttons */
+#leva__root button span {
+  text-align: left;
 }

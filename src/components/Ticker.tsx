@@ -38,11 +38,11 @@ export default function Ticker() {
                 }}>
                     <span style={{
                         fontFamily: 'Inter, sans-serif',
-                        fontSize: '2rem',
+                        fontSize: '3rem',
                         fontWeight: 900,
                         color: '#FBFF00',
                         letterSpacing: '-0.02em',
-                        paddingRight: '0px',
+                        paddingRight: '16px',
                         display: 'inline-block'
                     }}>
                         {text}
@@ -50,11 +50,11 @@ export default function Ticker() {
 
                     <span style={{
                         fontFamily: 'Inter, sans-serif',
-                        fontSize: '2rem',
+                        fontSize: '3rem',
                         fontWeight: 900,
                         color: '#FBFF00',
                         letterSpacing: '-0.02em',
-                        paddingRight: '0px',
+                        paddingRight: '16px',
                         display: 'inline-block'
                     }}>
                         {text}

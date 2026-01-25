@@ -1,14 +1,12 @@
+import { useRef, useState, useEffect } from 'react'
 import { useStore } from '../../store'
-import { useState, useRef, useEffect } from 'react'
 import SceneControl from './SceneControl'
 import GradientControl from './GradientControl'
 import GlassControl from './GlassControl'
 import EffectsControl from './EffectsControl'
 import LavaControl from './LavaControl'
 import BlobControl from './BlobControl'
-import BlobControl from './LavaControl'
 import GlowControl from './GlowControl'
-import { useRef, useState, useEffect } from 'react'
 
 export default function Overlay() {
     const { scene } = useStore()
@@ -29,7 +27,7 @@ export default function Overlay() {
             setCurrentScroll(prev => {
                 const diff = templateScroll - prev
                 if (Math.abs(diff) < 0.5) return templateScroll
-                return prev + diff * 0.08
+                return prev + diff * 0.05
             })
             animationFrameId = requestAnimationFrame(loop)
         }
@@ -109,7 +107,8 @@ export default function Overlay() {
                     gap: '24px',
                     paddingBottom: '120px', // Space for fade
                     width: '100%',
-                    willChange: 'transform' // Hardware accel
+                    willChange: 'transform', // Hardware accel
+                    boxSizing: 'border-box' // Fix clipping
                 }}
             >
                 <SceneControl />

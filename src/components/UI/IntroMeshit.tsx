@@ -25,20 +25,18 @@ export default function IntroMeshit() {
         if (appState !== 'intro') return
         setAppState('animating')
 
-        // Animation timing matches CSS
+        // Animation timing: 4s total (0.5s expand, 3s hold, 0.5s exit)
         setTimeout(() => {
             setAppState('ready')
-        }, 1500)
+        }, 4000)
     }
 
     // Generate Grid Positions for "MESHIT" wall
-    // 5 rows above, 5 rows below, spanning full width
     const clones = useMemo(() => {
         const arr = []
         for (let y = -6; y <= 6; y++) {
-            // Let's do a grid of 5x13 (x: -2 to 2)
             for (let x = -2; x <= 2; x++) {
-                if (x === 0 && y === 0) continue // Skip center (main text)
+                // Include center (0,0) so it's part of the cohesive grid animation
                 arr.push({ x, y })
             }
         }
@@ -59,57 +57,58 @@ export default function IntroMeshit() {
                 justifyContent: 'center',
                 alignItems: 'center',
                 zIndex: 50,
-                // We handle clicks on the text itself
                 pointerEvents: 'none'
             }}
         >
-            {/* Main Text */}
-            <h1
-                ref={textRef}
-                onClick={handleClick}
-                onMouseMove={handleMouseMove}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={handleMouseLeave}
-                className={appState === 'animating' ? 'mesh-explode-main' : ''}
-                style={{
-                    margin: 0,
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 900,
-                    color: '#FBFF00',
-                    fontSize: 'clamp(4rem, 7.2vw, 13rem)',
-                    letterSpacing: '-0.04em',
-                    lineHeight: 0.85,
-                    textAlign: 'center',
-                    mixBlendMode: 'overlay',
-                    transition: 'transform 0.1s ease-out',
-                    position: 'relative',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto', // Enable pointer events for text
-                    zIndex: 10
-                }}
-            >
-                MESHIT
-            </h1>
+            {/* Main Text - Hidden when animating, replaced by grid clone (0,0) */}
+            {appState === 'intro' && (
+                <h1
+                    ref={textRef}
+                    onClick={handleClick}
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={handleMouseLeave}
+                    style={{
+                        margin: 0,
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 900,
+                        color: '#FBFF00',
+                        fontSize: 'clamp(4rem, 7.2vw, 13rem)',
+                        letterSpacing: '-0.04em',
+                        lineHeight: 0.85,
+                        textAlign: 'center',
+                        mixBlendMode: 'overlay',
+                        transition: 'transform 0.1s ease-out',
+                        position: 'relative',
+                        cursor: 'pointer',
+                        pointerEvents: 'auto',
+                        zIndex: 10
+                    }}
+                >
+                    MESHIT
+                </h1>
+            )}
 
-            {/* Grid Explosion (Only render when animating) */}
+            {/* Grid Explosion (Renders EVERYTHING including center when animating) */}
             {appState === 'animating' && clones.map((pos, i) => (
                 <ExplodeClone key={i} x={pos.x} y={pos.y} />
             ))}
 
             <style>{`
                 @keyframes gridExpand {
+                    /* Rapid Expand (0.5s) */
                     0% { 
                         opacity: 0; 
                         transform: translate(-50%, -50%) scale(0.5); 
                     }
-                    20% {
+                    10% {
                         opacity: 1;
                         transform: translate(
                             calc(-50% + var(--tx)), 
                             calc(-50% + var(--ty))
                         ) scale(1);
                     }
-                    80% {
+                    /* LONG HOLD (~3s) */
+                    85% {
                          opacity: 1;
                          transform: translate(
                             calc(-50% + var(--tx)), 
@@ -117,24 +116,15 @@ export default function IntroMeshit() {
                         ) scale(1);
                         filter: blur(0px);
                     }
+                    /* Quick Exit (0.5s) */
                     100% { 
                         opacity: 0; 
                         transform: translate(
                             calc(-50% + var(--tx)), 
-                            calc(-50% + var(--ty) - 100vh)
+                            calc(-50% + var(--ty) - 100vh) /* Fly Up */
                         ) scale(1);
                         filter: blur(10px);
                     }
-                }
-                
-                @keyframes mainExit {
-                    0% { transform: scale(1); opacity: 1; }
-                    20% { transform: scale(1); opacity: 1; }
-                    100% { transform: translateY(-100vh); opacity: 0; filter: blur(10px); }
-                }
-
-                .mesh-explode-main {
-                    animation: mainExit 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
                 }
             `}</style>
         </div>
@@ -164,7 +154,8 @@ function ExplodeClone({ x, y }: { x: number, y: number }) {
                 mixBlendMode: 'overlay',
                 pointerEvents: 'none',
                 whiteSpace: 'nowrap',
-                animation: 'gridExpand 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'
+                // 4s Duration
+                animation: 'gridExpand 4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'
             }}
         >
             MESHIT

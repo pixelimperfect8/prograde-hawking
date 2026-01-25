@@ -90,19 +90,26 @@ div[class*="leva-c"][style*="position: fixed"] {
  */
 [class*="leva"] button:has(svg) {
   display: flex !important;
-  flex-direction: row-reverse !important;
-  justify-content: space-between !important;
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
   width: 100% !important;
+  position: relative !important;
 }
 
+/* Force SVG to the right using absolute positioning */
 [class*="leva"] button:has(svg) svg {
-  order: 2 !important;
-  margin-left: auto !important;
-  margin-right: 0 !important;
+  position: absolute !important;
+  right: 8px !important;
+  left: auto !important;
+  margin: 0 !important;
 }
 
-[class*="leva"] button:has(svg)>*:not(svg) {
-  order: 1 !important;
+/* Ensure the label text stays on the left */
+[class*="leva"] button:has(svg)>div,
+[class*="leva"] button:has(svg)>span {
+  margin-right: auto !important;
+  padding-left: 4px !important;
 }
 
 /* 

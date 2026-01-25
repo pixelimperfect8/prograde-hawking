@@ -1,10 +1,9 @@
-import { useRef, useState, useMemo } from 'react'
+import { useRef, useMemo } from 'react'
 import { useStore } from '../../store'
 
 export default function IntroMeshit() {
     const { appState, setAppState } = useStore()
     const textRef = useRef<HTMLHeadingElement>(null)
-    const [isHovered, setIsHovered] = useState(false)
 
     // Parallax only on hover
     const handleMouseMove = (e: React.MouseEvent<HTMLHeadingElement>) => {
@@ -19,7 +18,6 @@ export default function IntroMeshit() {
     }
 
     const handleMouseLeave = (e: React.MouseEvent<HTMLHeadingElement>) => {
-        setIsHovered(false)
         e.currentTarget.style.transform = `translate(0, 0) scale(1)`
     }
 

@@ -71,13 +71,16 @@ export default function GradientControl() {
 
             {gradient.loop && (
                 <button
+                    <button
                     onClick={() => {
-                        // Find the canvas
                         const canvas = document.querySelector('canvas')
                         if (!canvas) return
 
-                        const stream = canvas.captureStream(60) // 60 FPS
-                        const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' }) // WebM usually supported
+                        // Notify user (simple console for now or minimal visual?)
+                        // Ideally we'd have a toast, but keeping it simple.
+
+                        const stream = canvas.captureStream(60)
+                        const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' })
                         const chunks: Blob[] = []
 
                         recorder.ondataavailable = (e) => {
@@ -94,28 +97,46 @@ export default function GradientControl() {
                         }
 
                         recorder.start()
-                        // Stop after 10s exactly + tiny buffer
                         setTimeout(() => {
                             recorder.stop()
                         }, 10000)
                     }}
                     style={{
-                        marginTop: '16px',
                         width: '100%',
-                        padding: '12px',
-                        background: 'rgba(255, 0, 0, 0.2)',
-                        border: '1px solid rgba(255, 0, 0, 0.4)',
-                        color: '#ff3333',
-                        borderRadius: '4px',
+                        marginTop: '16px',
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#ff3333', // Slight red tint for Record
                         cursor: 'pointer',
-                        fontFamily: 'Inter',
-                        fontSize: '11px',
-                        fontWeight: 600,
                         textTransform: 'uppercase',
-                        letterSpacing: '1px'
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '11px',
+                        letterSpacing: '0.5px',
+                        fontWeight: 500,
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        gap: '8px',
+                        padding: '0'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.color = '#FFFFFF'
+                        e.currentTarget.style.textShadow = '0 0 8px rgba(255, 0, 0, 0.5)'
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.color = '#ff3333'
+                        e.currentTarget.style.textShadow = 'none'
                     }}
                 >
-                    REC • 10s MP4 (WEBM)
+                    <div style={{
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        background: 'currentColor',
+                        boxShadow: '0 0 5px currentColor'
+                    }} />
+                    Export Loop (10s MP4)
                 </button>
             )}
         </Section>

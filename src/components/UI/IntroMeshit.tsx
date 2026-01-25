@@ -1,25 +1,28 @@
-import { useRef, useEffect } from 'react'
+```javascript
+import { useRef, useState, useMemo } from 'react'
 import { useStore } from '../../store'
 
 export default function IntroMeshit() {
     const { appState, setAppState } = useStore()
-    const containerRef = useRef<HTMLDivElement>(null)
     const textRef = useRef<HTMLHeadingElement>(null)
+    const [isHovered, setIsHovered] = useState(false)
+    
+    // Parallax only on hover
+    const handleMouseMove = (e: React.MouseEvent<HTMLHeadingElement>) => {
+        if (appState !== 'intro') return
+        
+        // Calculate relative to the element center
+        const rect = e.currentTarget.getBoundingClientRect()
+        const x = (e.clientX - rect.left) / rect.width - 0.5
+        const y = (e.clientY - rect.top) / rect.height - 0.5
+        
+        e.currentTarget.style.transform = `translate(${ x * - 20}px, ${ y * - 20}px) scale(1.05)`
+    }
 
-    useEffect(() => {
-        const handleMove = (e: MouseEvent) => {
-            if (appState !== 'intro') return
-            const x = (e.clientX / window.innerWidth) - 0.5
-            const y = (e.clientY / window.innerHeight) - 0.5
-
-            // Subtle parallax
-            if (textRef.current) {
-                textRef.current.style.transform = `translate(${x * -30}px, ${y * -30}px)`
-            }
-        }
-        window.addEventListener('mousemove', handleMove)
-        return () => window.removeEventListener('mousemove', handleMove)
-    }, [appState])
+    const handleMouseLeave = (e: React.MouseEvent<HTMLHeadingElement>) => {
+        setIsHovered(false)
+        e.currentTarget.style.transform = `translate(0, 0) scale(1)`
+    }
 
     const handleClick = () => {
         if (appState !== 'intro') return
@@ -28,15 +31,29 @@ export default function IntroMeshit() {
         // Animation timing matches CSS
         setTimeout(() => {
             setAppState('ready')
-        }, 1200) // 1.2s for explosion + flight
+        }, 1500) 
     }
+
+    // Generate Grid Positions for "MESHIT" wall
+    // 5 rows above, 5 rows below, spanning full width
+    const clones = useMemo(() => {
+        const arr = []
+        for (let y = -6; y <= 6; y++) {
+            // For each row, simple horizontal repeat or just one centered wide block?
+            // The image shows text repeating horizontally too.
+            // Let's do a grid of 5x13 (x: -2 to 2)
+            for (let x = -2; x <= 2; x++) {
+                if (x === 0 && y === 0) continue // Skip center (main text)
+                arr.push({ x, y })
+            }
+        }
+        return arr
+    }, [])
 
     if (appState === 'ready') return null
 
     return (
-        <div
-            ref={containerRef}
-            onClick={handleClick}
+        <div 
             style={{
                 position: 'fixed',
                 top: 0,
@@ -47,13 +64,18 @@ export default function IntroMeshit() {
                 justifyContent: 'center',
                 alignItems: 'center',
                 zIndex: 50,
-                cursor: 'pointer',
-                pointerEvents: appState === 'intro' ? 'auto' : 'none'
+                // If animating, let clicks pass through to potential clones or background
+                pointerEvents: appState === 'intro' ? 'none' : 'none' 
+                // We handle clicks on the text itself
             }}
         >
             {/* Main Text */}
-            <h1
+            <h1 
                 ref={textRef}
+                onClick={handleClick}
+                onMouseMove={handleMouseMove}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={handleMouseLeave}
                 className={appState === 'animating' ? 'mesh-explode-main' : ''}
                 style={{
                     margin: 0,
@@ -62,89 +84,98 @@ export default function IntroMeshit() {
                     color: '#FBFF00',
                     fontSize: 'clamp(4rem, 7.2vw, 13rem)',
                     letterSpacing: '-0.04em',
-                    lineHeight: 1,
+                    lineHeight: 0.85,
                     textAlign: 'center',
                     mixBlendMode: 'overlay',
-                    transition: 'transform 0.1s ease-out', // smooth mouse follow
-                    position: 'relative' // for stacking
+                    transition: 'transform 0.1s ease-out',
+                    position: 'relative',
+                    cursor: 'pointer',
+                    pointerEvents: 'auto', // Enable pointer events for text
+                    zIndex: 10
                 }}
             >
                 MESHIT
             </h1>
 
-            {/* Duplicates for Explosion (Only render when animating) */}
-            {appState === 'animating' && (
-                <>
-                    {/* TOP */}
-                    <ExplodeClone direction="top" />
-                    {/* BOTTOM */}
-                    <ExplodeClone direction="bottom" />
-                    {/* LEFT */}
-                    <ExplodeClone direction="left" />
-                    {/* RIGHT */}
-                    <ExplodeClone direction="right" />
-                </>
-            )}
+            {/* Grid Explosion (Only render when animating) */}
+            {appState === 'animating' && clones.map((pos, i) => (
+                <ExplodeClone key={i} x={pos.x} y={pos.y} />
+            ))}
 
             <style>{`
-                @keyframes flyOutTop {
-                    0% { opacity: 1; transform: translate(0, 0); }
-                    100% { opacity: 0; transform: translate(0, -100vh) scale(1.5); filter: blur(20px); }
-                }
-                @keyframes flyOutBottom {
-                    0% { opacity: 1; transform: translate(0, 0); }
-                    100% { opacity: 0; transform: translate(0, 100vh) scale(1.5); filter: blur(20px); }
-                }
-                @keyframes flyOutLeft {
-                    0% { opacity: 1; transform: translate(0, 0); }
-                    100% { opacity: 0; transform: translate(-100vw, 0) scale(1.5); filter: blur(20px); }
-                }
-                @keyframes flyOutRight {
-                    0% { opacity: 1; transform: translate(0, 0); }
-                    100% { opacity: 0; transform: translate(100vw, 0) scale(1.5); filter: blur(20px); }
-                }
-                @keyframes fadeMain {
-                    0% { opacity: 1; transform: scale(1); }
-                    100% { opacity: 0; transform: scale(3); filter: blur(50px); } // explode main
+@keyframes gridExpand {
+    0 % {
+        opacity: 0;
+        transform: translate(-50 %, -50 %) scale(0.5);
+    }
+    20 % {
+        opacity: 1;
+        transform: translate(
+            calc(-50 % + var(--tx)),
+    calc(-50 % + var(--ty))
+                        ) scale(1);
+}
+80 % {
+    opacity: 1;
+    transform: translate(
+        calc(-50 % + var(--tx)),
+calc(-50 % + var(--ty))
+                        ) scale(1);
+filter: blur(0px);
+                    }
+100 % {
+    opacity: 0;
+    transform: translate(
+        calc(-50 % + var(--tx)),
+calc(-50 % + var(--ty) - 100vh)
+                        ) scale(1);
+filter: blur(10px);
+                    }
                 }
 
-                .mesh-explode-main {
-                    animation: fadeMain 1s ease-in forwards;
-                }
-            `}</style>
+@keyframes mainExit {
+    0 % { transform: scale(1); opacity: 1; }
+    20 % { transform: scale(1); opacity: 1; }
+    100 % { transform: translateY(-100vh); opacity: 0; filter: blur(10px); }
+}
+
+                .mesh - explode - main {
+    animation: mainExit 1.5s cubic - bezier(0.2, 0.8, 0.2, 1) forwards!important;
+}
+`}</style>
         </div>
     )
 }
 
-function ExplodeClone({ direction }: { direction: 'top' | 'bottom' | 'left' | 'right' }) {
-    const animMap = {
-        top: 'flyOutTop',
-        bottom: 'flyOutBottom',
-        left: 'flyOutLeft',
-        right: 'flyOutRight'
-    }
-
+function ExplodeClone({ x, y }: { x: number, y: number }) {
     return (
-        <h1
+        <h1 
             style={{
                 position: 'absolute',
                 top: '50%',
                 left: '50%',
                 margin: 0,
-                transform: 'translate(-50%, -50%)',
+                // Compute target position for animation
+                // We use CSS variables to pass grid coordinates to keyframes
+                // @ts-ignore
+                '--tx': `${ x * 100 }% `,
+                '--ty': `${ y * 85 }% `, // tighter vertical packing
+                
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 900,
                 color: '#FBFF00',
                 fontSize: 'clamp(4rem, 7.2vw, 13rem)',
                 letterSpacing: '-0.04em',
-                lineHeight: 1,
+                lineHeight: 0.85,
                 textAlign: 'center',
                 mixBlendMode: 'overlay',
                 pointerEvents: 'none',
-                animation: `${animMap[direction]} 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards`
+                whiteSpace: 'nowrap',
+                animation: 'gridExpand 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'
             }}
         >
             MESHIT
         </h1>
     )
 }
+```

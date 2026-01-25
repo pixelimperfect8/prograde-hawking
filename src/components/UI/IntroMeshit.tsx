@@ -95,17 +95,36 @@ export default function IntroMeshit() {
 
             <style>{`
                 @keyframes gridExpand {
-                    /* PHASE 1: EXPAND (0% -> 40%) - Single continuous bezier */
+                    /* PHASE 1: POP TO PERFECT GRID (15%) */
                     0% { 
                         opacity: 0; 
                         transform: translate(-50%, -50%) scale(0.5); 
                     }
-                    /* PHASE 2: CONTINUOUS MOTION INTO EXIT (No stop) */
+                    15% {
+                        opacity: 1;
+                        // Establish the perfect grid first
+                        transform: translate(
+                            calc(-50% + var(--tx)), 
+                            calc(-50% + var(--ty))
+                        ) scale(1);
+                    }
+                    
+                    /* PHASE 2: DRIFT (15% -> 50%) - The "Floating" moment */
+                    50% {
+                        opacity: 1;
+                        transform: translate(
+                            calc(-50% + (var(--tx) * 1.1)), 
+                            calc(-50% + (var(--ty) * 1.1))
+                        ) scale(1.02);
+                    }
+
+                    /* PHASE 3: ALTERNATING EXIT (100%) - Accelerate out */
                     100% { 
                         opacity: 1; 
                         transform: translate(
-                            calc(-50% + (var(--tx) * 1.5)), 
-                            calc(-50% + (var(--ty) * 1.5) + (120vh * var(--dir)))
+                            calc(-50% + (var(--tx) * 1.1)), 
+                            // Add large vertical offset based on direction
+                            calc(-50% + (var(--ty) * 1.1) + (130vh * var(--dir)))
                         ) scale(1);
                         filter: blur(0px);
                     }
@@ -143,11 +162,8 @@ function ExplodeClone({ x, y }: { x: number, y: number }) {
                 mixBlendMode: 'overlay',
                 pointerEvents: 'none',
                 whiteSpace: 'nowrap',
-                // Heavy eased curve that starts explosive and accelerates out endlessly
-                // cubic-bezier(0.7, 0, 0.3, 1) ? No, we want continuous.
-                // gentle start, accelerate end? cubic-bezier(0.5, 0, 1, 1)
-                // Let's try an expo ease in-out
-                animation: 'gridExpand 3.5s cubic-bezier(0.45, 0, 0.55, 1) forwards'
+                // Restore the smooth bezier that felt "liquid" but keep it continuous
+                animation: 'gridExpand 3s cubic-bezier(0.25, 1, 0.5, 1) forwards'
             }}
         >
             MESHIT

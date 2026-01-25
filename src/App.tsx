@@ -144,10 +144,14 @@ function UI() {
 }
 
 function App() {
+  // Check if we're in embed mode
+  const isEmbed = new URLSearchParams(window.location.search).get('embed') === 'true'
+
   return (
     <>
-      <Overlay />
-      <CustomCursor />
+      {/* Only show UI controls when NOT in embed mode */}
+      {!isEmbed && <Overlay />}
+      {!isEmbed && <CustomCursor />}
 
       {/* Leva Removed */}
 
@@ -162,7 +166,8 @@ function App() {
         </Canvas>
       </div>
 
-      <UI />
+      {/* Only show UI overlay when NOT in embed mode */}
+      {!isEmbed && <UI />}
     </>
   )
 }

@@ -8,7 +8,10 @@ export default function Section({ title, children, defaultOpen = true }: { title
         <div style={{
             marginBottom: '10px',
             width: '100%',
-            overflow: 'hidden',
+            overflow: 'visible', // Allow dropdowns or shadows? User said clipping. 
+            // Usually 'hidden' clips content. If padding is large, content might be pushed out.
+            // But width 100% of 337px is 337px. Padding 32px * 2 = 64px. Content = 273px.
+            boxSizing: 'border-box', // CRITICAL for padding
             // Card Style
             background: 'rgba(0, 0, 0, 0.45)',
             backdropFilter: 'blur(72px)',

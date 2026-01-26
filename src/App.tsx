@@ -7,6 +7,7 @@ import GlowOverlay from './components/Effects/GlowOverlay'
 import LavaLamp from './components/Effects/LavaLamp'
 import BlobStack from './components/Effects/BlobStack'
 import Orbs from './components/Effects/Orbs'
+import AcidBurn from './components/Effects/AcidBurn'
 import PostFX from './components/Effects/PostFX'
 import Ticker from './components/Ticker'
 import Overlay from './components/UI/Overlay'
@@ -62,6 +63,7 @@ function Scene() {
         {bgMode === 'Lava Lamp' && <LavaLamp />}
         {bgMode === 'Blob Stack' && <BlobStack />}
         {bgMode === 'Orbs' && <Orbs />}
+        {bgMode === 'Acid Burn' && <AcidBurn />}
 
         {showGlass && <GlassOverlay />}
       </group>

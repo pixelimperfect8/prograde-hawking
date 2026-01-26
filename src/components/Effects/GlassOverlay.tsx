@@ -14,30 +14,30 @@ function generateFlutedNormalMap(
     ridgeProfile: 'Round' | 'Sharp' | 'Square',
     curvature: number
 ) {
+    const res = 1024
     const canvas = document.createElement('canvas')
-    canvas.width = 512
-    canvas.height = 512
+    canvas.width = res
+    canvas.height = res
     const ctx = canvas.getContext('2d')
     if (!ctx) return null
 
     // Fill with neutral normal
     ctx.fillStyle = 'rgb(128, 128, 255)'
-    ctx.fillRect(0, 0, 512, 512)
-
-    const imgData = ctx.getImageData(0, 0, 512, 512)
+    ctx.fillRect(0, 0, res, res)
+    const imgData = ctx.getImageData(0, 0, res, res)
     const data = imgData.data
 
-    const cx = 256
-    const cy = 256
+    const cx = res / 2
+    const cy = res / 2
 
-    for (let y = 0; y < 512; y++) {
-        for (let x = 0; x < 512; x++) {
+    for (let y = 0; y < res; y++) {
+        for (let x = 0; x < res; x++) {
             let angle = 0
 
             if (patternType === 'Kaleidoscope') {
                 const dx = x - cx
                 const dy = y - cy
-                const dist = Math.sqrt(dx * dx + dy * dy) / 256
+                const dist = Math.sqrt(dx * dx + dy * dy) / cx
 
                 const waveOffset = Math.sin(dist * Math.PI * 2 * waveFreq) * waveAmp
                 let angleRad = Math.atan2(dy, dx)
@@ -65,22 +65,21 @@ function generateFlutedNormalMap(
                 const g = 128
                 const b = 255
 
-                const idx = (y * 512 + x) * 4
+                const idx = (y * res + x) * 4
                 data[idx] = r
                 data[idx + 1] = g
                 data[idx + 2] = b
                 data[idx + 3] = 255
 
             } else {
-                const v = y / 512
+                const v = y / res
                 const waveOffset = Math.sin(v * Math.PI * 2 * waveFreq) * waveAmp
 
-                // Curvature (Parabolic Bend)
-                // Maps 0..1 (v) to -0.5..0.5, then squares it
-                const bend = (v - 0.5) * 2.0
-                const curveOffset = curvature * (bend * bend) // Parabola
+                // Curvature (Single Smooth Sine Arch)
+                // Maps 0..1 to 0..1..0 (Smooth hill)
+                const curveOffset = Math.sin(v * Math.PI) * curvature
 
-                const xNorm = x / 512
+                const xNorm = x / res
                 angle = (xNorm + waveOffset + curveOffset) * Math.PI * 2 * density
 
                 let normalX = 0
@@ -103,7 +102,7 @@ function generateFlutedNormalMap(
                 const g = 128
                 const b = 255
 
-                const idx = (y * 512 + x) * 4
+                const idx = (y * res + x) * 4
                 data[idx] = r
                 data[idx + 1] = g
                 data[idx + 2] = b
@@ -173,7 +172,7 @@ export default function GlassOverlay() {
                 background={new THREE.Color('#000000')}
                 normalMap={flutedNormalMap}
                 normalScale={new THREE.Vector2(config.fluteScale, config.fluteScale)}
-                resolution={512}
+                resolution={1024}
             />
         </mesh>
     )

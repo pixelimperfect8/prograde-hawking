@@ -4,11 +4,9 @@ import { shaderMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import { useStore } from '../../store'
 
-// Fluid Flow Shader - Mesh Gradient / Liquid Simulation look
-// Features: 
-// - 4 Moving Color Points with soft blending
-// - Domain Warping for "fluid" feel
-// - Grain/Noise texture overlay
+// Fluid Flow Shader - SMOOTH Unicorn Studio style
+// - Lower noise frequency for larger, smoother blobs
+// - Slower, more liquid movement
 const FluidFlowMaterial = shaderMaterial(
     {
         uTime: 0,
@@ -18,8 +16,8 @@ const FluidFlowMaterial = shaderMaterial(
         uColor4: new THREE.Color('#fbbf24'),
         uBackground: new THREE.Color('#0f172a'),
         uSpeed: 0.2,
-        uDensity: 1.0,   // Control scale of noise
-        uStrength: 0.4,  // Control domain warp strength
+        uDensity: 1.0,
+        uStrength: 0.4,
         uAspectRatio: 1.0,
     },
     // Vertex Shader
@@ -93,51 +91,45 @@ const FluidFlowMaterial = shaderMaterial(
             uv.x *= uAspectRatio;
             float time = uTime * uSpeed;
             
-            // Domain Warping
-            // Create liquid movement by offsetting UVs with noise
+            // Domain Warping - SMOOTHED OUT
+            // Lower frequency for noise inputs (0.6 instead of 1.0 default density multiplier inside warp)
+            float d = uDensity * 0.6;
+            
             vec2 q = vec2(0.0);
-            q.x = snoise(uv * uDensity + time * 0.2);
-            q.y = snoise(uv * uDensity + time * 0.23 + 4.0);
+            q.x = snoise(uv * d + time * 0.15);
+            q.y = snoise(uv * d + time * 0.17 + 4.0);
             
             vec2 r = vec2(0.0);
-            r.x = snoise(uv * uDensity + q * 1.0 + time * 0.3 + vec2(1.7, 9.2));
-            r.y = snoise(uv * uDensity + q * 1.0 + time * 0.35 + vec2(8.3, 2.8));
+            r.x = snoise(uv * d + q * 1.0 + time * 0.2 + vec2(1.7, 9.2));
+            r.y = snoise(uv * d + q * 1.0 + time * 0.2 + vec2(8.3, 2.8));
             
             vec2 warpedUV = uv + r * uStrength;
             
-            // Color Mixing Pattern
-            // Mix colors based on warping results
+            // Color Mixing Pattern - Smoother step
             
-            float mix1 = snoise(warpedUV * 1.5 - time * 0.1); // Pattern 1
-            float mix2 = snoise(warpedUV * 2.0 + time * 0.15); // Pattern 2
+            float mix1 = snoise(warpedUV * 1.0 - time * 0.1); 
+            float mix2 = snoise(warpedUV * 1.5 + time * 0.15); 
             
-            // Normalize to 0-1
             mix1 = mix1 * 0.5 + 0.5;
             mix2 = mix2 * 0.5 + 0.5;
             
-            // Background base
             vec3 color = uBackground;
             
-            // Add Color Splashes
-            // Color 1
-            color = mix(color, uColor1, smoothstep(0.3, 0.8, mix1) * 0.8);
+            // Softer transitions (smoothstep wider range)
+            color = mix(color, uColor1, smoothstep(0.2, 0.9, mix1) * 0.9);
+            color = mix(color, uColor2, smoothstep(0.3, 0.95, mix2) * 0.8);
             
-            // Color 2
-            color = mix(color, uColor2, smoothstep(0.4, 0.9, mix2) * 0.7);
-            
-            // Color 3 (secondary warp)
-            float mix3 = snoise(warpedUV * 2.5 - time * 0.2 + vec2(4.0));
+            float mix3 = snoise(warpedUV * 1.8 - time * 0.2 + vec2(4.0));
             mix3 = mix3 * 0.5 + 0.5;
-            color = mix(color, uColor3, smoothstep(0.35, 0.85, mix3) * 0.6);
+            color = mix(color, uColor3, smoothstep(0.25, 0.9, mix3) * 0.7);
             
-            // Color 4 (Accent)
-            float mix4 = snoise(warpedUV * 3.0 + time * 0.1 + vec2(8.0));
+            float mix4 = snoise(warpedUV * 2.2 + time * 0.1 + vec2(8.0));
             mix4 = mix4 * 0.5 + 0.5;
-            color = mix(color, uColor4, smoothstep(0.6, 0.95, mix4) * 0.5);
+            color = mix(color, uColor4, smoothstep(0.5, 0.98, mix4) * 0.6);
             
-            // Grain Overlay
-            float grainStr = 0.08;
-            float g = noise(uv * 1000.0 + time * 10.0);
+            // Grain Overlay - slightly reduced
+            float grainStr = 0.05;
+            float g = noise(uv * 800.0 + time * 10.0);
             color += (g - 0.5) * grainStr;
             
             gl_FragColor = vec4(color, 1.0);

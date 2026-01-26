@@ -331,7 +331,7 @@ export const useStore = create<State>((set) => {
             filmDirt: 0.5
         },
         scene: {
-            bgMode: 'Fluid Flow',
+            bgMode: 'Gradient',
             solidColor: '#a3b48b'
         },
         logo: null,

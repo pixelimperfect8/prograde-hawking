@@ -17,7 +17,7 @@ export default function SceneControl() {
                 <Select
                     label="Background Mode"
                     value={scene.bgMode}
-                    options={['Gradient', 'Solid + Glow', 'Lava Lamp', 'Blob Stack', 'Orbs', 'Acid Burn']}
+                    options={['Gradient', 'Solid + Glow', 'Lava Lamp', 'Blob Stack', 'Orbs', 'Acid Burn', 'Fluid Flow']}
                     onChange={(val) => setScene({ bgMode: val as any })}
                 />
 

@@ -4,18 +4,20 @@ import { shaderMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import { useStore } from '../../store'
 
-// Acid Burn shader - expanding glowing outline rings/blobs
-// Effect: Dark background with cyan glowing edges that expand and merge
+// Acid Burn shader - morphing organic blob outline with halftone pattern
+// Creates a single hollow blob shape with glowing edges, like the Aura website
 const AcidBurnShaderMaterial = shaderMaterial(
     {
         uTime: 0,
         uGlowColor: new THREE.Color('#00d4ff'), // Cyan glow
         uBackground: new THREE.Color('#0a1628'), // Dark blue background
-        uSpeed: 0.2,
-        uRingWidth: 0.08,
-        uRingCount: 3.0,
-        uWarp: 0.3,
-        uGlowIntensity: 1.5,
+        uSpeed: 0.15,
+        uEdgeWidth: 0.12,
+        uBlobSize: 0.4,
+        uWarp: 0.4,
+        uGlowIntensity: 1.2,
+        uHalftoneScale: 80.0,
+        uHalftoneStrength: 0.4,
         uAspectRatio: 1.0,
     },
     // Vertex Shader
@@ -34,10 +36,12 @@ const AcidBurnShaderMaterial = shaderMaterial(
         uniform vec3 uGlowColor;
         uniform vec3 uBackground;
         uniform float uSpeed;
-        uniform float uRingWidth;
-        uniform float uRingCount;
+        uniform float uEdgeWidth;
+        uniform float uBlobSize;
         uniform float uWarp;
         uniform float uGlowIntensity;
+        uniform float uHalftoneScale;
+        uniform float uHalftoneStrength;
         uniform float uAspectRatio;
         
         varying vec2 vUv;
@@ -106,92 +110,79 @@ const AcidBurnShaderMaterial = shaderMaterial(
             return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
         }
         
-        // Create a single expanding ring with organic shape
-        float expandingRing(vec2 uv, vec2 center, float time, float offset, float warp) {
-            // Distance from center
-            vec2 d = uv - center;
-            float dist = length(d);
-            
-            // Add organic wobble to the distance
-            float angle = atan(d.y, d.x);
-            float wobble = snoise(vec3(angle * 2.0, time * 0.3, offset)) * warp;
-            wobble += snoise(vec3(angle * 4.0, time * 0.2, offset + 10.0)) * warp * 0.5;
-            dist += wobble;
-            
-            // Expanding ring - grows over time, loops back
-            float ringRadius = fract(time + offset) * 1.5; // 0 to 1.5, then reset
-            float fade = 1.0 - fract(time + offset); // Fade as it expands
-            
-            // Ring edge detection
-            float ringDist = abs(dist - ringRadius);
-            float ring = 1.0 - smoothstep(0.0, uRingWidth, ringDist);
-            
-            // Apply fade so rings fade as they expand outward
-            ring *= fade * fade;
-            
-            return ring;
+        // Halftone dot pattern
+        float halftone(vec2 uv, float intensity, float scale) {
+            vec2 grid = fract(uv * scale);
+            float dot = length(grid - 0.5);
+            return smoothstep(0.5 - intensity * 0.3, 0.5, dot);
         }
         
         void main() {
             float time = uTime * uSpeed;
             
-            // Adjust UV for aspect ratio
+            // Adjust UV for aspect ratio - center the blob
             vec2 uv = vUv - 0.5;
             uv.x *= uAspectRatio;
             
-            // Domain warp the UV for more organic feel
-            float warpX = snoise(vec3(uv * 2.0, time * 0.3));
-            float warpY = snoise(vec3(uv * 2.0 + 5.0, time * 0.25));
-            uv += vec2(warpX, warpY) * uWarp * 0.3;
+            // Offset the blob center slightly to the right (like in the screenshots)
+            vec2 center = vec2(0.15, 0.0);
+            center.x += snoise(vec3(time * 0.2, 0.0, 0.0)) * 0.1;
+            center.y += snoise(vec3(0.0, time * 0.15, 0.0)) * 0.1;
             
-            // Multiple ring centers that drift slowly
-            vec2 center1 = vec2(
-                snoise(vec3(time * 0.15, 0.0, 0.0)) * 0.3,
-                snoise(vec3(0.0, time * 0.15, 0.0)) * 0.3
-            );
-            vec2 center2 = vec2(
-                snoise(vec3(time * 0.12 + 5.0, 0.0, 0.0)) * 0.4 + 0.2,
-                snoise(vec3(0.0, time * 0.12 + 5.0, 0.0)) * 0.3 - 0.1
-            );
-            vec2 center3 = vec2(
-                snoise(vec3(time * 0.1 + 10.0, 0.0, 0.0)) * 0.3 - 0.2,
-                snoise(vec3(0.0, time * 0.1 + 10.0, 0.0)) * 0.4 + 0.1
-            );
+            vec2 p = uv - center;
             
-            // Create multiple staggered expanding rings per center
-            float ring = 0.0;
+            // Distance from center
+            float dist = length(p);
             
-            // Ring set 1 - from center1
-            ring += expandingRing(uv, center1, time, 0.0, uWarp);
-            ring += expandingRing(uv, center1, time, 0.33, uWarp);
-            ring += expandingRing(uv, center1, time, 0.66, uWarp);
+            // Get angle for organic deformation
+            float angle = atan(p.y, p.x);
             
-            // Ring set 2 - from center2
-            ring += expandingRing(uv, center2, time * 0.8, 0.1, uWarp);
-            ring += expandingRing(uv, center2, time * 0.8, 0.44, uWarp);
-            ring += expandingRing(uv, center2, time * 0.8, 0.77, uWarp);
+            // Multi-layered organic deformation of the blob shape
+            float deform = 0.0;
+            deform += snoise(vec3(angle * 2.0 + time * 0.3, dist * 3.0, time * 0.2)) * uWarp * 0.3;
+            deform += snoise(vec3(angle * 3.0 + time * 0.2, dist * 2.0 + 5.0, time * 0.15)) * uWarp * 0.2;
+            deform += snoise(vec3(angle * 5.0 + time * 0.4, dist * 4.0 + 10.0, time * 0.1)) * uWarp * 0.1;
             
-            // Ring set 3 - from center3
-            if (uRingCount > 2.5) {
-                ring += expandingRing(uv, center3, time * 1.1, 0.2, uWarp);
-                ring += expandingRing(uv, center3, time * 1.1, 0.55, uWarp);
-            }
+            // Adjust distance based on deformation - creates organic blob shape
+            float blobDist = dist + deform;
             
-            // Clamp and apply intensity
-            ring = clamp(ring, 0.0, 1.0);
-            ring *= uGlowIntensity;
+            // The blob ring - hollow inside with glowing edge
+            float innerRadius = uBlobSize;
+            float outerRadius = uBlobSize + uEdgeWidth;
             
-            // Add outer glow (soft halo around rings)
-            float glow = ring * 0.5 + pow(ring, 2.0) * 0.5;
+            // Create the ring shape (hollow inside)
+            float ring = smoothstep(innerRadius - 0.05, innerRadius, blobDist) 
+                       - smoothstep(outerRadius, outerRadius + 0.08, blobDist);
+            ring = max(ring, 0.0);
             
-            // Final color: dark background with glowing edges only
+            // Add soft glow extending outward from the ring
+            float outerGlow = 1.0 - smoothstep(outerRadius, outerRadius + 0.25, blobDist);
+            outerGlow *= 0.5;
+            
+            // Add inner glow (subtle glow inside the hole)
+            float innerGlow = smoothstep(innerRadius - 0.15, innerRadius, blobDist);
+            innerGlow *= 0.3;
+            
+            // Combine ring and glows
+            float glow = ring * uGlowIntensity + outerGlow * 0.6 + innerGlow * 0.2;
+            glow = clamp(glow, 0.0, 1.5);
+            
+            // Apply halftone pattern
+            vec2 halftoneUv = vUv;
+            halftoneUv.x *= uAspectRatio;
+            float dots = halftone(halftoneUv, glow, uHalftoneScale);
+            
+            // Mix halftone with solid glow based on strength
+            float finalGlow = mix(glow, glow * (1.0 - dots * uHalftoneStrength), uHalftoneStrength);
+            
+            // Final color
             vec3 color = uBackground;
-            color += uGlowColor * glow;
+            color += uGlowColor * finalGlow;
             
-            // Add subtle ambient glow around screen edges
+            // Add subtle screen edge glow
             float edgeDist = max(abs(uv.x / uAspectRatio), abs(uv.y)) * 2.0;
-            float edgeGlow = smoothstep(0.7, 1.0, edgeDist) * 0.3;
-            color += uGlowColor * edgeGlow * 0.2;
+            float edgeGlow = smoothstep(0.8, 1.0, edgeDist) * 0.15;
+            color += uGlowColor * edgeGlow;
             
             gl_FragColor = vec4(color, 1.0);
         }
@@ -219,10 +210,12 @@ export default function AcidBurn() {
             materialRef.current.uGlowColor = colors.glowColor
             materialRef.current.uBackground = colors.background
             materialRef.current.uSpeed = acidBurn.speed
-            materialRef.current.uRingWidth = acidBurn.burnWidth
-            materialRef.current.uRingCount = 3.0
+            materialRef.current.uEdgeWidth = acidBurn.burnWidth
+            materialRef.current.uBlobSize = acidBurn.threshold
             materialRef.current.uWarp = acidBurn.warp
-            materialRef.current.uGlowIntensity = acidBurn.threshold // Reusing threshold as intensity
+            materialRef.current.uGlowIntensity = 1.2
+            materialRef.current.uHalftoneScale = 80.0
+            materialRef.current.uHalftoneStrength = 0.4
             materialRef.current.uAspectRatio = aspect
         }
     })

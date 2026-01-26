@@ -4,17 +4,16 @@ import { shaderMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import { useStore } from '../../store'
 
-// Acid Burn shader - DOT MATRIX / EXPANDING RIPPLES
-// The visual is a grid of dots.
-// An organic ring spawns at the center and expands outwards until it hits the edges.
+// Acid Burn shader - DOT MATRIX / SMOOTH RIPPLES
+// Refined for smoother, flowy expansion without sharp ridges
 const AcidBurnShaderMaterial = shaderMaterial(
     {
         uTime: 0,
-        uGlowColor: new THREE.Color('#00d4ff'), // Cyan glow
-        uBaseColor: new THREE.Color('#0a1628'), // Dark background
-        uDotColor: new THREE.Color('#1f2937'), // Inactive dot color
-        uSpeed: 0.4,      // Faster expansion
-        uGridScale: 120.0, // Much denser grid (smaller dots)
+        uGlowColor: new THREE.Color('#00d4ff'),
+        uBaseColor: new THREE.Color('#0a1628'),
+        uDotColor: new THREE.Color('#1f2937'),
+        uSpeed: 0.2,       // Slower, smoother expansion
+        uGridScale: 120.0,
         uDotSize: 0.5,
         uWarp: 0.3,
         uAspectRatio: 1.0,
@@ -110,82 +109,78 @@ const AcidBurnShaderMaterial = shaderMaterial(
         void main() {
             float time = uTime * uSpeed;
             
-            // Grid UVs
+            // Grid Setup
             vec2 uv = vUv;
             uv.x *= uAspectRatio;
             
-            vec2 gridUV = fract(uv * uGridScale); // 0-1 inside cell
+            vec2 gridUV = fract(uv * uGridScale);
             vec2 cellID = floor(uv * uGridScale);
-            vec2 cellCenter = (cellID + 0.5) / uGridScale; // World pos of cell center
+            vec2 cellCenter = (cellID + 0.5) / uGridScale;
             
-            // Centered UV for distance calc
             vec2 center = vec2(0.5 * uAspectRatio, 0.5);
             vec2 warpedP = cellCenter;
             
-            // --- EXPANDING RIPPLE LOGIC ---
-            // We want a ring that grows from 0 to >1.5 (offscreen)
-            // Repeating periodically
-            
-            // Organic warp applied to the position before distance calc
+            // --- SMOOTH RIPPLE LOGIC ---
             float angle = atan(warpedP.y - center.y, warpedP.x - center.x);
             float dist0 = length(warpedP - center);
             
-            // Warp makes the ring non-circular
-            float warp = snoise(vec3(angle * 2.5, dist0 * 1.0, time * 0.2)) * uWarp * 0.2;
+            // Smoother warp:
+            // 1. Lower frequency for "round" shapes (angle * 1.5 instead of 2.5)
+            // 2. Slower time evolution
+            // 3. Less amplitude on high-freq noise
+            float warp = snoise(vec3(angle * 1.5, dist0 * 0.8, time * 0.15)) * uWarp * 0.25;
+            
+            // Add very subtle secondary low-frequency drift
+            warp += snoise(vec3(warpedP * 1.5, time * 0.05)) * 0.05;
+            
             float dist = dist0 + warp;
             
-            // Current radius of the expanding ring
-            // loops every 1.0 unit of 'time'
+            // Ring Expansion
             float loopTime = time; 
-            float radius = fract(loopTime) * 1.5; // grows to covering screen
+            float radius = fract(loopTime) * 1.6; // Expands fully
             
-            // Ring width thickness
-            float thickness = 0.15;
+            // Thick, soft ring
+            float thickness = 0.2;
             
-            // Field strength: 1.0 at ring, 0.0 elsewhere
-            float field = 1.0 - smoothstep(0.0, thickness, abs(dist - radius));
+            // Usage of smoothstep for very soft falloff
+            float ringDist = abs(dist - radius);
+            float field = 1.0 - smoothstep(0.0, thickness, ringDist);
             
-            // Add a second staggered ring for complexity?
-            // offset by 0.5 time
-            float radius2 = fract(loopTime + 0.5) * 1.5;
-            float field2 = 1.0 - smoothstep(0.0, thickness * 0.8, abs(dist - radius2));
+            // Ease-in/Ease-out transparency
+            // Fade out as it gets very large (near edges)
+            float fade = 1.0 - smoothstep(1.0, 1.5, radius); 
+            field *= fade;
             
-            // Fade out the second ring slightly
-            field = max(field, field2 * 0.7);
-            
-            // --- SCREEN EDGE GLOW ---
-            // The user mentioned "joins the outer glow of the screen"
-            // We'll create a permanent glow at the edges
+            // --- EDGE GLOW ---
+            // Permanent soft glow at edges
             vec2 uvCentered = vUv - 0.5;
             uvCentered.x *= uAspectRatio;
             float edgeDist = length(uvCentered);
-            float edgeGlow = smoothstep(0.5, 0.8, edgeDist);
+            float edgeGlow = smoothstep(0.6, 1.2, edgeDist);
             
             // Merge expanding ring into edge glow
-            field = max(field, edgeGlow * 0.5);
+            field = max(field * 0.8, edgeGlow * 0.4);
             
             // --- DOT RENDERING ---
-            float baseDotSize = 0.1 * uDotSize; // Tiny inactive dots
-            float activeDotSize = 0.8 * uDotSize; // Large active dots
+            float baseDotSize = 0.15 * uDotSize; 
+            float activeDotSize = 0.9 * uDotSize; 
             
             float currentSize = mix(baseDotSize, activeDotSize, field);
             
-            // Distance to center of dot
+            // Dot Rendering
             float d = length(gridUV - 0.5);
             float alpha = 1.0 - smoothstep(currentSize - 0.05, currentSize + 0.05, d);
             
             // Color
             vec3 finalColor = mix(uDotColor, uGlowColor, field);
-            finalColor += uGlowColor * field * 0.5; // bloom boost
+            finalColor += uGlowColor * field * 0.3; // Slight bloom
             
             // Background
             vec3 bg = uBaseColor;
-            
-            // Render Dot
             vec3 pixel = mix(bg, finalColor, alpha);
             
-            // Add Field Glow (behind dots)
-            pixel += uGlowColor * field * 0.2;
+            // Subtle Glow behind dots
+            pixel += uGlowColor * field * 0.15;
             
             gl_FragColor = vec4(pixel, 1.0);
         }
@@ -201,7 +196,6 @@ export default function AcidBurn() {
     const { viewport } = useThree()
     const aspect = viewport.width / viewport.height
 
-    // Parse colors
     const colors = useMemo(() => ({
         glowColor: new THREE.Color(acidBurn.color1),
         baseColor: new THREE.Color(acidBurn.background),
@@ -211,23 +205,14 @@ export default function AcidBurn() {
     useFrame((state) => {
         if (materialRef.current) {
             materialRef.current.uTime = state.clock.elapsedTime
-            // Default faster speed if user hasn't adjusted it yet
-            // But we respect the store value. 
-            // NOTE: Store value for speed might be low (0.15). User requested expanding rings which implies movement.
-            // We'll scale the speed uniform slightly to ensure it moves visibly.
-            materialRef.current.uSpeed = acidBurn.speed * 2.0
+            // Slow down the speed significantly for "smooth and flowy"
+            materialRef.current.uSpeed = acidBurn.speed * 0.8
 
             materialRef.current.uGlowColor = colors.glowColor
             materialRef.current.uBaseColor = colors.baseColor
             materialRef.current.uDotColor = colors.dotColor
-
-            // Dynamic Grid Scale based on viewport? Or just high default.
-            // User complained "too zoomed in", so we want HIGHER grid scale (more small dots)
             materialRef.current.uGridScale = 120.0
-
-            // Threshold controls dot size in previous logic, let's reuse it for Dot max size
             materialRef.current.uDotSize = Math.max(0.5, acidBurn.threshold)
-
             materialRef.current.uWarp = acidBurn.warp
             materialRef.current.uAspectRatio = aspect
         }

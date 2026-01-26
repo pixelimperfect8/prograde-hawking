@@ -4,19 +4,20 @@ import { shaderMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import { useStore } from '../../store'
 
-// Acid Burn shader - DOT MATRIX / ULTIMATE FLOW
-// - Extremely dense grid (Zoomed out)
-// - Liquid smooth motion (Low freq noise + Sine waves)
+// Acid Burn shader - THIN & CLEAN
+// - Very thin ring
+// - Clean expansion (no sticky points)
+// - Gentle sine warp only
 const AcidBurnShaderMaterial = shaderMaterial(
     {
         uTime: 0,
         uGlowColor: new THREE.Color('#00d4ff'),
         uBaseColor: new THREE.Color('#0a1628'),
         uDotColor: new THREE.Color('#1f2937'),
-        uSpeed: 0.1,        // Very slow, majestic
-        uGridScale: 250.0,  // WAY ZOOMED OUT (Tiny dots)
+        uSpeed: 0.1,
+        uGridScale: 250.0,
         uDotSize: 0.5,
-        uWarp: 0.5,
+        uWarp: 0.3,
         uAspectRatio: 1.0,
     },
     // Vertex Shader
@@ -43,7 +44,7 @@ const AcidBurnShaderMaterial = shaderMaterial(
         
         varying vec2 vUv;
         
-        // Simplex noise
+        // Simplex noise (Low Freq only)
         vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
         float snoise(vec2 v){
             const vec4 C = vec4(0.211324865405187, 0.366025403784439,
@@ -85,50 +86,55 @@ const AcidBurnShaderMaterial = shaderMaterial(
             vec2 center = vec2(0.5 * uAspectRatio, 0.5);
             vec2 p = cellCenter - center;
             
-            // --- ULTIMATE FLOW EXPANSION ---
+            // --- CLEAN WARP LOGIC ---
+            // "Points sticking" happens when warp direction opposes expansion or is too high freq.
+            // We'll use a very smooth, large-scale warp that rotates slowly.
             
-            // 1. Very Low Frequency Warp
-            // Use Sine waves instead of noise for base shape to guarantee smoothness
             float angle = atan(p.y, p.x);
             float dist = length(p);
             
-            // Warping field
-            // Combine a few sine waves for "Liquid" feel
+            // Warp Factor - Scale with distance slightly so it doesn't pinch at center
+            // Only very low frequency sine waves for "round" feel
             float wave1 = sin(angle * 3.0 + time * 0.5);
-            float wave2 = cos(angle * 2.0 - time * 0.3);
-            float wave3 = sin(angle * 5.0 + time * 0.7 + dist * 2.0); // twist
+            float wave2 = cos(angle * 2.0 - time * 0.4);
             
-            // Apply organic noise ON TOP of sine waves, but very subtle and low freq
-            float noiseVal = snoise(p * 1.5 + vec2(time * 0.2));
+            // Minimal noise, very large scale
+            float noiseVal = snoise(p * 0.8 + vec2(time * 0.1));
             
-            // Combine
-            float warp = (wave1 * 0.5 + wave2 * 0.3 + wave3 * 0.2) * uWarp * 0.2;
-            warp += noiseVal * uWarp * 0.1;
+            // Combined warp - gentle
+            float warp = (wave1 * 0.3 + wave2 * 0.2 + noiseVal * 0.5) * uWarp * 0.15;
             
-            // Distorted distance
+            // Apply warp directly to distance check
             float dField = dist + warp;
             
             // Expanding Rings
-            // We want them to spawn continuously
             float loop = fract(time); 
-            float r1 = loop * 1.8; // Ring 1
-            float r2 = fract(loop + 0.5) * 1.8; // Ring 2 (Staggered)
+            float r1 = loop * 1.8; 
             
-            // Soft Rings
-            float width = 0.25; // Very wide, soft rings
-            float ring1 = smoothstep(width, 0.0, abs(dField - r1));
-            float ring2 = smoothstep(width, 0.0, abs(dField - r2));
+            // STAGGERED SECOND RING (Optional, kept subtle)
+            // float r2 = fract(loop + 0.5) * 1.8;
             
-            // Fade out as they get large
-            ring1 *= smoothstep(1.5, 0.5, r1);
-            ring2 *= smoothstep(1.5, 0.5, r2);
+            // --- THIN RING PROFILE ---
+            // Much thinner width
+            float width = 0.08; // Was 0.25
             
-            float interaction = max(ring1, ring2);
+            // Sharp falloff for thin, crisp ring
+            float ring1 = 1.0 - smoothstep(0.0, width, abs(dField - r1));
+            
+            // Fade inner/outer edge to avoid "sticky" artifacts
+            // This mask helps clean up the center just as it spawns
+            float centerMask = smoothstep(0.05, 0.2, r1); 
+            ring1 *= centerMask;
+            
+            // Fade out at screen edges
+            float edgeFade = 1.0 - smoothstep(1.2, 1.8, r1);
+            ring1 *= edgeFade;
+            
+            float interaction = ring1;
             
             // --- DOT RENDERING ---
-            // Base dots calculated from interaction
             float baseSize = 0.1 * uDotSize; 
-            float boostSize = 0.8 * uDotSize; 
+            float boostSize = 0.9 * uDotSize; 
             
             float size = mix(baseSize, boostSize, interaction);
             
@@ -137,14 +143,13 @@ const AcidBurnShaderMaterial = shaderMaterial(
             float dotMask = 1.0 - smoothstep(size - 0.1, size + 0.1, dotDist);
             
             // Color Logic
-            vec3 col = mix(uDotColor, uGlowColor, interaction * 0.8);
-            col += uGlowColor * interaction * 0.4; // bloom
+            vec3 col = mix(uDotColor, uGlowColor, interaction);
+            col += uGlowColor * interaction * 0.5; // Bloom
             
-            // BG
             vec3 pixel = mix(uBaseColor, col, dotMask);
             
-            // Add subtle glow field
-            pixel += uGlowColor * interaction * 0.15;
+            // Subtle Glow Field
+            pixel += uGlowColor * interaction * 0.1;
             
             gl_FragColor = vec4(pixel, 1.0);
         }
@@ -169,16 +174,11 @@ export default function AcidBurn() {
     useFrame((state) => {
         if (materialRef.current) {
             materialRef.current.uTime = state.clock.elapsedTime
-            // even slower for flow
             materialRef.current.uSpeed = acidBurn.speed * 0.5
-
             materialRef.current.uGlowColor = colors.glowColor
             materialRef.current.uBaseColor = colors.baseColor
             materialRef.current.uDotColor = colors.dotColor
-
-            // Massively increased scale for "Zoomed Out" look
             materialRef.current.uGridScale = 250.0
-
             materialRef.current.uDotSize = Math.max(0.5, acidBurn.threshold)
             materialRef.current.uWarp = acidBurn.warp
             materialRef.current.uAspectRatio = aspect

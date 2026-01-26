@@ -115,6 +115,10 @@ function generateFlutedNormalMap(
     const texture = new THREE.CanvasTexture(canvas)
     texture.wrapS = THREE.RepeatWrapping
     texture.wrapT = THREE.RepeatWrapping
+    texture.minFilter = THREE.LinearFilter
+    texture.magFilter = THREE.LinearFilter
+    texture.anisotropy = 16 // Max quality
+    texture.needsUpdate = true
     return texture
 }
 

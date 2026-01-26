@@ -11,7 +11,8 @@ function generateFlutedNormalMap(
     waveAmp: number,
     patternType: 'Linear' | 'Kaleidoscope',
     segments: number,
-    ridgeProfile: 'Round' | 'Sharp' | 'Square'
+    ridgeProfile: 'Round' | 'Sharp' | 'Square',
+    curvature: number
 ) {
     const canvas = document.createElement('canvas')
     canvas.width = 512
@@ -74,8 +75,13 @@ function generateFlutedNormalMap(
                 const v = y / 512
                 const waveOffset = Math.sin(v * Math.PI * 2 * waveFreq) * waveAmp
 
+                // Curvature (Parabolic Bend)
+                // Maps 0..1 (v) to -0.5..0.5, then squares it
+                const bend = (v - 0.5) * 2.0
+                const curveOffset = curvature * (bend * bend) // Parabola
+
                 const xNorm = x / 512
-                angle = (xNorm + waveOffset) * Math.PI * 2 * density
+                angle = (xNorm + waveOffset + curveOffset) * Math.PI * 2 * density
 
                 let normalX = 0
                 if (ridgeProfile === 'Round') {
@@ -131,13 +137,14 @@ export default function GlassOverlay() {
             config.waviness,
             config.patternType as 'Linear' | 'Kaleidoscope',
             config.segments,
-            config.ridgeProfile as 'Round' | 'Sharp' | 'Square'
+            config.ridgeProfile as 'Round' | 'Sharp' | 'Square',
+            config.curvature || 0
         )
         if (tex) {
             tex.center.set(0.5, 0.5)
         }
         return tex
-    }, [config.rippleDensity, config.waveFreq, config.waviness, config.patternType, config.segments, config.ridgeProfile])
+    }, [config.rippleDensity, config.waveFreq, config.waviness, config.patternType, config.segments, config.ridgeProfile, config.curvature])
 
     useFrame((_state, delta) => {
         if (!flutedNormalMap) return
@@ -159,7 +166,7 @@ export default function GlassOverlay() {
     if (!config.enabled || !flutedNormalMap) return null
 
     return (
-        <mesh position={[0, 0, 1]}>
+        <mesh position={[0, 0, 2]} renderOrder={10}>
             <planeGeometry args={[width, height]} />
             <MeshTransmissionMaterial
                 {...config}

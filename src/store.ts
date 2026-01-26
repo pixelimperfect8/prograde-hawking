@@ -103,6 +103,7 @@ interface State {
         patternRotation: number
         flowSpeed: number
         flowDirection: number
+        curvature: number
     } // End of Glass
     ripples: {
         color: string
@@ -254,7 +255,8 @@ export const useStore = create<State>((set) => {
             animate: true,
             patternRotation: 45,
             flowSpeed: 0.2,
-            flowDirection: 135
+            flowDirection: 135,
+            curvature: 0
         },
 
         ripples: {

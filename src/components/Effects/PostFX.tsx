@@ -27,48 +27,60 @@ export default function PostFX() {
     return (
         <EffectComposer>
             {/* Dither / Noise */}
-            <Noise
-                premultiply
-                blendFunction={BlendFunction.OVERLAY}
-                opacity={noiseOpacity}
-            />
+            {postfx.dither ? (
+                <Noise
+                    premultiply
+                    blendFunction={BlendFunction.OVERLAY}
+                    opacity={noiseOpacity}
+                />
+            ) : <></>}
 
             {/* Bloom */}
-            <Bloom
-                luminanceThreshold={postfx.bloomThreshold}
-                mipmapBlur
-                intensity={bloomIntensity}
-                luminanceSmoothing={postfx.bloomSmoothing}
-            />
+            {postfx.bloom ? (
+                <Bloom
+                    luminanceThreshold={postfx.bloomThreshold}
+                    mipmapBlur
+                    intensity={bloomIntensity}
+                    luminanceSmoothing={postfx.bloomSmoothing}
+                />
+            ) : <></>}
 
             {/* Sepia (Old Film) */}
-            <Sepia
-                intensity={sepiaIntensity}
-                blendFunction={BlendFunction.NORMAL}
-            />
+            {postfx.film ? (
+                <Sepia
+                    intensity={sepiaIntensity}
+                    blendFunction={BlendFunction.NORMAL}
+                />
+            ) : <></>}
 
             {/* Vintage Film Artifacts */}
-            <VintageFilm
-                scratches={scratches}
-                dirt={dirt}
-            />
+            {postfx.film ? (
+                <VintageFilm
+                    scratches={scratches}
+                    dirt={dirt}
+                />
+            ) : <></>}
 
             {/* CRT Effects */}
-            <Scanline
-                blendFunction={BlendFunction.OVERLAY}
-                density={1.5}
-                opacity={scanlineOpacity}
-            />
-            <ChromaticAberration
-                blendFunction={BlendFunction.NORMAL}
-                offset={new THREE.Vector2(aberrationOffset, aberrationOffset * 0.5)}
-            />
-            <Vignette
-                offset={0.3}
-                darkness={vignetteDarkness}
-                eskil={false}
-                blendFunction={BlendFunction.NORMAL}
-            />
+            {postfx.crt ? (
+                <>
+                    <Scanline
+                        blendFunction={BlendFunction.OVERLAY}
+                        density={1.5}
+                        opacity={scanlineOpacity}
+                    />
+                    <ChromaticAberration
+                        blendFunction={BlendFunction.NORMAL}
+                        offset={new THREE.Vector2(aberrationOffset, aberrationOffset * 0.5)}
+                    />
+                    <Vignette
+                        offset={0.3}
+                        darkness={vignetteDarkness}
+                        eskil={false}
+                        blendFunction={BlendFunction.NORMAL}
+                    />
+                </>
+            ) : <></>}
         </EffectComposer>
     )
 }

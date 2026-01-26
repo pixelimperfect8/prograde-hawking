@@ -4,9 +4,9 @@ import { shaderMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import { useStore } from '../../store'
 
-// Fluid Flow Shader - SMOOTH Unicorn Studio style
-// - Lower noise frequency for larger, smoother blobs
-// - Slower, more liquid movement
+// Fluid Flow Shader - PAINT MIXING style
+// - Removed grain (frosted look)
+// - Deep domain warping for swirly "oil paint" effect
 const FluidFlowMaterial = shaderMaterial(
     {
         uTime: 0,
@@ -16,8 +16,8 @@ const FluidFlowMaterial = shaderMaterial(
         uColor4: new THREE.Color('#fbbf24'),
         uBackground: new THREE.Color('#0f172a'),
         uSpeed: 0.2,
-        uDensity: 1.0,
-        uStrength: 0.4,
+        uDensity: 1.5, // Higher density for paint streaks
+        uStrength: 0.6,
         uAspectRatio: 1.0,
     },
     // Vertex Shader
@@ -72,65 +72,65 @@ const FluidFlowMaterial = shaderMaterial(
             g.yz = a0.yz * x12.xz + h.yz * x12.yw;
             return 130.0 * dot(m, g);
         }
-        
-        // Grain noise
-        float noise(vec2 p) {
-            vec2 ip = floor(p);
-            vec2 u = fract(p);
-            u = u*u*(3.0-2.0*u);
-            float res = mix(
-                mix(fract(sin(dot(ip,vec2(12.9898,78.233)))*43758.5453),
-                    fract(sin(dot(ip+vec2(1.0,0.0),vec2(12.9898,78.233)))*43758.5453),u.x),
-                mix(fract(sin(dot(ip+vec2(0.0,1.0),vec2(12.9898,78.233)))*43758.5453),
-                    fract(sin(dot(ip+vec2(1.0,1.0),vec2(12.9898,78.233)))*43758.5453),u.x),u.y);
-            return res*res;
-        }
 
         void main() {
             vec2 uv = vUv;
             uv.x *= uAspectRatio;
             float time = uTime * uSpeed;
             
-            // Domain Warping - SMOOTHED OUT
-            // Lower frequency for noise inputs (0.6 instead of 1.0 default density multiplier inside warp)
-            float d = uDensity * 0.6;
+            // Domain Warping - "Paint Mixing"
+            // We do a triple warp to get that swirly liquid look
+            // f(p) = fbm( p + fbm( p + fbm( p ) ) )
             
+            float scale = uDensity * 0.8;
+            
+            // Layer 1
             vec2 q = vec2(0.0);
-            q.x = snoise(uv * d + time * 0.15);
-            q.y = snoise(uv * d + time * 0.17 + 4.0);
+            q.x = snoise(uv * scale + time * 0.1);
+            q.y = snoise(uv * scale + time * 0.12 + 4.0);
             
+            // Layer 2
             vec2 r = vec2(0.0);
-            r.x = snoise(uv * d + q * 1.0 + time * 0.2 + vec2(1.7, 9.2));
-            r.y = snoise(uv * d + q * 1.0 + time * 0.2 + vec2(8.3, 2.8));
+            r.x = snoise(uv * scale + q * 2.0 + time * 0.2 + vec2(1.7, 9.2));
+            r.y = snoise(uv * scale + q * 2.0 + time * 0.2 + vec2(8.3, 2.8));
             
-            vec2 warpedUV = uv + r * uStrength;
+            // Layer 3 (Deep liquid)
+            // Use 'r' to distort the final coordinate
+            vec2 warped = uv + r * uStrength * 1.5;
             
-            // Color Mixing Pattern - Smoother step
+            // Calculate pattern for mixing
+            // Higher frequency detail
+            float fluid = snoise(warped * 2.0 - time * 0.1);
             
-            float mix1 = snoise(warpedUV * 1.0 - time * 0.1); 
-            float mix2 = snoise(warpedUV * 1.5 + time * 0.15); 
+            // Normalize
+            fluid = fluid * 0.5 + 0.5; 
             
-            mix1 = mix1 * 0.5 + 0.5;
-            mix2 = mix2 * 0.5 + 0.5;
+            // Color Mapping
+            // We map the 0-1 fluid value to a palette
+            // To look like paint, we want swirls of distinct colors
             
             vec3 color = uBackground;
             
-            // Softer transitions (smoothstep wider range)
-            color = mix(color, uColor1, smoothstep(0.2, 0.9, mix1) * 0.9);
-            color = mix(color, uColor2, smoothstep(0.3, 0.95, mix2) * 0.8);
+            // Create "ribbons" using sine waves on the fluid value
+            // This creates bands of color that follow the warp
             
-            float mix3 = snoise(warpedUV * 1.8 - time * 0.2 + vec2(4.0));
-            mix3 = mix3 * 0.5 + 0.5;
-            color = mix(color, uColor3, smoothstep(0.25, 0.9, mix3) * 0.7);
+            float ribbon1 = sin(fluid * 10.0 + time) * 0.5 + 0.5;
+            float ribbon2 = sin(fluid * 15.0 - time * 0.5 + 2.0) * 0.5 + 0.5;
+            float ribbon3 = snoise(warped * 3.0 + vec2(time)); // More chaotic mix
             
-            float mix4 = snoise(warpedUV * 2.2 + time * 0.1 + vec2(8.0));
-            mix4 = mix4 * 0.5 + 0.5;
-            color = mix(color, uColor4, smoothstep(0.5, 0.98, mix4) * 0.6);
+            // Base layer
+            color = mix(color, uColor1, smoothstep(0.2, 0.6, fluid));
             
-            // Grain Overlay - slightly reduced
-            float grainStr = 0.05;
-            float g = noise(uv * 800.0 + time * 10.0);
-            color += (g - 0.5) * grainStr;
+            // Streaks of other colors
+            color = mix(color, uColor2, smoothstep(0.4, 0.7, ribbon1) * 0.8);
+            color = mix(color, uColor3, smoothstep(0.4, 0.7, ribbon2) * 0.8);
+            
+            // Accent
+            // Sharp thin lines for detail?
+            float detail = smoothstep(0.48, 0.52, abs(ribbon3));
+            color = mix(color, uColor4, detail * 0.5);
+            
+            // NO GRAIN - Clean, glossy paint look
             
             gl_FragColor = vec4(color, 1.0);
         }

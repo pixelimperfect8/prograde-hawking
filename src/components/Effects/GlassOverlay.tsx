@@ -30,87 +30,85 @@ function generateFlutedNormalMap(
     const cx = res / 2
     const cy = res / 2
 
+    // SSAA Loop (4 samples per pixel)
     for (let y = 0; y < res; y++) {
         for (let x = 0; x < res; x++) {
-            let angle = 0
+            let totalR = 0
 
-            if (patternType === 'Kaleidoscope') {
-                const dx = x - cx
-                const dy = y - cy
-                const dist = Math.sqrt(dx * dx + dy * dy) / cx
+            // 4 samples: (0.25, 0.25), (0.75, 0.25), (0.25, 0.75), (0.75, 0.75)
+            const offsets = [0.25, 0.75]
+            for (let dy of offsets) {
+                for (let dx of offsets) {
+                    const sampleX = x + dx
+                    const sampleY = y + dy
 
-                const waveOffset = Math.sin(dist * Math.PI * 2 * waveFreq) * waveAmp
-                let angleRad = Math.atan2(dy, dx)
+                    let angle = 0
 
-                const effectiveAngle = angleRad + waveOffset
-                const sectorSize = (Math.PI * 2) / segments
+                    if (patternType === 'Kaleidoscope') {
+                        const dxk = sampleX - cx
+                        const dyk = sampleY - cy
+                        const dist = Math.sqrt(dxk * dxk + dyk * dyk) / cx
 
-                const finalAngleSignal = (Math.abs((effectiveAngle % sectorSize) - sectorSize / 2)) * density
+                        const waveOffset = Math.sin(dist * Math.PI * 2 * waveFreq) * waveAmp
+                        let angleRad = Math.atan2(dyk, dxk)
 
-                // Normal calculation based on profile
-                let normalSignal = 0
+                        const effectiveAngle = angleRad + waveOffset
+                        const sectorSize = (Math.PI * 2) / segments
 
-                if (ridgeProfile === 'Round') {
-                    normalSignal = Math.cos(finalAngleSignal * 20)
-                } else if (ridgeProfile === 'Sharp') {
-                    // Triangle wave
-                    const t = (finalAngleSignal * 20) / (Math.PI * 2)
-                    normalSignal = 2 * Math.abs(2 * (t - Math.floor(t + 0.5))) - 1
-                } else {
-                    // Square
-                    normalSignal = Math.cos(finalAngleSignal * 20) > 0 ? 0.8 : -0.8
+                        const finalAngleSignal = (Math.abs((effectiveAngle % sectorSize) - sectorSize / 2)) * density
+
+                        let normalSignal = 0
+                        if (ridgeProfile === 'Round') {
+                            normalSignal = Math.cos(finalAngleSignal * 20)
+                        } else if (ridgeProfile === 'Sharp') {
+                            const t = (finalAngleSignal * 20) / (Math.PI * 2)
+                            normalSignal = 2 * Math.abs(2 * (t - Math.floor(t + 0.5))) - 1
+                        } else {
+                            normalSignal = Math.cos(finalAngleSignal * 20) > 0 ? 0.8 : -0.8
+                        }
+
+                        totalR += (normalSignal * 0.5 + 0.5)
+
+                    } else {
+                        const v = sampleY / res
+                        // Seamless Loop
+                        const safeFreq = Math.round(waveFreq)
+                        const waveOffset = Math.sin(v * Math.PI * 2 * safeFreq) * waveAmp
+
+                        // Smooth Bell Curve
+                        const bell = (1 - Math.cos(v * Math.PI * 2)) * 0.5
+                        const curveOffset = bell * curvature
+
+                        const xNorm = sampleX / res
+                        angle = (xNorm + waveOffset + curveOffset) * Math.PI * 2 * density
+
+                        let normalX = 0
+                        if (ridgeProfile === 'Round') {
+                            normalX = Math.cos(angle)
+                        } else if (ridgeProfile === 'Sharp') {
+                            const t = angle / (Math.PI * 2)
+                            normalX = 2 * Math.abs(2 * (t - Math.floor(t + 0.5))) - 1
+                            normalX *= -1
+                        } else {
+                            const t = Math.cos(angle)
+                            normalX = t > 0 ? 0.9 : -0.9
+                        }
+
+                        totalR += (normalX * 0.5 + 0.5)
+                    }
                 }
-
-                const r = (normalSignal * 0.5 + 0.5) * 255
-                const g = 128
-                const b = 255
-
-                const idx = (y * res + x) * 4
-                data[idx] = r
-                data[idx + 1] = g
-                data[idx + 2] = b
-                data[idx + 3] = 255
-
-            } else {
-                const v = y / res
-                // Force waveFreq to nearest integer so patterns loop seamlessly
-                const safeFreq = Math.round(waveFreq)
-                const waveOffset = Math.sin(v * Math.PI * 2 * safeFreq) * waveAmp
-
-                // Curvature (Smooth Cosine Bell)
-                // Maps 0..1 to 0..1..0 (Bell Curve), with 0 slope at edges to remove "V" seams
-                const bell = (1 - Math.cos(v * Math.PI * 2)) * 0.5
-                const curveOffset = bell * curvature
-
-                const xNorm = x / res
-                angle = (xNorm + waveOffset + curveOffset) * Math.PI * 2 * density
-
-                let normalX = 0
-                if (ridgeProfile === 'Round') {
-                    normalX = Math.cos(angle)
-                } else if (ridgeProfile === 'Sharp') {
-                    // Triangle wave logic
-                    const t = angle / (Math.PI * 2)
-                    normalX = 2 * Math.abs(2 * (t - Math.floor(t + 0.5))) - 1
-                    // Invert for better look
-                    normalX *= -1
-                } else {
-                    // Square logic
-                    const t = Math.cos(angle)
-                    normalX = t > 0 ? 0.9 : -0.9
-                }
-
-                // Map -1..1 to 0..255
-                const r = (normalX * 0.5 + 0.5) * 255
-                const g = 128
-                const b = 255
-
-                const idx = (y * res + x) * 4
-                data[idx] = r
-                data[idx + 1] = g
-                data[idx + 2] = b
-                data[idx + 3] = 255
             }
+
+            // Average the 4 samples
+            const avgR = (totalR / 4) * 255
+            const g = 128
+            const b = 255
+
+            const idx = (y * res + x) * 4
+            data[idx] = avgR
+            data[idx + 1] = g
+            data[idx + 2] = b
+            data[idx + 3] = 255
         }
     }
 

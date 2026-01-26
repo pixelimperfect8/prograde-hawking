@@ -73,11 +73,14 @@ function generateFlutedNormalMap(
 
             } else {
                 const v = y / res
-                const waveOffset = Math.sin(v * Math.PI * 2 * waveFreq) * waveAmp
+                // Force waveFreq to nearest integer so patterns loop seamlessly
+                const safeFreq = Math.round(waveFreq)
+                const waveOffset = Math.sin(v * Math.PI * 2 * safeFreq) * waveAmp
 
-                // Curvature (Single Smooth Sine Arch)
-                // Maps 0..1 to 0..1..0 (Smooth hill)
-                const curveOffset = Math.sin(v * Math.PI) * curvature
+                // Curvature (Smooth Cosine Bell)
+                // Maps 0..1 to 0..1..0 (Bell Curve), with 0 slope at edges to remove "V" seams
+                const bell = (1 - Math.cos(v * Math.PI * 2)) * 0.5
+                const curveOffset = bell * curvature
 
                 const xNorm = x / res
                 angle = (xNorm + waveOffset + curveOffset) * Math.PI * 2 * density

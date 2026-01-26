@@ -154,6 +154,16 @@ interface State {
         burnWidth: number
         warp: number
     }
+    fluid: {
+        color1: string
+        color2: string
+        color3: string
+        color4: string
+        background: string
+        speed: number
+        density: number
+        strength: number
+    }
     // New PostFX Slice
     postfx: {
         dither: boolean
@@ -173,7 +183,7 @@ interface State {
     }
     // Scene Slice
     scene: {
-        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Burn'
+        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Burn' | 'Fluid Flow'
         solidColor: string
     }
     logo: string | null
@@ -187,6 +197,7 @@ interface State {
     setGlow: (partial: Partial<State['glow']>) => void
     setOrbs: (partial: Partial<State['orbs']>) => void
     setAcidBurn: (partial: Partial<State['acidBurn']>) => void
+    setFluid: (partial: Partial<State['fluid']>) => void
     setPostFX: (partial: Partial<State['postfx']>) => void
     setScene: (partial: Partial<State['scene']>) => void
     setLogo: (logo: string | null) => void
@@ -293,6 +304,16 @@ export const useStore = create<State>((set) => {
             burnWidth: 0.1,
             warp: 0.3
         },
+        fluid: {
+            color1: '#38bdf8',
+            color2: '#e879f9',
+            color3: '#34d399',
+            color4: '#fbbf24',
+            background: '#0f172a',
+            speed: 0.2,
+            density: 1.0,
+            strength: 0.4
+        },
         postfx: {
             dither: true,
             ditherOpacity: 0.5,
@@ -310,7 +331,7 @@ export const useStore = create<State>((set) => {
             filmDirt: 0.5
         },
         scene: {
-            bgMode: 'Gradient',
+            bgMode: 'Fluid Flow',
             solidColor: '#a3b48b'
         },
         logo: null,
@@ -324,6 +345,7 @@ export const useStore = create<State>((set) => {
         setGlow: (partial) => set((state) => ({ glow: { ...state.glow, ...partial } })),
         setOrbs: (partial) => set((state) => ({ orbs: { ...state.orbs, ...partial } })),
         setAcidBurn: (partial) => set((state) => ({ acidBurn: { ...state.acidBurn, ...partial } })),
+        setFluid: (partial) => set((state) => ({ fluid: { ...state.fluid, ...partial } })),
         setPostFX: (partial) => set((state) => ({ postfx: { ...state.postfx, ...partial } })),
         setScene: (partial) => set((state) => ({ scene: { ...state.scene, ...partial } })),
         setLogo: (logo) => set({ logo }),
@@ -351,6 +373,8 @@ export const useStore = create<State>((set) => {
                     return { glow: { ...state.glow, color1: p[0], color2: p[1] } }
                 } else if (mode === 'Acid Burn') {
                     return { acidBurn: { ...state.acidBurn, color1: p[0], color2: p[1], color3: p[2], background: p[3] } }
+                } else if (mode === 'Fluid Flow') {
+                    return { fluid: { ...state.fluid, color1: p[0], color2: p[1], color3: p[2], color4: p[3] } }
                 }
                 return {}
             })

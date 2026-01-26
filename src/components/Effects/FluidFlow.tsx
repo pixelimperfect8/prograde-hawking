@@ -5,8 +5,7 @@ import * as THREE from 'three'
 import { useStore } from '../../store'
 
 // Fluid Flow Shader - PAINT MIXING style
-// - Removed grain (frosted look)
-// - Deep domain warping for swirly "oil paint" effect
+// - Added Smoothing control
 const FluidFlowMaterial = shaderMaterial(
     {
         uTime: 0,
@@ -16,8 +15,9 @@ const FluidFlowMaterial = shaderMaterial(
         uColor4: new THREE.Color('#fbbf24'),
         uBackground: new THREE.Color('#0f172a'),
         uSpeed: 0.2,
-        uDensity: 1.5, // Higher density for paint streaks
+        uDensity: 1.5,
         uStrength: 0.6,
+        uSmoothing: 0.5, // New prop
         uAspectRatio: 1.0,
     },
     // Vertex Shader
@@ -41,6 +41,7 @@ const FluidFlowMaterial = shaderMaterial(
         uniform float uSpeed;
         uniform float uDensity;
         uniform float uStrength;
+        uniform float uSmoothing;
         uniform float uAspectRatio;
         
         varying vec2 vUv;
@@ -78,10 +79,6 @@ const FluidFlowMaterial = shaderMaterial(
             uv.x *= uAspectRatio;
             float time = uTime * uSpeed;
             
-            // Domain Warping - "Paint Mixing"
-            // We do a triple warp to get that swirly liquid look
-            // f(p) = fbm( p + fbm( p + fbm( p ) ) )
-            
             float scale = uDensity * 0.8;
             
             // Layer 1
@@ -98,39 +95,36 @@ const FluidFlowMaterial = shaderMaterial(
             // Use 'r' to distort the final coordinate
             vec2 warped = uv + r * uStrength * 1.5;
             
-            // Calculate pattern for mixing
-            // Higher frequency detail
+            // Mixing pattern
             float fluid = snoise(warped * 2.0 - time * 0.1);
-            
-            // Normalize
             fluid = fluid * 0.5 + 0.5; 
             
-            // Color Mapping
-            // We map the 0-1 fluid value to a palette
-            // To look like paint, we want swirls of distinct colors
+            // Color Ribbons
+            float ribbon1 = sin(fluid * 10.0 + time) * 0.5 + 0.5;
+            float ribbon2 = sin(fluid * 15.0 - time * 0.5 + 2.0) * 0.5 + 0.5;
+            float ribbon3 = snoise(warped * 3.0 + vec2(time)); 
+            
+            // Smoothing Logic
+            // Map uSmoothing (0-1) to smoothstep range
+            // 0.0 -> 0.01 (sharp)
+            // 1.0 -> 0.5 (blurry)
+            float sm = mix(0.05, 0.8, uSmoothing);
+            float smHalf = sm * 0.5;
             
             vec3 color = uBackground;
             
-            // Create "ribbons" using sine waves on the fluid value
-            // This creates bands of color that follow the warp
-            
-            float ribbon1 = sin(fluid * 10.0 + time) * 0.5 + 0.5;
-            float ribbon2 = sin(fluid * 15.0 - time * 0.5 + 2.0) * 0.5 + 0.5;
-            float ribbon3 = snoise(warped * 3.0 + vec2(time)); // More chaotic mix
-            
             // Base layer
-            color = mix(color, uColor1, smoothstep(0.2, 0.6, fluid));
+            color = mix(color, uColor1, smoothstep(0.5 - smHalf, 0.5 + smHalf, fluid));
             
-            // Streaks of other colors
-            color = mix(color, uColor2, smoothstep(0.4, 0.7, ribbon1) * 0.8);
-            color = mix(color, uColor3, smoothstep(0.4, 0.7, ribbon2) * 0.8);
+            // Streaks
+            color = mix(color, uColor2, smoothstep(0.5 - smHalf, 0.5 + smHalf, ribbon1) * 0.8);
+            color = mix(color, uColor3, smoothstep(0.5 - smHalf, 0.5 + smHalf, ribbon2) * 0.8);
             
             // Accent
-            // Sharp thin lines for detail?
-            float detail = smoothstep(0.48, 0.52, abs(ribbon3));
-            color = mix(color, uColor4, detail * 0.5);
-            
-            // NO GRAIN - Clean, glossy paint look
+            // We keep accent relatively sharp unless smoothing is maxed
+            float detailWidth = mix(0.02, 0.2, uSmoothing);
+            float detail = smoothstep(0.5 - detailWidth, 0.5 + detailWidth, abs(ribbon3));
+            color = mix(color, uColor4, (1.0 - detail) * 0.5);
             
             gl_FragColor = vec4(color, 1.0);
         }
@@ -156,6 +150,7 @@ export default function FluidFlow() {
             materialRef.current.uSpeed = fluid.speed
             materialRef.current.uDensity = fluid.density
             materialRef.current.uStrength = fluid.strength
+            materialRef.current.uSmoothing = fluid.smoothing
             materialRef.current.uAspectRatio = aspect
         }
     })

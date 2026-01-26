@@ -8,7 +8,6 @@ import LavaControl from './LavaControl'
 import BlobControl from './BlobControl'
 import GlowControl from './GlowControl'
 import OrbsControl from './OrbsControl'
-import AcidBurnControl from './AcidBurnControl'
 import FluidFlowControl from './FluidFlowControl'
 
 export default function Overlay() {
@@ -128,7 +127,6 @@ export default function Overlay() {
                 {bgMode === 'Blob Stack' && <BlobControl />}
                 {bgMode === 'Solid + Glow' && <GlowControl />}
                 {bgMode === 'Orbs' && <OrbsControl />}
-                {bgMode === 'Acid Burn' && <AcidBurnControl />}
                 {bgMode === 'Fluid Flow' && <FluidFlowControl />}
 
                 <GlassControl />

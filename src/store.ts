@@ -143,17 +143,6 @@ interface State {
         blur: number
         scale: number
     }
-    acidBurn: {
-        color1: string
-        color2: string
-        color3: string
-        background: string
-        burnColor: string
-        speed: number
-        threshold: number
-        burnWidth: number
-        warp: number
-    }
     fluid: {
         color1: string
         color2: string
@@ -163,6 +152,7 @@ interface State {
         speed: number
         density: number
         strength: number
+        smoothing: number
     }
     // New PostFX Slice
     postfx: {
@@ -183,7 +173,7 @@ interface State {
     }
     // Scene Slice
     scene: {
-        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Burn' | 'Fluid Flow'
+        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Fluid Flow'
         solidColor: string
     }
     logo: string | null
@@ -196,7 +186,6 @@ interface State {
     setBlob: (partial: Partial<State['blob']>) => void
     setGlow: (partial: Partial<State['glow']>) => void
     setOrbs: (partial: Partial<State['orbs']>) => void
-    setAcidBurn: (partial: Partial<State['acidBurn']>) => void
     setFluid: (partial: Partial<State['fluid']>) => void
     setPostFX: (partial: Partial<State['postfx']>) => void
     setScene: (partial: Partial<State['scene']>) => void
@@ -293,17 +282,7 @@ export const useStore = create<State>((set) => {
             blur: 0.4,
             scale: 1.0
         },
-        acidBurn: {
-            color1: '#ff3366',
-            color2: '#ff9933',
-            color3: '#33ccff',
-            background: '#0a0a0a',
-            burnColor: '#ffffff',
-            speed: 0.15,
-            threshold: 0.5,
-            burnWidth: 0.1,
-            warp: 0.3
-        },
+
         fluid: {
             color1: '#38bdf8',
             color2: '#e879f9',
@@ -311,8 +290,9 @@ export const useStore = create<State>((set) => {
             color4: '#fbbf24',
             background: '#0f172a',
             speed: 0.2,
-            density: 1.0,
-            strength: 0.4
+            density: 0.7,
+            strength: 0.4,
+            smoothing: 0.5
         },
         postfx: {
             dither: true,
@@ -344,7 +324,6 @@ export const useStore = create<State>((set) => {
         setBlob: (partial) => set((state) => ({ blob: { ...state.blob, ...partial } })),
         setGlow: (partial) => set((state) => ({ glow: { ...state.glow, ...partial } })),
         setOrbs: (partial) => set((state) => ({ orbs: { ...state.orbs, ...partial } })),
-        setAcidBurn: (partial) => set((state) => ({ acidBurn: { ...state.acidBurn, ...partial } })),
         setFluid: (partial) => set((state) => ({ fluid: { ...state.fluid, ...partial } })),
         setPostFX: (partial) => set((state) => ({ postfx: { ...state.postfx, ...partial } })),
         setScene: (partial) => set((state) => ({ scene: { ...state.scene, ...partial } })),
@@ -371,8 +350,6 @@ export const useStore = create<State>((set) => {
                     return { orbs: { ...state.orbs, color1: p[0], color2: p[1], color3: p[2], color4: p[3] } }
                 } else if (mode === 'Solid + Glow') {
                     return { glow: { ...state.glow, color1: p[0], color2: p[1] } }
-                } else if (mode === 'Acid Burn') {
-                    return { acidBurn: { ...state.acidBurn, color1: p[0], color2: p[1], color3: p[2], background: p[3] } }
                 } else if (mode === 'Fluid Flow') {
                     return { fluid: { ...state.fluid, color1: p[0], color2: p[1], color3: p[2], color4: p[3] } }
                 }

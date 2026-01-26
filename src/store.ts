@@ -173,7 +173,7 @@ interface State {
     }
     // Scene Slice
     scene: {
-        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Fluid Flow'
+        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip'
         solidColor: string
     }
     logo: string | null
@@ -226,7 +226,7 @@ export const useStore = create<State>((set) => {
             loop: getParam('loop', false)
         },
         glass: {
-            enabled: true,
+            enabled: false,
             transmission: 1,
             thickness: 0.5,
             roughness: 0.1,
@@ -311,7 +311,7 @@ export const useStore = create<State>((set) => {
             filmDirt: 0.5
         },
         scene: {
-            bgMode: 'Gradient',
+            bgMode: 'Acid Trip',
             solidColor: '#a3b48b'
         },
         logo: null,
@@ -350,7 +350,7 @@ export const useStore = create<State>((set) => {
                     return { orbs: { ...state.orbs, color1: p[0], color2: p[1], color3: p[2], color4: p[3] } }
                 } else if (mode === 'Solid + Glow') {
                     return { glow: { ...state.glow, color1: p[0], color2: p[1] } }
-                } else if (mode === 'Fluid Flow') {
+                } else if (mode === 'Acid Trip') {
                     return { fluid: { ...state.fluid, color1: p[0], color2: p[1], color3: p[2], color4: p[3] } }
                 }
                 return {}

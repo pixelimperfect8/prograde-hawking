@@ -3,13 +3,13 @@ import ColorPicker from './inputs/ColorPicker'
 import Slider from './inputs/Slider'
 import Section from './inputs/Section'
 
-export default function FluidFlowControl() {
+export default function AcidTripControl() {
     const { fluid, setFluid } = useStore()
 
     const { color1, color2, color3, color4, background, speed, density, strength, smoothing } = fluid
 
     return (
-        <Section title="Fluid Flow">
+        <Section title="Acid Trip">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
                 {/* Colors */}
@@ -31,7 +31,7 @@ export default function FluidFlowControl() {
                         <Slider label="Flow Speed" value={speed} min={0.0} max={1.0} onChange={(v: number) => setFluid({ speed: v })} />
                         <Slider label="Noise Density" value={density} min={0.2} max={2.0} onChange={(v: number) => setFluid({ density: v })} />
                         <Slider label="Warp Strength" value={strength} min={0.0} max={1.0} onChange={(v: number) => setFluid({ strength: v })} />
-                        <Slider label="Smoothing" value={smoothing} min={0.0} max={1.0} onChange={(v: number) => setFluid({ smoothing: v })} />
+                        <Slider label="Smoothing" value={smoothing} min={0.0} max={2.0} onChange={(v: number) => setFluid({ smoothing: v })} />
                     </div>
                 </div>
 

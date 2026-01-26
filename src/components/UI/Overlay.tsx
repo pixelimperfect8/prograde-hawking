@@ -8,7 +8,7 @@ import LavaControl from './LavaControl'
 import BlobControl from './BlobControl'
 import GlowControl from './GlowControl'
 import OrbsControl from './OrbsControl'
-import FluidFlowControl from './FluidFlowControl'
+import AcidTripControl from './AcidTripControl'
 
 export default function Overlay() {
     const { scene, appState } = useStore()
@@ -127,7 +127,7 @@ export default function Overlay() {
                 {bgMode === 'Blob Stack' && <BlobControl />}
                 {bgMode === 'Solid + Glow' && <GlowControl />}
                 {bgMode === 'Orbs' && <OrbsControl />}
-                {bgMode === 'Fluid Flow' && <FluidFlowControl />}
+                {bgMode === 'Acid Trip' && <AcidTripControl />}
 
                 <GlassControl />
                 <EffectsControl />

@@ -17,8 +17,14 @@ export default function SceneControl() {
                 <Select
                     label="Background Mode"
                     value={scene.bgMode}
-                    options={['Gradient', 'Solid + Glow', 'Lava Lamp', 'Blob Stack', 'Orbs', 'Fluid Flow']}
-                    onChange={(val) => setScene({ bgMode: val as any })}
+                    options={['Gradient', 'Solid + Glow', 'Lava Lamp', 'Blob Stack', 'Orbs', 'Acid Trip']}
+                    onChange={(val) => {
+                        setScene({ bgMode: val as any })
+                        // Auto-disable glass for Acid Trip if user selects it (requested behavior)
+                        if (val === 'Acid Trip') {
+                            setGlass({ enabled: false })
+                        }
+                    }}
                 />
 
                 {scene.bgMode === 'Solid + Glow' && (

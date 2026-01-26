@@ -4,9 +4,9 @@ import { shaderMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import { useStore } from '../../store'
 
-// Fluid Flow Shader - PAINT MIXING style
+// Acid Trip Shader - PAINT MIXING style
 // - Added Smoothing control
-const FluidFlowMaterial = shaderMaterial(
+const AcidTripMaterial = shaderMaterial(
     {
         uTime: 0,
         uColor1: new THREE.Color('#38bdf8'),
@@ -104,11 +104,10 @@ const FluidFlowMaterial = shaderMaterial(
             float ribbon2 = sin(fluid * 15.0 - time * 0.5 + 2.0) * 0.5 + 0.5;
             float ribbon3 = snoise(warped * 3.0 + vec2(time)); 
             
-            // Smoothing Logic
-            // Map uSmoothing (0-1) to smoothstep range
-            // 0.0 -> 0.01 (sharp)
-            // 1.0 -> 0.5 (blurry)
-            float sm = mix(0.05, 0.8, uSmoothing);
+        // Map uSmoothing (0-2) to smoothstep range
+        // 0.0 -> 0.01 (sharp)
+        // 2.0 -> 0.8 (very blurry)
+        float sm = mix(0.01, 0.8, uSmoothing * 0.5);
             float smHalf = sm * 0.5;
             
             vec3 color = uBackground;
@@ -131,9 +130,9 @@ const FluidFlowMaterial = shaderMaterial(
     `
 )
 
-extend({ FluidFlowMaterial })
+extend({ AcidTripMaterial })
 
-export default function FluidFlow() {
+export default function AcidTrip() {
     const materialRef = useRef<any>(null)
     const { fluid } = useStore()
     const { viewport } = useThree()
@@ -159,7 +158,7 @@ export default function FluidFlow() {
         <mesh scale={[viewport.width * 1.5, viewport.height * 1.5, 1]}>
             <planeGeometry args={[1, 1]} />
             {/* @ts-ignore */}
-            <fluidFlowMaterial ref={materialRef} />
+            <acidTripMaterial ref={materialRef} />
         </mesh>
     )
 }

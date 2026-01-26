@@ -7,7 +7,7 @@ import GlowOverlay from './components/Effects/GlowOverlay'
 import LavaLamp from './components/Effects/LavaLamp'
 import BlobStack from './components/Effects/BlobStack'
 import Orbs from './components/Effects/Orbs'
-import FluidFlow from './components/Effects/FluidFlow'
+import AcidTrip from './components/Effects/AcidTrip'
 import PostFX from './components/Effects/PostFX'
 import Ticker from './components/Ticker'
 import Overlay from './components/UI/Overlay'
@@ -63,7 +63,7 @@ function Scene() {
         {bgMode === 'Lava Lamp' && <LavaLamp />}
         {bgMode === 'Blob Stack' && <BlobStack />}
         {bgMode === 'Orbs' && <Orbs />}
-        {bgMode === 'Fluid Flow' && <FluidFlow />}
+        {bgMode === 'Acid Trip' && <AcidTrip />}
 
         {showGlass && <GlassOverlay />}
       </group>

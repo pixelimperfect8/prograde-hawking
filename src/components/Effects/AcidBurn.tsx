@@ -4,20 +4,19 @@ import { shaderMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import { useStore } from '../../store'
 
-// Acid Burn shader - morphing organic blob outline with halftone pattern
-// Creates a single hollow blob shape with glowing edges, like the Aura website
+// Acid Burn shader - DOT MATRIX / FORCE FIELD version
+// The visual is a grid of dots that scale/glow to form the organic ring shape
 const AcidBurnShaderMaterial = shaderMaterial(
     {
         uTime: 0,
         uGlowColor: new THREE.Color('#00d4ff'), // Cyan glow
-        uBackground: new THREE.Color('#0a1628'), // Dark blue background
-        uSpeed: 0.15,
-        uEdgeWidth: 0.12,
-        uBlobSize: 0.4,
-        uWarp: 0.4,
-        uGlowIntensity: 1.2,
-        uHalftoneScale: 80.0,
-        uHalftoneStrength: 0.4,
+        uBaseColor: new THREE.Color('#0a1628'), // Dark background
+        uDotColor: new THREE.Color('#1f2937'), // Inactive dot color
+        uSpeed: 0.2,
+        uGridScale: 60.0, // How many dots across
+        uDotSize: 0.5,    // Base dot size
+        uWarp: 0.3,
+        uThreshold: 0.5,
         uAspectRatio: 1.0,
     },
     // Vertex Shader
@@ -34,14 +33,13 @@ const AcidBurnShaderMaterial = shaderMaterial(
         
         uniform float uTime;
         uniform vec3 uGlowColor;
-        uniform vec3 uBackground;
+        uniform vec3 uBaseColor;
+        uniform vec3 uDotColor;
         uniform float uSpeed;
-        uniform float uEdgeWidth;
-        uniform float uBlobSize;
+        uniform float uGridScale;
+        uniform float uDotSize; // Max size relative to cell
         uniform float uWarp;
-        uniform float uGlowIntensity;
-        uniform float uHalftoneScale;
-        uniform float uHalftoneStrength;
+        uniform float uThreshold; // Controls ring thickness/size
         uniform float uAspectRatio;
         
         varying vec2 vUv;
@@ -110,81 +108,85 @@ const AcidBurnShaderMaterial = shaderMaterial(
             return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
         }
         
-        // Halftone dot pattern
-        float halftone(vec2 uv, float intensity, float scale) {
-            vec2 grid = fract(uv * scale);
-            float dot = length(grid - 0.5);
-            return smoothstep(0.5 - intensity * 0.3, 0.5, dot);
-        }
-        
         void main() {
             float time = uTime * uSpeed;
             
-            // Adjust UV for aspect ratio - center the blob
-            vec2 uv = vUv - 0.5;
+            // Grid Setup
+            vec2 uv = vUv;
             uv.x *= uAspectRatio;
             
-            // Offset the blob center slightly to the right (like in the screenshots)
-            vec2 center = vec2(0.15, 0.0);
-            center.x += snoise(vec3(time * 0.2, 0.0, 0.0)) * 0.1;
-            center.y += snoise(vec3(0.0, time * 0.15, 0.0)) * 0.1;
+            // Cell coordinates from 0 to 1 within each grid cell
+            vec2 gridUV = fract(uv * uGridScale);
             
-            vec2 p = uv - center;
+            // ID of the cell - used for noise sampling so the whole dot moves together
+            vec2 cellID = floor(uv * uGridScale);
+            vec2 cellCenter = (cellID + 0.5) / uGridScale; // Normalized position of cell center
             
-            // Distance from center
-            float dist = length(p);
+            // --- FIELD CALCULATION (Sampled at Cell Center) ---
             
-            // Get angle for organic deformation
-            float angle = atan(p.y, p.x);
+            // Organic movement of the center
+            vec2 organicCenter = vec2(0.5 * uAspectRatio, 0.5);
+            organicCenter.x += snoise(vec3(time * 0.2, 0.0, 0.0)) * 0.15;
+            organicCenter.y += snoise(vec3(0.0, time * 0.15, 0.0)) * 0.15;
             
-            // Multi-layered organic deformation of the blob shape
-            float deform = 0.0;
-            deform += snoise(vec3(angle * 2.0 + time * 0.3, dist * 3.0, time * 0.2)) * uWarp * 0.3;
-            deform += snoise(vec3(angle * 3.0 + time * 0.2, dist * 2.0 + 5.0, time * 0.15)) * uWarp * 0.2;
-            deform += snoise(vec3(angle * 5.0 + time * 0.4, dist * 4.0 + 10.0, time * 0.1)) * uWarp * 0.1;
+            // Domain warp for the ring shape
+            vec2 warpP = cellCenter - organicCenter;
+            float angle = atan(warpP.y, warpP.x);
+            float dist = length(warpP);
             
-            // Adjust distance based on deformation - creates organic blob shape
-            float blobDist = dist + deform;
+            // Warp the distance field
+            float warp = snoise(vec3(angle * 2.5 + time * 0.2, dist * 2.0, time * 0.1)) * uWarp;
+            warp += snoise(vec3(angle * 5.0 - time * 0.1, dist * 5.0, time * 0.2)) * uWarp * 0.5;
             
-            // The blob ring - hollow inside with glowing edge
-            float innerRadius = uBlobSize;
-            float outerRadius = uBlobSize + uEdgeWidth;
+            float warpedDist = dist + warp * 0.2;
             
-            // Create the ring shape (hollow inside)
-            float ring = smoothstep(innerRadius - 0.05, innerRadius, blobDist) 
-                       - smoothstep(outerRadius, outerRadius + 0.08, blobDist);
-            ring = max(ring, 0.0);
+            // Calculate "Ring Field" value (0 to 1)
+            // Peak at the ring radius, fall off to sides
+            float midRadius = 0.35; // Base radius size
+            float ringWidth = 0.15 * uThreshold;
             
-            // Add soft glow extending outward from the ring
-            float outerGlow = 1.0 - smoothstep(outerRadius, outerRadius + 0.25, blobDist);
-            outerGlow *= 0.5;
+            float fieldObj = 1.0 - smoothstep(0.0, ringWidth, abs(warpedDist - midRadius));
             
-            // Add inner glow (subtle glow inside the hole)
-            float innerGlow = smoothstep(innerRadius - 0.15, innerRadius, blobDist);
-            innerGlow *= 0.3;
+            // Add a second, thinner outer ring
+            float fieldObj2 = 1.0 - smoothstep(0.0, ringWidth * 0.5, abs(warpedDist - (midRadius + 0.15)));
+            fieldObj = max(fieldObj, fieldObj2 * 0.5);
             
-            // Combine ring and glows
-            float glow = ring * uGlowIntensity + outerGlow * 0.6 + innerGlow * 0.2;
-            glow = clamp(glow, 0.0, 1.5);
+            // --- DOT RENDERING ---
             
-            // Apply halftone pattern
-            vec2 halftoneUv = vUv;
-            halftoneUv.x *= uAspectRatio;
-            float dots = halftone(halftoneUv, glow, uHalftoneScale);
+            // Dot size modulation
+            // Base dots are small
+            float currentDotSize = 0.15 * uDotSize;
             
-            // Mix halftone with solid glow based on strength
-            float finalGlow = mix(glow, glow * (1.0 - dots * uHalftoneStrength), uHalftoneStrength);
+            // Active dots (in the ring) are larger
+            currentDotSize += fieldObj * 0.6 * uDotSize;
             
-            // Final color
-            vec3 color = uBackground;
-            color += uGlowColor * finalGlow;
+            // Distance from center of current grid cell
+            float d = length(gridUV - 0.5);
             
-            // Add subtle screen edge glow
-            float edgeDist = max(abs(uv.x / uAspectRatio), abs(uv.y)) * 2.0;
-            float edgeGlow = smoothstep(0.8, 1.0, edgeDist) * 0.15;
-            color += uGlowColor * edgeGlow;
+            // Draw dot
+            float dotMask = 1.0 - smoothstep(currentDotSize - 0.05, currentDotSize + 0.05, d);
             
-            gl_FragColor = vec4(color, 1.0);
+            // Color modulation
+            vec3 activeColor = uGlowColor;
+            vec3 inactiveColor = uDotColor;
+            
+            // Mix color based on field strength
+            vec3 dotColor = mix(inactiveColor, activeColor, fieldObj);
+            
+            // Brightness boost for active dots
+            dotColor += activeColor * fieldObj * 1.5;
+            
+            // Final composite
+            vec3 finalColor = uBaseColor; // Background
+            
+            // Add dots on top
+            finalColor = mix(finalColor, dotColor, dotMask);
+            
+            // Add subtle glow around active area (behind dots)
+            float glowMask = fieldObj * 0.3;
+            finalColor += uGlowColor * glowMask;
+            
+            gl_FragColor = vec4(finalColor, 1.0);
         }
     `
 )
@@ -201,21 +203,21 @@ export default function AcidBurn() {
     // Parse colors
     const colors = useMemo(() => ({
         glowColor: new THREE.Color(acidBurn.color1),
-        background: new THREE.Color(acidBurn.background),
+        baseColor: new THREE.Color(acidBurn.background),
+        dotColor: new THREE.Color('#1f2937'), // Dark grey/blue for inactive dots
     }), [acidBurn.color1, acidBurn.background])
 
     useFrame((state) => {
         if (materialRef.current) {
             materialRef.current.uTime = state.clock.elapsedTime
             materialRef.current.uGlowColor = colors.glowColor
-            materialRef.current.uBackground = colors.background
+            materialRef.current.uBaseColor = colors.baseColor
+            materialRef.current.uDotColor = colors.dotColor
             materialRef.current.uSpeed = acidBurn.speed
-            materialRef.current.uEdgeWidth = acidBurn.burnWidth
-            materialRef.current.uBlobSize = acidBurn.threshold
+            materialRef.current.uGridScale = 60.0 // Fixed dense grid
+            materialRef.current.uDotSize = acidBurn.threshold * 1.5 // Map threshold to dot size scale
             materialRef.current.uWarp = acidBurn.warp
-            materialRef.current.uGlowIntensity = 1.2
-            materialRef.current.uHalftoneScale = 80.0
-            materialRef.current.uHalftoneStrength = 0.4
+            materialRef.current.uThreshold = acidBurn.burnWidth * 5.0 // Map burn width to ring thickness
             materialRef.current.uAspectRatio = aspect
         }
     })

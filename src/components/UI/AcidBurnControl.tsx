@@ -45,8 +45,8 @@ export default function AcidBurnControl() {
                 <span style={{ fontSize: '0.7rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px' }}>Effects</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
                     <Slider label="Speed" value={acidBurn.speed} min={0.05} max={0.5} onChange={(v) => setAcidBurn({ speed: v })} />
-                    <Slider label="Threshold" value={acidBurn.threshold} min={0.2} max={0.8} onChange={(v) => setAcidBurn({ threshold: v })} />
-                    <Slider label="Burn Width" value={acidBurn.burnWidth} min={0.02} max={0.3} onChange={(v) => setAcidBurn({ burnWidth: v })} />
+                    <Slider label="Dot Scale" value={acidBurn.threshold} min={0.2} max={1.0} onChange={(v) => setAcidBurn({ threshold: v })} />
+                    <Slider label="Ring Width" value={acidBurn.burnWidth} min={0.05} max={0.4} onChange={(v) => setAcidBurn({ burnWidth: v })} />
                     <Slider label="Warp" value={acidBurn.warp} min={0.1} max={0.8} onChange={(v) => setAcidBurn({ warp: v })} />
                 </div>
             </div>

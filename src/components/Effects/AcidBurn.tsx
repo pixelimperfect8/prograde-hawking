@@ -4,10 +4,10 @@ import { shaderMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import { useStore } from '../../store'
 
-// Acid Burn shader - THIN & CLEAN
-// - Very thin ring
-// - Clean expansion (no sticky points)
-// - Gentle sine warp only
+// Acid Burn shader - MULTIPLE DANCING RINGS
+// - 3 Staggered rings
+// - Dynamic "dancing" warp
+// - Proportional growth (corrected scaling)
 const AcidBurnShaderMaterial = shaderMaterial(
     {
         uTime: 0,
@@ -44,7 +44,7 @@ const AcidBurnShaderMaterial = shaderMaterial(
         
         varying vec2 vUv;
         
-        // Simplex noise (Low Freq only)
+        // Simplex noise
         vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
         float snoise(vec2 v){
             const vec4 C = vec4(0.211324865405187, 0.366025403784439,
@@ -72,6 +72,41 @@ const AcidBurnShaderMaterial = shaderMaterial(
             return 130.0 * dot(m, g);
         }
 
+        // Helper for one ring
+        float drawRing(vec2 p, float progress, float warpScale, float time) {
+            float dist0 = length(p);
+            float angle = atan(p.y, p.x);
+            
+            // "Dancing" Warp
+            // Rotate the noise phase over time (angle + time)
+            // Scale warp frequency with radius to keep shape complexity consistent
+            float freq = 2.0 + progress * 1.5; 
+            
+            float w1 = sin(angle * freq + time * 2.0);
+            float w2 = cos(angle * (freq * 1.5) - time * 1.5);
+            float noise = snoise(p * (1.0 + progress) + vec2(time * 0.5));
+            
+            float warp = (w1 * 0.3 + w2 * 0.2 + noise * 0.5) * warpScale * 0.2;
+            
+            float dField = dist0 + warp;
+            
+            // Radius expands from 0 to 1.6
+            float radius = progress * 1.6;
+            
+            // Width
+            float width = 0.06;
+            
+            float ring = 1.0 - smoothstep(0.0, width, abs(dField - radius));
+            
+            // Mask center to prevent spawn artifacts
+            ring *= smoothstep(0.05, 0.15, radius);
+            
+            // Fade out edge
+            ring *= 1.0 - smoothstep(1.3, 1.6, radius);
+            
+            return ring;
+        }
+
         void main() {
             float time = uTime * uSpeed;
             
@@ -83,73 +118,53 @@ const AcidBurnShaderMaterial = shaderMaterial(
             vec2 cellID = floor(uv * uGridScale);
             vec2 cellCenter = (cellID + 0.5) / uGridScale;
             
+            // Center in isotropic coords
             vec2 center = vec2(0.5 * uAspectRatio, 0.5);
             vec2 p = cellCenter - center;
             
-            // --- CLEAN WARP LOGIC ---
-            // "Points sticking" happens when warp direction opposes expansion or is too high freq.
-            // We'll use a very smooth, large-scale warp that rotates slowly.
+            // --- MULTIPLE RINGS ---
+            float totalInteraction = 0.0;
             
-            float angle = atan(p.y, p.x);
-            float dist = length(p);
+            // Ring 1
+            float t1 = fract(time);
+            totalInteraction = max(totalInteraction, drawRing(p, t1, uWarp, time));
             
-            // Warp Factor - Scale with distance slightly so it doesn't pinch at center
-            // Only very low frequency sine waves for "round" feel
-            float wave1 = sin(angle * 3.0 + time * 0.5);
-            float wave2 = cos(angle * 2.0 - time * 0.4);
+            // Ring 2 (Offset 0.33)
+            float t2 = fract(time + 0.33);
+            totalInteraction = max(totalInteraction, drawRing(p, t2, uWarp, time + 10.0));
             
-            // Minimal noise, very large scale
-            float noiseVal = snoise(p * 0.8 + vec2(time * 0.1));
+            // Ring 3 (Offset 0.66)
+            float t3 = fract(time + 0.66);
+            totalInteraction = max(totalInteraction, drawRing(p, t3, uWarp, time + 20.0));
             
-            // Combined warp - gentle
-            float warp = (wave1 * 0.3 + wave2 * 0.2 + noiseVal * 0.5) * uWarp * 0.15;
             
-            // Apply warp directly to distance check
-            float dField = dist + warp;
+            // --- EDGE GLOW ---
+            vec2 uvCentered = vUv - 0.5;
+            uvCentered.x *= uAspectRatio;
+            float edgeDist = length(uvCentered);
+            float edgeGlow = smoothstep(0.7, 1.4, edgeDist);
             
-            // Expanding Rings
-            float loop = fract(time); 
-            float r1 = loop * 1.8; 
-            
-            // STAGGERED SECOND RING (Optional, kept subtle)
-            // float r2 = fract(loop + 0.5) * 1.8;
-            
-            // --- THIN RING PROFILE ---
-            // Much thinner width
-            float width = 0.08; // Was 0.25
-            
-            // Sharp falloff for thin, crisp ring
-            float ring1 = 1.0 - smoothstep(0.0, width, abs(dField - r1));
-            
-            // Fade inner/outer edge to avoid "sticky" artifacts
-            // This mask helps clean up the center just as it spawns
-            float centerMask = smoothstep(0.05, 0.2, r1); 
-            ring1 *= centerMask;
-            
-            // Fade out at screen edges
-            float edgeFade = 1.0 - smoothstep(1.2, 1.8, r1);
-            ring1 *= edgeFade;
-            
-            float interaction = ring1;
+            // Merge
+            float field = max(totalInteraction, edgeGlow * 0.3);
             
             // --- DOT RENDERING ---
             float baseSize = 0.1 * uDotSize; 
-            float boostSize = 0.9 * uDotSize; 
+            float boostSize = 0.85 * uDotSize; 
             
-            float size = mix(baseSize, boostSize, interaction);
+            float size = mix(baseSize, boostSize, field);
             
             // Circle SDF
             float dotDist = length(gridUV - 0.5);
             float dotMask = 1.0 - smoothstep(size - 0.1, size + 0.1, dotDist);
             
             // Color Logic
-            vec3 col = mix(uDotColor, uGlowColor, interaction);
-            col += uGlowColor * interaction * 0.5; // Bloom
+            vec3 col = mix(uDotColor, uGlowColor, field);
+            col += uGlowColor * field * 0.4; // Bloom
             
             vec3 pixel = mix(uBaseColor, col, dotMask);
             
             // Subtle Glow Field
-            pixel += uGlowColor * interaction * 0.1;
+            pixel += uGlowColor * field * 0.1;
             
             gl_FragColor = vec4(pixel, 1.0);
         }
@@ -174,7 +189,7 @@ export default function AcidBurn() {
     useFrame((state) => {
         if (materialRef.current) {
             materialRef.current.uTime = state.clock.elapsedTime
-            materialRef.current.uSpeed = acidBurn.speed * 0.5
+            materialRef.current.uSpeed = acidBurn.speed * 0.4 // Moderate speed
             materialRef.current.uGlowColor = colors.glowColor
             materialRef.current.uBaseColor = colors.baseColor
             materialRef.current.uDotColor = colors.dotColor

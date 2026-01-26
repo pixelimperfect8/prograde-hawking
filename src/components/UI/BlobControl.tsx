@@ -115,15 +115,7 @@ export default function BlobControl() {
                 </div>
             </div>
 
-            {/* Settings */}
-            <div style={{ marginTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
-                <span style={{ fontSize: '0.7rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px' }}>Effects</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
-                    <Slider label="Noise" value={blob.noise} min={0} max={0.5} onChange={(v) => setBlob({ noise: v })} />
-                </div>
-            </div>
-
-            {/* Animation Group */}
+            {/* Animation & Effects Group */}
             <div style={{ marginTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
                 <span style={{ fontSize: '0.7rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px' }}>Animation</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
@@ -149,6 +141,7 @@ export default function BlobControl() {
                             />
                         </>
                     )}
+                    <Slider label="Noise" value={blob.noise} min={0} max={0.5} onChange={(v) => setBlob({ noise: v })} />
                 </div>
             </div>
         </Section>

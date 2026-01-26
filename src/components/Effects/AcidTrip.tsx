@@ -6,6 +6,7 @@ import { useStore } from '../../store'
 
 // Acid Trip Shader - PAINT MIXING style
 // - Added Smoothing control
+// - Added Complexity control
 const AcidTripMaterial = shaderMaterial(
     {
         uTime: 0,
@@ -17,7 +18,8 @@ const AcidTripMaterial = shaderMaterial(
         uSpeed: 0.2,
         uDensity: 1.5,
         uStrength: 0.6,
-        uSmoothing: 0.5, // New prop
+        uSmoothing: 0.5,
+        uComplexity: 1.0, // New prop
         uAspectRatio: 1.0,
     },
     // Vertex Shader
@@ -42,6 +44,7 @@ const AcidTripMaterial = shaderMaterial(
         uniform float uDensity;
         uniform float uStrength;
         uniform float uSmoothing;
+        uniform float uComplexity;
         uniform float uAspectRatio;
         
         varying vec2 vUv;
@@ -92,7 +95,6 @@ const AcidTripMaterial = shaderMaterial(
             r.y = snoise(uv * scale + q * 2.0 + time * 0.2 + vec2(8.3, 2.8));
             
             // Layer 3 (Deep liquid)
-            // Use 'r' to distort the final coordinate
             vec2 warped = uv + r * uStrength * 1.5;
             
             // Mixing pattern
@@ -100,14 +102,14 @@ const AcidTripMaterial = shaderMaterial(
             fluid = fluid * 0.5 + 0.5; 
             
             // Color Ribbons
-            float ribbon1 = sin(fluid * 10.0 + time) * 0.5 + 0.5;
-            float ribbon2 = sin(fluid * 15.0 - time * 0.5 + 2.0) * 0.5 + 0.5;
-            float ribbon3 = snoise(warped * 3.0 + vec2(time)); 
+            // Complexity controls the frequency of these waves
+            float ribbonFreq = 10.0 * uComplexity;
+            float ribbon1 = sin(fluid * ribbonFreq + time) * 0.5 + 0.5;
+            float ribbon2 = sin(fluid * (ribbonFreq * 1.5) - time * 0.5 + 2.0) * 0.5 + 0.5;
+            float ribbon3 = snoise(warped * (3.0 * uComplexity) + vec2(time)); 
             
-        // Map uSmoothing (0-2) to smoothstep range
-        // 0.0 -> 0.01 (sharp)
-        // 2.0 -> 0.8 (very blurry)
-        float sm = mix(0.01, 0.8, uSmoothing * 0.5);
+            // Smoothing Logic
+            float sm = mix(0.01, 0.8, uSmoothing * 0.5);
             float smHalf = sm * 0.5;
             
             vec3 color = uBackground;
@@ -120,7 +122,6 @@ const AcidTripMaterial = shaderMaterial(
             color = mix(color, uColor3, smoothstep(0.5 - smHalf, 0.5 + smHalf, ribbon2) * 0.8);
             
             // Accent
-            // We keep accent relatively sharp unless smoothing is maxed
             float detailWidth = mix(0.02, 0.2, uSmoothing);
             float detail = smoothstep(0.5 - detailWidth, 0.5 + detailWidth, abs(ribbon3));
             color = mix(color, uColor4, (1.0 - detail) * 0.5);
@@ -150,6 +151,7 @@ export default function AcidTrip() {
             materialRef.current.uDensity = fluid.density
             materialRef.current.uStrength = fluid.strength
             materialRef.current.uSmoothing = fluid.smoothing
+            materialRef.current.uComplexity = fluid.complexity || 1.0
             materialRef.current.uAspectRatio = aspect
         }
     })

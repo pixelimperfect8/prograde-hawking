@@ -103,7 +103,16 @@ interface State {
         patternRotation: number
         flowSpeed: number
         flowDirection: number
+    } // End of Glass
+    ripples: {
+        color: string
+        speed: number
+        cellDensity: number
+        spread: number
+        backgroundColor: string
+        effectType: 'Static' | 'Pulse' | 'Expand'
     }
+
     lava: {
         color1: string
         color2: string
@@ -153,6 +162,7 @@ interface State {
         density: number
         strength: number
         smoothing: number
+        complexity: number
     }
     // New PostFX Slice
     postfx: {
@@ -173,7 +183,7 @@ interface State {
     }
     // Scene Slice
     scene: {
-        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip'
+        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples'
         solidColor: string
     }
     logo: string | null
@@ -187,6 +197,8 @@ interface State {
     setGlow: (partial: Partial<State['glow']>) => void
     setOrbs: (partial: Partial<State['orbs']>) => void
     setFluid: (partial: Partial<State['fluid']>) => void
+    setRipples: (partial: Partial<State['ripples']>) => void
+
     setPostFX: (partial: Partial<State['postfx']>) => void
     setScene: (partial: Partial<State['scene']>) => void
     setLogo: (logo: string | null) => void
@@ -194,6 +206,7 @@ interface State {
     applyPreset: (name: string) => void
     randomizeColors: () => void
 }
+
 
 export const useStore = create<State>((set) => {
     // URL Hydration Logic
@@ -242,6 +255,15 @@ export const useStore = create<State>((set) => {
             patternRotation: 45,
             flowSpeed: 0.2,
             flowDirection: 135
+        },
+
+        ripples: {
+            color: '#0081f7',
+            speed: 0.2,
+            cellDensity: 120, // Finer grid by default
+            spread: 0.15,
+            backgroundColor: '#000000',
+            effectType: 'Expand'
         },
         lava: {
             color1: '#ff0055',
@@ -292,7 +314,8 @@ export const useStore = create<State>((set) => {
             speed: 0.2,
             density: 0.7,
             strength: 0.4,
-            smoothing: 0.5
+            smoothing: 0.5,
+            complexity: 1.0
         },
         postfx: {
             dither: true,
@@ -325,6 +348,11 @@ export const useStore = create<State>((set) => {
         setGlow: (partial) => set((state) => ({ glow: { ...state.glow, ...partial } })),
         setOrbs: (partial) => set((state) => ({ orbs: { ...state.orbs, ...partial } })),
         setFluid: (partial) => set((state) => ({ fluid: { ...state.fluid, ...partial } })),
+        setRipples: (partial) => set((state) => ({ ripples: { ...state.ripples, ...partial } })),
+        // Ripples tasks restored:
+        // - [x] Implement "Ripples" Mode (Halftone/Squares)
+        // - [x] Restore Ring Expansion for Ripples
+        // - [x] Update Ripples Controls (Density, Bg Color)
         setPostFX: (partial) => set((state) => ({ postfx: { ...state.postfx, ...partial } })),
         setScene: (partial) => set((state) => ({ scene: { ...state.scene, ...partial } })),
         setLogo: (logo) => set({ logo }),

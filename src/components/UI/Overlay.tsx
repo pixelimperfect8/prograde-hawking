@@ -9,6 +9,8 @@ import BlobControl from './BlobControl'
 import GlowControl from './GlowControl'
 import OrbsControl from './OrbsControl'
 import AcidTripControl from './AcidTripControl'
+import RipplesControl from './RipplesControl'
+
 
 export default function Overlay() {
     const { scene, appState } = useStore()
@@ -128,6 +130,8 @@ export default function Overlay() {
                 {bgMode === 'Solid + Glow' && <GlowControl />}
                 {bgMode === 'Orbs' && <OrbsControl />}
                 {bgMode === 'Acid Trip' && <AcidTripControl />}
+                {bgMode === 'Ripples' && <RipplesControl />}
+
 
                 <GlassControl />
                 <EffectsControl />

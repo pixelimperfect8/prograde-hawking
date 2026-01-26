@@ -8,11 +8,14 @@ import LavaLamp from './components/Effects/LavaLamp'
 import BlobStack from './components/Effects/BlobStack'
 import Orbs from './components/Effects/Orbs'
 import AcidTrip from './components/Effects/AcidTrip'
+
+import Ripples from './components/Effects/Ripples'
 import PostFX from './components/Effects/PostFX'
-import Ticker from './components/Ticker'
+// import Ticker from './components/Ticker'
 import Overlay from './components/UI/Overlay'
 import CustomCursor from './components/UI/CustomCursor'
 import IntroMeshit from './components/UI/IntroMeshit'
+// import BrandLogo from './components/UI/BrandLogo'
 import { useStore } from './store'
 import './index.css'
 
@@ -64,6 +67,8 @@ function Scene() {
         {bgMode === 'Blob Stack' && <BlobStack />}
         {bgMode === 'Orbs' && <Orbs />}
         {bgMode === 'Acid Trip' && <AcidTrip />}
+        {bgMode === 'Ripples' && <Ripples />}
+
 
         {showGlass && <GlassOverlay />}
       </group>
@@ -139,7 +144,7 @@ function UI() {
         transition: 'opacity 1s ease 0.5s', // Delay to sync with controls
         pointerEvents: isReady ? 'auto' : 'none'
       }}>
-        <Ticker />
+        {/* <BrandLogo /> REMOVED as per user request */}
       </div>
 
 

@@ -152,7 +152,7 @@ export default function GlowOverlay() {
     if (!config.enabled) return null
 
     return (
-        <mesh position={[0, 0, 0.1]}>
+        <mesh position={[0, 0, 0.1]} renderOrder={1}>
             <planeGeometry args={[visibleWidth, visibleHeight]} />
             {/* @ts-ignore */}
             <glowMaterial

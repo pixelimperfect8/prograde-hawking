@@ -240,23 +240,23 @@ export const useStore = create<State>((set) => {
             loop: getParam('loop', false)
         },
         glass: {
-            enabled: false,
-            transmission: 1,
-            thickness: 0.5,
-            roughness: 0.1,
+            enabled: true,
+            transmission: 1.0,
+            thickness: 0.50,
+            roughness: 0.39,
             chromaticAberration: 0.05,
-            fluteScale: 1,
+            fluteScale: 1.00,
             patternType: 'Linear',
             ridgeProfile: 'Round',
             segments: 6,
-            rippleDensity: 11,
+            rippleDensity: 21.00,
             waviness: 0,
             waveFreq: 5.8,
             animate: true,
-            patternRotation: 45,
-            flowSpeed: 0.2,
+            patternRotation: 45.00,
+            flowSpeed: 0.20,
             flowDirection: 135,
-            curvature: 0
+            curvature: 0.00
         },
 
         ripples: {
@@ -290,12 +290,12 @@ export const useStore = create<State>((set) => {
         glow: {
             color1: '#4facfe',
             color2: '#f093fb',
-            radius1: 0.8,
-            radius2: 0.6,
-            intensity: 1.2,
-            pulseSpeed: 1.0,
-            pos1: { x: 0.3, y: 0.7 },
-            pos2: { x: 0.7, y: 0.3 }
+            radius1: 1.65,
+            radius2: 1.03,
+            intensity: 1.20,
+            pulseSpeed: 2.76,
+            pos1: { x: 0.28, y: 0.73 },
+            pos2: { x: 0.31, y: 0.45 }
         },
         orbs: {
             color1: '#4f46e5',
@@ -321,10 +321,10 @@ export const useStore = create<State>((set) => {
         },
         postfx: {
             dither: true,
-            ditherOpacity: 0.5,
+            ditherOpacity: 0.76,
             bloom: true,
-            bloomIntensity: 1.5,
-            bloomThreshold: 0.2,
+            bloomIntensity: 0.76,
+            bloomThreshold: 0.20,
             bloomSmoothing: 0.9,
             crt: false,
             scanlines: 0.5,
@@ -337,7 +337,7 @@ export const useStore = create<State>((set) => {
         },
         scene: {
             bgMode: 'Acid Trip',
-            solidColor: '#a3b48b'
+            solidColor: '#012265'
         },
         logo: null,
         appState: new URLSearchParams(window.location.search).get('embed') === 'true' ? 'ready' : 'intro',

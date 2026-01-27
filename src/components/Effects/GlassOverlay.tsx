@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
 import { MeshTransmissionMaterial } from '@react-three/drei'
 
@@ -133,22 +133,68 @@ export default function GlassOverlay() {
     // Use "glass" from store instead of "config"
     const config = glass
 
+    // Debounce the expensive texture generation props
+    const [debouncedConfig, setDebouncedConfig] = useState({
+        rippleDensity: config.rippleDensity,
+        waveFreq: config.waveFreq,
+        waviness: config.waviness,
+        patternType: config.patternType,
+        segments: config.segments,
+        ridgeProfile: config.ridgeProfile,
+        curvature: config.curvature
+    })
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedConfig({
+                rippleDensity: config.rippleDensity,
+                waveFreq: config.waveFreq,
+                waviness: config.waviness,
+                patternType: config.patternType,
+                segments: config.segments,
+                ridgeProfile: config.ridgeProfile,
+                curvature: config.curvature
+            })
+        }, 200) // 200ms delay
+
+        return () => {
+            clearTimeout(handler)
+        }
+    }, [
+        config.rippleDensity,
+        config.waveFreq,
+        config.waviness,
+        config.patternType,
+        config.segments,
+        config.ridgeProfile,
+        config.curvature
+    ])
+
     // Memoize the texture so we don't regenerate it every frame
+    // Use debouncedConfig for dependencies
     const flutedNormalMap = useMemo(() => {
         const tex = generateFlutedNormalMap(
-            config.rippleDensity,
-            config.waveFreq,
-            config.waviness,
-            config.patternType as 'Linear' | 'Kaleidoscope',
-            config.segments,
-            config.ridgeProfile as 'Round' | 'Sharp' | 'Square',
-            config.curvature || 0
+            debouncedConfig.rippleDensity,
+            debouncedConfig.waveFreq,
+            debouncedConfig.waviness,
+            debouncedConfig.patternType as 'Linear' | 'Kaleidoscope',
+            debouncedConfig.segments,
+            debouncedConfig.ridgeProfile as 'Round' | 'Sharp' | 'Square',
+            debouncedConfig.curvature || 0
         )
         if (tex) {
             tex.center.set(0.5, 0.5)
         }
         return tex
-    }, [config.rippleDensity, config.waveFreq, config.waviness, config.patternType, config.segments, config.ridgeProfile, config.curvature])
+    }, [
+        debouncedConfig.rippleDensity,
+        debouncedConfig.waveFreq,
+        debouncedConfig.waviness,
+        debouncedConfig.patternType,
+        debouncedConfig.segments,
+        debouncedConfig.ridgeProfile,
+        debouncedConfig.curvature
+    ])
 
     useFrame((_state, delta) => {
         if (!flutedNormalMap) return

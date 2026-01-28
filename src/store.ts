@@ -152,7 +152,7 @@ interface State {
         roughness: number
     }
     liquidMetal: {
-        color: string
+        colors: string[]
         metalness: number
         roughness: number
         speed: number
@@ -367,11 +367,11 @@ export const useStore = create<State>((set) => {
             roughness: 0
         },
         liquidMetal: {
-            color: '#2244aa', // Blueprint Blue-ish
-            metalness: 1.0,   // Full Chrome
-            roughness: 0.15,  // Shiny but not perfect mirror
+            colors: ['#ffffff', '#ffafaf', '#0099ff', '#aaffff'],
+            metalness: 0.5,
+            roughness: 0.5,
             speed: 0.2,
-            distortion: 1.5   // Stronger waves
+            distortion: 1.5
         },
         logo: null,
         appState: new URLSearchParams(window.location.search).get('embed') === 'true' ? 'ready' : 'intro',

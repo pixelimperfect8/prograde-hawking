@@ -27,78 +27,67 @@ export default function LiquidMetalControl() {
     }
 
     return (
-        <div className="flex flex-col gap-0">
-            <Section title="Palette">
-                <div className="flex flex-col gap-4">
-                    {liquidMetal.colors.map((c, i) => (
-                        <ColorPicker
-                            key={i}
-                            label={`Color ${i + 1}`}
-                            value={c}
-                            onChange={(val) => updateColor(i, val)}
-                        />
-                    ))}
+        <Section title="Liquid Metal Settings">
+            {liquidMetal.colors.map((c, i) => (
+                <ColorPicker
+                    key={i}
+                    label={`Color ${i + 1}`}
+                    value={c}
+                    onChange={(val) => updateColor(i, val)}
+                />
+            ))}
 
-                    <div className="flex gap-2 mt-4 pt-4 border-t border-white/5">
-                        <button
-                            onClick={addColor}
-                            disabled={liquidMetal.colors.length >= 4}
-                            className="flex-1 py-2 px-4 rounded-md bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] uppercase tracking-wider font-medium text-white transition-all border border-white/5 hover:border-white/20"
-                        >
-                            + Add Color
-                        </button>
-                        <button
-                            onClick={removeColor}
-                            disabled={liquidMetal.colors.length <= 1}
-                            className="flex-1 py-2 px-4 rounded-md bg-white/5 hover:bg-red-500/20 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] uppercase tracking-wider font-medium text-white hover:text-red-200 transition-all border border-white/5 hover:border-red-500/20"
-                        >
-                            - Remove
-                        </button>
-                    </div>
-                </div>
-            </Section>
+            <div className="flex gap-2 mt-2 mb-4">
+                <button
+                    onClick={addColor}
+                    disabled={liquidMetal.colors.length >= 4}
+                    className="flex-1 py-2 px-4 rounded-md bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] uppercase tracking-wider font-medium text-white transition-all border border-white/5 hover:border-white/20"
+                >
+                    + Add Color
+                </button>
+                <button
+                    onClick={removeColor}
+                    disabled={liquidMetal.colors.length <= 1}
+                    className="flex-1 py-2 px-4 rounded-md bg-white/5 hover:bg-red-500/20 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] uppercase tracking-wider font-medium text-white hover:text-red-200 transition-all border border-white/5 hover:border-red-500/20"
+                >
+                    - Remove
+                </button>
+            </div>
 
-            <Section title="Simulation">
-                <div className="flex flex-col gap-4">
-                    <Slider
-                        label="Zoom / Scale"
-                        value={liquidMetal.distortion}
-                        min={0.1}
-                        max={4.0}
-                        step={0.1}
-                        onChange={(val) => setLiquidMetal({ distortion: val })}
-                    />
-                    <Slider
-                        label="Flow Speed"
-                        value={liquidMetal.speed}
-                        min={0}
-                        max={1.0}
-                        step={0.01}
-                        onChange={(val) => setLiquidMetal({ speed: val })}
-                    />
-                </div>
-            </Section>
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '8px 0 16px 0' }} />
 
-            <Section title="Warping">
-                <div className="flex flex-col gap-4">
-                    <Slider
-                        label="Fluid Warp"
-                        value={liquidMetal.metalness}
-                        min={0}
-                        max={20}
-                        step={0.1}
-                        onChange={(val) => setLiquidMetal({ metalness: val })}
-                    />
-                    <Slider
-                        label="Detail Swirls"
-                        value={liquidMetal.roughness}
-                        min={0}
-                        max={2.0}
-                        step={0.01}
-                        onChange={(val) => setLiquidMetal({ roughness: val })}
-                    />
-                </div>
-            </Section>
-        </div>
+            <Slider
+                label="Zoom / Scale"
+                value={liquidMetal.distortion}
+                min={0.1}
+                max={4.0}
+                step={0.1}
+                onChange={(val) => setLiquidMetal({ distortion: val })}
+            />
+            <Slider
+                label="Flow Speed"
+                value={liquidMetal.speed}
+                min={0}
+                max={1.0}
+                step={0.01}
+                onChange={(val) => setLiquidMetal({ speed: val })}
+            />
+            <Slider
+                label="Fluid Warp"
+                value={liquidMetal.metalness}
+                min={0}
+                max={20}
+                step={0.1}
+                onChange={(val) => setLiquidMetal({ metalness: val })}
+            />
+            <Slider
+                label="Detail Swirls"
+                value={liquidMetal.roughness}
+                min={0}
+                max={2.0}
+                step={0.01}
+                onChange={(val) => setLiquidMetal({ roughness: val })}
+            />
+        </Section>
     )
 }

@@ -202,10 +202,22 @@ interface State {
         filmSepia: number
         filmScratches: number
         filmDirt: number
+        grain: number
+    }
+    flowGradient: {
+        color1: string
+        color2: string
+        color3: string
+        color4: string
+        speed: number
+        noiseFreq: { x: number, y: number }
+        noiseAmp: number
+        density: number
+        grain: number
     }
     // Scene Slice
     scene: {
-        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples' | 'Linear Gradient' | 'Liquid Metal' | 'Cubic'
+        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples' | 'Linear Gradient' | 'Liquid Metal' | 'Cubic' | 'Flow Gradient'
         solidColor: string
     }
     logo: string | null
@@ -224,7 +236,9 @@ interface State {
     setPostFX: (partial: Partial<State['postfx']>) => void
     setScene: (partial: Partial<State['scene']>) => void
     setAdvancedGradient: (partial: Partial<State['advancedGradient']>) => void
+
     setLiquidMetal: (partial: Partial<State['liquidMetal']>) => void
+    setFlowGradient: (partial: Partial<State['flowGradient']>) => void
     setCubicGlass: (config: Partial<State['cubicGlass']>) => void
     setLogo: (logo: string | null) => void
     setAppState: (state: 'intro' | 'animating' | 'ready') => void
@@ -346,6 +360,7 @@ export const useStore = create<State>((set) => {
         postfx: {
             dither: true,
             ditherOpacity: 0.76,
+            grain: 0.0, // New Global Static Grain (Default 0, User request)
             bloom: true,
             bloomIntensity: 0.76,
             bloomThreshold: 0.20,
@@ -386,6 +401,17 @@ export const useStore = create<State>((set) => {
             speed: 0.5,
             smoothness: 0.2
         },
+        flowGradient: {
+            color1: '#a960ee',
+            color2: '#ff333d',
+            color3: '#90e0ff',
+            color4: '#ffcb57',
+            speed: 0.15,
+            noiseFreq: { x: 14e-5, y: 29e-5 }, // From reference
+            noiseAmp: 320,
+            density: 0.08,
+            grain: 0.0 // Default 0 (Off) until user adjusts
+        },
         logo: null,
         appState: new URLSearchParams(window.location.search).get('embed') === 'true' ? 'ready' : 'intro',
 
@@ -400,7 +426,9 @@ export const useStore = create<State>((set) => {
         setOrbs: (partial) => set((state) => ({ orbs: { ...state.orbs, ...partial } })),
         setFluid: (partial) => set((state) => ({ fluid: { ...state.fluid, ...partial } })),
         setRipples: (partial) => set((state) => ({ ripples: { ...state.ripples, ...partial } })),
+
         setCubicGlass: (partial) => set((state) => ({ cubicGlass: { ...state.cubicGlass, ...partial } })),
+        setFlowGradient: (partial) => set((state) => ({ flowGradient: { ...state.flowGradient, ...partial } })),
         // Ripples tasks restored:
         // - [x] Implement "Ripples" Mode (Halftone/Squares)
         // - [x] Restore Ring Expansion for Ripples
@@ -432,6 +460,8 @@ export const useStore = create<State>((set) => {
                     return { glow: { ...state.glow, color1: p[0], color2: p[1] } }
                 } else if (mode === 'Acid Trip') {
                     return { fluid: { ...state.fluid, color1: p[0], color2: p[1], color3: p[2], color4: p[3] } }
+                } else if (mode === 'Flow Gradient') {
+                    return { flowGradient: { ...state.flowGradient, color1: p[0], color2: p[1], color3: p[2], color4: p[3] } }
                 }
                 return {}
             })

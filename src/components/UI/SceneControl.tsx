@@ -15,6 +15,7 @@ import GradientControl from './GradientControl'
 import BlobControl from './BlobControl'
 import OrbsControl from './OrbsControl'
 import GlowControl from './GlowControl'
+import FlowGradientControl from './FlowGradientControl'
 
 export default function SceneControl() {
     const { scene, setScene, setGlass } = useStore()
@@ -27,12 +28,12 @@ export default function SceneControl() {
                 <Select
                     label="Background Mode"
                     value={scene.bgMode}
-                    options={['Gradient', 'Solid + Glow', 'Lava Lamp', 'Blob Stack', 'Orbs', 'Acid Trip', 'Ripples', 'Linear Gradient', 'Liquid Metal', 'Cubic']}
+                    options={['Gradient', 'Solid + Glow', 'Lava Lamp', 'Blob Stack', 'Orbs', 'Acid Trip', 'Ripples', 'Linear Gradient', 'Liquid Metal', 'Cubic', 'Flow Gradient']}
                     onChange={(val) => {
                         setScene({ bgMode: val as any })
 
                         // Auto-toggle Glass logic
-                        const disableGlassModes = ['Acid Trip', 'Liquid Metal', 'Cubic']
+                        const disableGlassModes = ['Acid Trip', 'Liquid Metal', 'Cubic', 'Flow Gradient']
                         const enableGlassModes = ['Solid + Glow']
 
                         if (disableGlassModes.includes(val)) {
@@ -56,6 +57,7 @@ export default function SceneControl() {
                 {scene.bgMode === 'Ripples' && <RipplesControl />}
                 {scene.bgMode === 'Blob Stack' && <BlobControl />}
                 {scene.bgMode === 'Orbs' && <OrbsControl />}
+                {scene.bgMode === 'Flow Gradient' && <FlowGradientControl />}
                 {scene.bgMode === 'Solid + Glow' && <GlowControl />}
 
                 {scene.bgMode === 'Solid + Glow' && (

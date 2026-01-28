@@ -12,6 +12,7 @@ import Ripples from './components/Effects/Ripples'
 import AdvancedGradient from './components/Effects/AdvancedGradient'
 import LiquidMetal from './components/Effects/LiquidMetal'
 import CubicGlass from './components/Effects/CubicGlass'
+import FlowGradient from './components/Effects/FlowGradient'
 import PostFX from './components/Effects/PostFX'
 import Overlay from './components/UI/Overlay'
 import CustomCursor from './components/UI/CustomCursor'
@@ -73,7 +74,9 @@ function Scene() {
         {bgMode === 'Liquid Metal' && <LiquidMetal />}
         {bgMode === 'Cubic' && <CubicGlass />}
         {bgMode === 'Linear Gradient' && <AdvancedGradient />}
+        {bgMode === 'Linear Gradient' && <AdvancedGradient />}
         {bgMode === 'Liquid Metal' && <LiquidMetal />}
+        {bgMode === 'Flow Gradient' && <FlowGradient />}
 
 
         {showGlass && <GlassOverlay />}
@@ -161,6 +164,7 @@ function UI() {
 function App() {
   // Check if we're in embed mode
   const isEmbed = new URLSearchParams(window.location.search).get('embed') === 'true'
+
 
   return (
     <>

@@ -8,13 +8,20 @@ export default function EffectsControl() {
 
     return (
         <Section title="Effects">
+            {/* Static Grain */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                <Slider label="Static Grain" value={postfx.grain || 0} min={0} max={0.25} step={0.01} onChange={(v) => setPostFX({ grain: v })} />
+            </div>
+
             {/* Dither */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <Switch label="Dither (Grit)" checked={postfx.dither} onChange={(v) => setPostFX({ dither: v })} />
+                <Switch label="Dither (Animated)" checked={postfx.dither} onChange={(v) => setPostFX({ dither: v })} />
                 {postfx.dither && (
                     <Slider label="Opacity" value={postfx.ditherOpacity} min={0} max={1} onChange={(v) => setPostFX({ ditherOpacity: v })} />
                 )}
             </div>
+
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '16px 0 16px 0' }} />
 
             {/* Bloom */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -27,6 +34,8 @@ export default function EffectsControl() {
                 )}
             </div>
 
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '16px 0 16px 0' }} />
+
             {/* CRT */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <Switch label="CRT Mode" checked={postfx.crt} onChange={(v) => setPostFX({ crt: v })} />
@@ -38,6 +47,8 @@ export default function EffectsControl() {
                     </>
                 )}
             </div>
+
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '16px 0 16px 0' }} />
 
             {/* Vintage Film */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

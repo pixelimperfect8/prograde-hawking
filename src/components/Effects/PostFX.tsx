@@ -4,17 +4,27 @@ import { BlendFunction } from 'postprocessing'
 import { useStore } from '../../store'
 import * as THREE from 'three'
 import { VintageFilm } from './VintageFilm'
+import { StaticGrain } from './StaticGrain'
 
 export default function PostFX() {
-    const { postfx } = useStore()
+    const { postfx, scene, flowGradient } = useStore()
 
-    // Leva controls removed
-    // const { postfx, setPostFX } = useStore() is already above
+    const isFlowMode = scene.bgMode === 'Flow Gradient';
 
-    const noiseOpacity = postfx.dither ? postfx.ditherOpacity : 0
-    const bloomIntensity = postfx.bloom ? postfx.bloomIntensity : 0
+    // Logic: 
+    // - Flow Mode: Use local `flowGradient.grain`
+    // - Other Modes: Use global `postfx.grain`
+    // - Dither: Kept as legacy "Animated Noise" option (separate from Static Grain)
 
-    // CRT Logic: Render always but set values to 0 if disabled
+    const grainOpacity = isFlowMode ? flowGradient.grain : (postfx.grain || 0);
+    const ditherOpacity = postfx.dither ? postfx.ditherOpacity : 0;
+
+    // Force Disable Bloom/Dither for Flow Gradient unless explicitly wanted (kept clean by default)
+    // For Flow Mode, we ONLY allow Static Grain. No Dither/Bloom to avoid glitches.
+    const effectiveDither = isFlowMode ? 0 : ditherOpacity;
+    const bloomIntensity = (postfx.bloom && !isFlowMode) ? postfx.bloomIntensity : 0
+
+    // CRT Logic
     const scanlineOpacity = postfx.crt ? postfx.scanlines : 0
     const aberrationOffset = postfx.crt ? postfx.crtAberration : 0
     const vignetteDarkness = postfx.crt ? postfx.vignette : 0
@@ -26,17 +36,25 @@ export default function PostFX() {
 
     return (
         <EffectComposer>
-            {/* Dither / Noise */}
-            {postfx.dither ? (
+            {/* 1. Static Grain (Texture) */}
+            {grainOpacity > 0 ? (
+                <StaticGrain
+                    opacity={grainOpacity}
+                    blendFunction={BlendFunction.OVERLAY}
+                />
+            ) : <></>}
+
+            {/* 2. Animated Noise (Dither) */}
+            {effectiveDither > 0 ? (
                 <Noise
                     premultiply
                     blendFunction={BlendFunction.OVERLAY}
-                    opacity={noiseOpacity}
+                    opacity={effectiveDither}
                 />
             ) : <></>}
 
             {/* Bloom */}
-            {postfx.bloom ? (
+            {bloomIntensity > 0 ? (
                 <Bloom
                     luminanceThreshold={postfx.bloomThreshold}
                     mipmapBlur
@@ -45,7 +63,7 @@ export default function PostFX() {
                 />
             ) : <></>}
 
-            {/* Sepia (Old Film) */}
+            {/* Sepia */}
             {postfx.film ? (
                 <Sepia
                     intensity={sepiaIntensity}
@@ -53,7 +71,7 @@ export default function PostFX() {
                 />
             ) : <></>}
 
-            {/* Vintage Film Artifacts */}
+            {/* Vintage Film */}
             {postfx.film ? (
                 <VintageFilm
                     scratches={scratches}
@@ -61,7 +79,7 @@ export default function PostFX() {
                 />
             ) : <></>}
 
-            {/* CRT Effects */}
+            {/* CRT */}
             {postfx.crt ? (
                 <>
                     <Scanline

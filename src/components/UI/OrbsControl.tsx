@@ -15,7 +15,7 @@ export default function OrbsControl() {
                 >
                     🎲 Randomize Colors
                 </button>
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-4">
                     <ColorPicker label="Orb 1" value={orbs.color1} onChange={(v) => setOrbs({ color1: v })} />
                     <ColorPicker label="Orb 2" value={orbs.color2} onChange={(v) => setOrbs({ color2: v })} />
                     <ColorPicker label="Orb 3" value={orbs.color3} onChange={(v) => setOrbs({ color3: v })} />

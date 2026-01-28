@@ -23,7 +23,7 @@ export default function SceneControl() {
     return (
         <>
             {showExport && <ExportPanel onClose={() => setShowExport(false)} />}
-            <Section title="Scene">
+            <Section title="Scene Settings">
                 <Select
                     label="Background Mode"
                     value={scene.bgMode}
@@ -71,7 +71,6 @@ export default function SceneControl() {
                     onClick={() => setShowExport(true)}
                     style={{
                         width: '100%',
-                        marginTop: '16px',
                         background: 'transparent',
                         border: '1px solid rgba(0, 153, 255, 0.3)',
                         color: 'rgba(0, 153, 255, 0.8)',

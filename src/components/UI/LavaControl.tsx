@@ -9,7 +9,7 @@ export default function LavaControl() {
     return (
         <div className="flex flex-col gap-0">
             <Section title="Palette">
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-4">
                     <button
                         onClick={randomizeColors}
                         className="w-full py-2 mb-2 rounded-md bg-white/5 hover:bg-white/10 text-[10px] uppercase tracking-wider font-medium text-white transition-all border border-white/5 hover:border-white/20"

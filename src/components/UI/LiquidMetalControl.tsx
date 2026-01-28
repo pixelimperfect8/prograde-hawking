@@ -29,7 +29,7 @@ export default function LiquidMetalControl() {
     return (
         <div className="flex flex-col gap-0">
             <Section title="Palette">
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-4">
                     {liquidMetal.colors.map((c, i) => (
                         <ColorPicker
                             key={i}

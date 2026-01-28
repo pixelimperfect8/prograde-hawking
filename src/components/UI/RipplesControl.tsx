@@ -10,7 +10,7 @@ export default function RipplesControl() {
     return (
         <div className="flex flex-col gap-0">
             <Section title="Palette">
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-4">
                     <ColorPicker
                         label="Base Color"
                         value={ripples.color}

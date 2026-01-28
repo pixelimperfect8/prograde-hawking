@@ -1,5 +1,5 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useRef } from 'react'
+import React, { useRef } from 'react'
 import * as THREE from 'three'
 import MeshGradient from './components/MeshGradient'
 import GlassOverlay from './components/Effects/GlassOverlay'
@@ -175,7 +175,9 @@ function App() {
           camera={{ position: [0, 0, 5], fov: 45 }}
         >
           <color attach="background" args={['#000']} />
-          <Scene />
+          <React.Suspense fallback={null}>
+            <Scene />
+          </React.Suspense>
         </Canvas>
       </div>
 

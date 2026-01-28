@@ -8,7 +8,7 @@ export default function AcidTripControl() {
     const { color1, color2, color3, color4, background, speed, density, strength, smoothing, complexity } = fluid
 
     return (
-        <div className="flex flex-col gap-6 p-4">
+        <div className="flex flex-col gap-0">
             <Section title="Palette">
                 <div className="flex flex-col gap-3">
                     <ColorPicker label="Background" value={background} onChange={(c) => setFluid({ background: c })} />

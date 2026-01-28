@@ -7,7 +7,7 @@ export default function LavaControl() {
     const { lava, setLava, randomizeColors } = useStore()
 
     return (
-        <div className="flex flex-col gap-6 p-4">
+        <div className="flex flex-col gap-0">
             <Section title="Palette">
                 <div className="flex flex-col gap-3">
                     <button

@@ -7,7 +7,7 @@ export default function OrbsControl() {
     const { orbs, setOrbs, randomizeColors } = useStore()
 
     return (
-        <div className="flex flex-col gap-6 p-4">
+        <div className="flex flex-col gap-0">
             <Section title="Palette">
                 <button
                     onClick={randomizeColors}

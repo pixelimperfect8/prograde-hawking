@@ -65,7 +65,7 @@ export default function AdvancedGradientControl() {
     const sortedStops = [...stops].sort((a, b) => a.pos - b.pos)
 
     return (
-        <div className="flex flex-col gap-6 p-4">
+        <div className="flex flex-col gap-0">
             <Section title="Gradient Editor">
                 <GradientBar
                     stops={stops}

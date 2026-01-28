@@ -9,6 +9,7 @@ function patchShader(shader: any) {
     shader.uniforms.uSpeed = { value: 0.2 }
     shader.uniforms.uDistortion = { value: 1.0 }
 
+    // Simplex Noise 3D
     const noiseGLSL = `
     vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
     vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -71,11 +72,10 @@ function patchShader(shader: any) {
         
         ${noiseGLSL}
         
-        // "Giant Horizontal Waves"
         float getHeight(vec3 p) {
             float t = uTime * uSpeed * 0.5;
             
-            vec3 pStretch = vec3(p.x * 0.1, p.y * 0.5, 0.0);
+            vec3 pStretch = vec3(p.x * 0.15, p.y * 0.6, 0.0);
             
             float giant = sin(pStretch.x + t) * sin(pStretch.y + t * 0.5) * 2.0;
             float swell = snoise(vec3(p.x * 0.2, p.y * 0.2, t)) * 1.5;
@@ -114,37 +114,46 @@ function patchShader(shader: any) {
     )
 }
 
-function PhysicalLights() {
+function MovingShapes() {
     return (
-        <group>
-            {/* 
-                PHYSICAL LIGHT STRIPS
-                These are actual meshes in the scene. 
-                Standard Material will reflect them because they are bright.
-            */}
-
-            {/* 1. Gold Strip (Warm) - Left */}
-            <Float speed={2} rotationIntensity={0.2} floatIntensity={0.5}>
-                <mesh position={[-8, 5, -2]} rotation={[0, 0.5, 0]}>
-                    <planeGeometry args={[15, 2]} />
-                    {/* High Emissive intensity makes it glow and reflect effectively */}
-                    <meshBasicMaterial color="#ffaa00" toneMapped={false} />
-                </mesh>
-            </Float>
-
-            {/* 2. Blue Strip (Cool) - Right */}
-            <Float speed={3} rotationIntensity={0.2} floatIntensity={0.5}>
-                <mesh position={[8, 0, -2]} rotation={[0, -0.5, 0]}>
-                    <planeGeometry args={[15, 2]} />
-                    <meshBasicMaterial color="#0088ff" toneMapped={false} />
-                </mesh>
-            </Float>
-
-            {/* 3. White Rim - Top */}
-            <mesh position={[0, 8, -5]} rotation={[Math.PI / 2, 0, 0]}>
-                <planeGeometry args={[20, 1]} />
-                <meshBasicMaterial color="#ffffff" toneMapped={false} />
+        <group position={[0, -5, -15]} rotation={[-0.2, 0, 0]}>
+            {/* Background Gradient Plane (Deep Dark) */}
+            <mesh position={[0, 0, -5]}>
+                <planeGeometry args={[100, 100]} />
+                <meshBasicMaterial color="#000000" />
             </mesh>
+
+            {/* Blue Blob (Top Right) */}
+            <Float speed={1.5} rotationIntensity={0.5} floatIntensity={1.0}>
+                <mesh position={[10, 10, -2]} scale={[15, 15, 1]}>
+                    <sphereGeometry args={[1, 32, 32]} />
+                    <meshBasicMaterial color="#0081f7" />
+                </mesh>
+            </Float>
+
+            {/* Pink Blob (Center Left) */}
+            <Float speed={2.0} rotationIntensity={0.5} floatIntensity={1.5}>
+                <mesh position={[-5, 0, 0]} scale={[12, 12, 1]}>
+                    <sphereGeometry args={[1, 32, 32]} />
+                    <meshBasicMaterial color="#ff75ca" />
+                </mesh>
+            </Float>
+
+            {/* Gold Blob (Bottom Right) */}
+            <Float speed={1.8} rotationIntensity={0.5} floatIntensity={1.2}>
+                <mesh position={[8, -10, 2]} scale={[10, 10, 1]}>
+                    <sphereGeometry args={[1, 32, 32]} />
+                    <meshBasicMaterial color="#ffae87" />
+                </mesh>
+            </Float>
+
+            {/* Extra Cyan Blob (Top Left) */}
+            <Float speed={1.2} rotationIntensity={0.5} floatIntensity={1.0}>
+                <mesh position={[-15, 12, -2]} scale={[8, 8, 1]}>
+                    <sphereGeometry args={[1, 32, 32]} />
+                    <meshBasicMaterial color="#00ffff" />
+                </mesh>
+            </Float>
         </group>
     )
 }
@@ -164,23 +173,34 @@ export default function LiquidMetal() {
 
     return (
         <group>
-            {/* Standard Environment as backup */}
-            <Environment preset="city" />
+            {/* 1. The Colorful Background (What we see THROUGH the liquid) */}
+            <MovingShapes />
 
-            {/* Physical Light Meshes (Visible in Scene) */}
-            <PhysicalLights />
+            {/* 2. Standard Environment for Surface Reflections (Optional, mixing with refraction) */}
+            <Environment preset="city" blur={1} />
 
+            {/* 3. The Liquid Mesh (Refractive Glass) */}
             <mesh
                 ref={meshRef}
                 position={[0, -2, -6]}
                 rotation={[-Math.PI / 2.5, 0, 0]}
             >
                 <planeGeometry args={[40, 40, 400, 400]} />
-                <meshStandardMaterial
-                    // Safe Dark Blue instead of Black, so it's always visible
-                    color="#001133"
-                    metalness={0.9} // Slight reduction to pick up the blue base color
-                    roughness={liquidMetal.roughness * 0.5}
+                {/* 
+                   MeshPhysicalMaterial is KEY here.
+                   Transmission = 1 (Glass)
+                   Roughness = Low
+                   Thickness = High (For refraction depth)
+                */}
+                <meshPhysicalMaterial
+                    color="#ffffff" // Glass should be white/clear base
+                    transmission={1.0}
+                    thickness={3.0}
+                    roughness={liquidMetal.roughness * 0.3} // Very smooth default
+                    ior={1.4}
+                    // Map "Metalness" slider to Chromatic Aberration for fun visual flair
+                    // chromaticAberration={liquidMetal.metalness * 0.5}
+
                     onBeforeCompile={(shader) => {
                         patchShader(shader)
                         shaderRef.current = shader

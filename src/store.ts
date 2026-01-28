@@ -151,6 +151,14 @@ interface State {
         speed: number
         roughness: number
     }
+    liquidMetal: {
+        color: string
+        metalness: number
+        roughness: number
+        speed: number
+        distortion: number
+    }
+
     orbs: {
         color1: string
         color2: string
@@ -191,7 +199,7 @@ interface State {
     }
     // Scene Slice
     scene: {
-        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples' | 'Linear Gradient' | 'Radial Gradient'
+        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples' | 'Linear Gradient' | 'Liquid Metal'
         solidColor: string
     }
     logo: string | null
@@ -210,6 +218,7 @@ interface State {
     setPostFX: (partial: Partial<State['postfx']>) => void
     setScene: (partial: Partial<State['scene']>) => void
     setAdvancedGradient: (partial: Partial<State['advancedGradient']>) => void
+    setLiquidMetal: (partial: Partial<State['liquidMetal']>) => void
     setLogo: (logo: string | null) => void
     setAppState: (state: 'intro' | 'animating' | 'ready') => void
     applyPreset: (name: string) => void
@@ -357,6 +366,13 @@ export const useStore = create<State>((set) => {
             speed: 0.2,
             roughness: 0
         },
+        liquidMetal: {
+            color: '#1a2a6c',
+            metalness: 1.0,
+            roughness: 0.2,
+            speed: 0.2,
+            distortion: 1.0
+        },
         logo: null,
         appState: new URLSearchParams(window.location.search).get('embed') === 'true' ? 'ready' : 'intro',
 
@@ -367,6 +383,7 @@ export const useStore = create<State>((set) => {
         setBlob: (partial) => set((state) => ({ blob: { ...state.blob, ...partial } })),
         setGlow: (partial) => set((state) => ({ glow: { ...state.glow, ...partial } })),
         setAdvancedGradient: (partial) => set((state) => ({ advancedGradient: { ...state.advancedGradient, ...partial } })),
+        setLiquidMetal: (partial: Partial<State['liquidMetal']>) => set((state) => ({ liquidMetal: { ...state.liquidMetal, ...partial } })),
         setOrbs: (partial) => set((state) => ({ orbs: { ...state.orbs, ...partial } })),
         setFluid: (partial) => set((state) => ({ fluid: { ...state.fluid, ...partial } })),
         setRipples: (partial) => set((state) => ({ ripples: { ...state.ripples, ...partial } })),

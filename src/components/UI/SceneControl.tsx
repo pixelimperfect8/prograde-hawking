@@ -6,6 +6,7 @@ import ColorPicker from './inputs/ColorPicker'
 import Switch from './inputs/Switch'
 import ExportPanel from './ExportPanel'
 import AdvancedGradientControl from './AdvancedGradientControl'
+import LiquidMetalControl from './LiquidMetalControl'
 
 export default function SceneControl() {
     const { scene, glass, setScene, setGlass } = useStore()
@@ -18,7 +19,7 @@ export default function SceneControl() {
                 <Select
                     label="Background Mode"
                     value={scene.bgMode}
-                    options={['Gradient', 'Solid + Glow', 'Lava Lamp', 'Blob Stack', 'Orbs', 'Acid Trip', 'Ripples', 'Linear Gradient', 'Radial Gradient']}
+                    options={['Gradient', 'Solid + Glow', 'Lava Lamp', 'Blob Stack', 'Orbs', 'Acid Trip', 'Ripples', 'Linear Gradient', 'Liquid Metal']}
                     onChange={(val) => {
                         setScene({ bgMode: val as any })
                         // Auto-disable glass for Acid Trip if user selects it (requested behavior)
@@ -32,9 +33,11 @@ export default function SceneControl() {
                     }}
                 />
 
-                {(scene.bgMode === 'Linear Gradient' || scene.bgMode === 'Radial Gradient') && (
+                {(scene.bgMode === 'Linear Gradient') && (
                     <AdvancedGradientControl />
                 )}
+
+                {scene.bgMode === 'Liquid Metal' && <LiquidMetalControl />}
 
                 {scene.bgMode === 'Solid + Glow' && (
                     <ColorPicker

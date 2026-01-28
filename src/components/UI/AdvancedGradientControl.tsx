@@ -62,34 +62,11 @@ export default function AdvancedGradientControl() {
         if (selectedId === id) setSelectedId(null)
     }
 
-    // Sort logic for list display only? Or just render in random order?
-    // User screenshot implies sorted list by position usually.
-    // Let's sort list by position for display.
     const sortedStops = [...stops].sort((a, b) => a.pos - b.pos)
 
     return (
-        <>
-            <div style={{ marginBottom: '20px', padding: '0 4px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'center' }}>
-                    <div style={{ width: '100px' }}>
-                        <Select
-                            label=""
-                            value={'Linear'}
-                            options={['Linear']}
-                            onChange={() => { }}
-                        />
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        {/* Fake Swap/Rotate icons for visual parity if requested, or functional? */}
-                        <button
-                            onClick={() => setAdvancedGradient({ angle: (angle + 45) % 360 })}
-                            style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}
-                        >
-                            ↻
-                        </button>
-                    </div>
-                </div>
-
+        <div className="flex flex-col gap-6 p-4">
+            <Section title="Gradient Editor">
                 <GradientBar
                     stops={stops}
                     onChange={(id, pos) => updateStop(id, { pos })}
@@ -97,30 +74,27 @@ export default function AdvancedGradientControl() {
                     selectedId={selectedId}
                 />
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Stops</span>
-                    <button onClick={addStop} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '16px', cursor: 'pointer' }}>+ Add</button>
+                <div className="flex justify-between items-center mt-2 mb-2">
+                    <span className="text-xs font-bold text-white/80 uppercase tracking-wide">Stops</span>
+                    <button
+                        onClick={addStop}
+                        className="text-white hover:text-white/80 text-sm font-medium transition-colors"
+                    >
+                        + Add
+                    </button>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div className="flex flex-col gap-1">
                     {sortedStops.map((stop) => {
                         const isSel = selectedId === stop.id
                         return (
                             <div
                                 key={stop.id}
                                 onClick={() => setSelectedId(stop.id)}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    padding: '4px 8px',
-                                    borderRadius: '4px',
-                                    background: isSel ? 'rgba(0,153,255,0.2)' : 'transparent',
-                                    border: isSel ? '1px solid rgba(0,153,255,0.5)' : '1px solid transparent'
-                                }}
+                                className={`flex items-center gap-2 p-1 rounded transition-colors border ${isSel ? 'bg-blue-500/20 border-blue-500/50' : 'border-transparent hover:bg-white/5'}`}
                             >
                                 {/* Position Input */}
-                                <div style={{ width: '50px', display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', padding: '2px' }}>
+                                <div className="w-[50px] flex items-center bg-black/20 rounded p-0.5">
                                     <input
                                         type="number"
                                         value={Math.round(stop.pos * 100)}
@@ -128,30 +102,24 @@ export default function AdvancedGradientControl() {
                                             const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0))
                                             updateStop(stop.id, { pos: val / 100 })
                                         }}
-                                        style={{ width: '100%', background: 'transparent', border: 'none', color: 'white', textAlign: 'right', fontSize: '11px' }}
+                                        className="w-full bg-transparent border-none text-white text-right text-[11px] focus:outline-none"
                                     />
-                                    <span style={{ fontSize: '10px', color: '#888', marginLeft: '2px' }}>%</span>
+                                    <span className="text-[10px] text-gray-400 ml-0.5">%</span>
                                 </div>
 
                                 {/* Color Swatch/Picker */}
-                                <div style={{ flex: 1 }}>
+                                <div className="flex-1 flex items-center">
                                     <input
                                         type="color"
                                         value={stop.color}
                                         onChange={(e) => updateStop(stop.id, { color: e.target.value })}
-                                        style={{
-                                            width: '100%',
-                                            height: '24px',
-                                            border: 'none',
-                                            background: 'transparent',
-                                            cursor: 'pointer'
-                                        }}
+                                        className="w-full h-6 border-none bg-transparent cursor-pointer"
                                     />
-                                    <span style={{ fontSize: '10px', marginLeft: '4px', color: '#aaa' }}>{stop.color.toUpperCase()}</span>
+                                    <span className="text-[10px] text-gray-400 ml-1 font-mono">{stop.color.toUpperCase()}</span>
                                 </div>
 
                                 {/* Opacity Input */}
-                                <div style={{ width: '50px', display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', padding: '2px' }}>
+                                <div className="w-[50px] flex items-center bg-black/20 rounded p-0.5">
                                     <input
                                         type="number"
                                         value={Math.round((stop.opacity ?? 1) * 100)}
@@ -159,21 +127,16 @@ export default function AdvancedGradientControl() {
                                             const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0))
                                             updateStop(stop.id, { opacity: val / 100 })
                                         }}
-                                        style={{ width: '100%', background: 'transparent', border: 'none', color: 'white', textAlign: 'right', fontSize: '11px' }}
+                                        className="w-full bg-transparent border-none text-white text-right text-[11px] focus:outline-none"
                                     />
-                                    <span style={{ fontSize: '10px', color: '#888', marginLeft: '2px' }}>%</span>
+                                    <span className="text-[10px] text-gray-400 ml-0.5">%</span>
                                 </div>
 
                                 {/* Remove */}
                                 <button
                                     onClick={(e) => { e.stopPropagation(); removeStop(stop.id); }}
                                     disabled={stops.length <= 2}
-                                    style={{
-                                        background: 'transparent',
-                                        border: 'none',
-                                        color: stops.length <= 2 ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.6)',
-                                        cursor: stops.length <= 2 ? 'not-allowed' : 'pointer',
-                                    }}
+                                    className={`text-sm px-2 ${stops.length <= 2 ? 'text-white/10 cursor-not-allowed' : 'text-white/60 hover:text-red-400 cursor-pointer'}`}
                                 >
                                     –
                                 </button>
@@ -181,46 +144,47 @@ export default function AdvancedGradientControl() {
                         )
                     })}
                 </div>
-            </div>
+            </Section>
 
             <Section title="Effects">
-                <Slider
-                    label="Angle"
-                    value={angle}
-                    min={0}
-                    max={360}
-                    step={1}
-                    onChange={(val) => setAdvancedGradient({ angle: val })}
-                />
-
-                <Select
-                    label="Animation"
-                    value={animation}
-                    options={['Static', 'Flow', 'Pulse']}
-                    onChange={(val) => setAdvancedGradient({ animation: val as any })}
-                />
-
-                {animation !== 'Static' && (
+                <div className="flex flex-col gap-4">
                     <Slider
-                        label="Speed"
-                        value={speed}
+                        label="Angle"
+                        value={angle}
                         min={0}
-                        max={2}
-                        step={0.05}
-                        onChange={(val) => setAdvancedGradient({ speed: val })}
+                        max={360}
+                        step={1}
+                        onChange={(val) => setAdvancedGradient({ angle: val })}
                     />
-                )}
 
-                <Slider
-                    label="Frosted"
-                    value={roughness}
-                    min={0}
-                    max={0.5}
-                    step={0.01}
-                    onChange={(val) => setAdvancedGradient({ roughness: val })}
-                />
+                    <Select
+                        label="Animation"
+                        value={animation}
+                        options={['Static', 'Flow', 'Pulse']}
+                        onChange={(val) => setAdvancedGradient({ animation: val as any })}
+                    />
 
+                    {animation !== 'Static' && (
+                        <Slider
+                            label="Speed"
+                            value={speed}
+                            min={0}
+                            max={2}
+                            step={0.05}
+                            onChange={(val) => setAdvancedGradient({ speed: val })}
+                        />
+                    )}
+
+                    <Slider
+                        label="Frosted"
+                        value={roughness}
+                        min={0}
+                        max={0.5}
+                        step={0.01}
+                        onChange={(val) => setAdvancedGradient({ roughness: val })}
+                    />
+                </div>
             </Section>
-        </>
+        </div>
     )
 }

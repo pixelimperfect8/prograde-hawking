@@ -117,7 +117,7 @@ const AdvancedGradientMaterial = shaderMaterial(
         // We use the noise function to generate offsets.
         // Scaling noise frequency higher makes it finer grain, lower makes it wavy.
         // "Frosted" usually implies fine grain but smooth edges.
-        float noiseScale = 500.0; // Moderate high freq
+        float noiseScale = 1500.0; // Higher freq for finer grain
         
         // 5 Samples with jitter
         // Center
@@ -125,7 +125,8 @@ const AdvancedGradientMaterial = shaderMaterial(
         totalWeight += 1.0;
         
         // Jitter amount based on roughness
-        float spread = uRoughness * 0.05;
+        // Reduced spread to avoid "blurry" look, just soften
+        float spread = uRoughness * 0.01;
 
         // Sample 1
         float n1 = noise(uv * noiseScale + vec2(0.0, uTime * 0.1));

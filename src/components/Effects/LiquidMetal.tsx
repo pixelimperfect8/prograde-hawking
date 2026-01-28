@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Environment } from '@react-three/drei'
+import { Environment, Float } from '@react-three/drei'
 import * as THREE from 'three'
 import { useStore } from '../../store'
 
@@ -73,38 +73,21 @@ function patchShader(shader: any) {
         
         ${noiseGLSL}
         
-        // "Long Horizontal Silk" Logic
+        // "Rolling Ocean of Silk"
         float getHeight(vec3 p) {
-            float t = uTime * uSpeed;
+            float t = uTime * uSpeed * 0.5; // Slow down for majesty
             
-            // ANISOTROPIC SCALING is key here!
-            // Multiply X by a SMALL number to stretch it out (make it long)
-            // Multiply Y by a LARGER number to create the folds across the width
+            // Giant waves
+            // Low frequency, high amplitude
+            float giant = sin(p.x * 0.2 + t) * sin(p.y * 0.1 + t * 0.8) * 2.0;
             
-            vec3 pStretch = vec3(p.x * 0.2, p.y * 0.8, 0.0);
+            // Rolling Swell
+            float swell = snoise(vec3(p.x * 0.3, p.y * 0.3, t)) * 1.5;
             
-            // Flow direction (Horizontal)
-            vec3 flow = pStretch + vec3(t * 1.0, 0.0, 0.0);
+            // Detail (very smooth)
+            float detail = snoise(vec3(p.x * 0.8, p.y * 0.8, t * 1.5)) * 0.2;
             
-            // Soft Domain Warping (Large, smooth bends)
-            vec3 warp = vec3(
-                snoise(vec3(flow.x, flow.y, t * 0.1)),
-                snoise(vec3(flow.x, flow.y + 4.0, t * 0.1)),
-                0.0
-            ) * 1.5;
-            
-            vec3 finalP = flow + warp;
-            
-            // Main shape: Smooth Sine waves mixed with soft noise
-            // We use standard trigonometric functions for the predictable "cloth fold" look
-            // and noise just to break it up slightly so it's not perfect stripes
-            
-            float mainWave = sin(finalP.y * 3.0 + finalP.x * 0.5) * 1.0; 
-            float secWave = sin(finalP.y * 6.0 - finalP.x * 1.0 + t) * 0.3;
-            float noiseDetail = snoise(vec3(finalP.x * 1.5, finalP.y * 1.5, t * 0.5)) * 0.2;
-            
-            // Combine and Smooth
-            return (mainWave + secWave + noiseDetail) * uDistortion;
+            return (giant + swell + detail) * uDistortion;
         }
         `
     )
@@ -116,7 +99,7 @@ function patchShader(shader: any) {
         #include <beginnormal_vertex>
         
         vec3 p = position;
-        float offset = 0.1; // Very broad offset for super smooth normals (cloth-like)
+        float offset = 0.2; // Huge offset for broad, smooth reflections
         
         float h0 = getHeight(p);
         float hx = getHeight(p + vec3(offset, 0.0, 0.0));
@@ -140,12 +123,50 @@ function patchShader(shader: any) {
     )
 }
 
+function StudioLights() {
+    return (
+        <group>
+            {/* 
+                VIRTUAL REFLECTION STUDIO
+                These invisible meshes are purely to create reflections on the metal.
+                We use bright Emissive materials.
+            */}
+
+            {/* 1. Main Horizon Strip (Blue/Cyan/Purple Grade) */}
+            <mesh position={[0, 0, 10]} rotation={[0, 0, 0]}>
+                <planeGeometry args={[40, 10]} />
+                <meshBasicMaterial color="#0044aa" toneMapped={false} />
+            </mesh>
+
+            {/* 2. Highlight Strip (Warm Gold/White) - The "Key Light" reflection */}
+            <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
+                <mesh position={[-5, 5, 8]} rotation={[0, 0.5, 0]}>
+                    <planeGeometry args={[20, 1]} />
+                    <meshBasicMaterial color="#ffcc88" toneMapped={false} />
+                </mesh>
+            </Float>
+
+            {/* 3. Secondary Highlight (Cool White) */}
+            <Float speed={3} rotationIntensity={0.5} floatIntensity={0.5}>
+                <mesh position={[5, -2, 8]} rotation={[0, -0.5, 0]}>
+                    <planeGeometry args={[20, 0.5]} />
+                    <meshBasicMaterial color="#ccffff" toneMapped={false} />
+                </mesh>
+            </Float>
+
+            {/* 4. Deep Purple Underglow */}
+            <mesh position={[0, -10, 5]} rotation={[-0.5, 0, 0]}>
+                <planeGeometry args={[50, 10]} />
+                <meshBasicMaterial color="#440055" toneMapped={false} />
+            </mesh>
+
+        </group>
+    )
+}
+
 export default function LiquidMetal() {
     const meshRef = useRef<THREE.Mesh>(null)
     const { liquidMetal } = useStore()
-    // Removed unused useThree and viewport for clean build
-
-    // Keep reference to shader to update uniforms
     const shaderRef = useRef<any>(null)
 
     useFrame(({ clock }) => {
@@ -158,21 +179,25 @@ export default function LiquidMetal() {
 
     return (
         <group>
-            <Environment preset="city" />
+            {/* 
+               Custom Environment:
+               We render the "StudioLights" into a cube map that the metal reflects.
+               background={false} keeps the actual background black.
+            */}
+            <Environment resolution={512} background={false}>
+                <StudioLights />
+            </Environment>
 
             <mesh
                 ref={meshRef}
-                position={[0, -2, -5]}
-                rotation={[-Math.PI / 2.5, 0, 0]}
+                position={[0, -2, -6]}
+                rotation={[-Math.PI / 2.2, 0, 0]}
             >
-                {/* 
-                   Increased segment count to 500x500 for ultra-smooth folds 
-                */}
-                <planeGeometry args={[30, 30, 500, 500]} />
+                <planeGeometry args={[40, 40, 400, 400]} />
                 <meshStandardMaterial
-                    color={liquidMetal.color}
-                    metalness={liquidMetal.metalness}
-                    roughness={liquidMetal.roughness}
+                    color="black" // Metal must be black to purely reflect the environment
+                    metalness={1.0}
+                    roughness={liquidMetal.roughness * 0.5} // Enhance shininess
                     onBeforeCompile={(shader) => {
                         patchShader(shader)
                         shaderRef.current = shader
@@ -180,11 +205,6 @@ export default function LiquidMetal() {
                     side={THREE.DoubleSide}
                 />
             </mesh>
-
-            <ambientLight intensity={0.2} />
-            <directionalLight position={[-10, 5, 5]} intensity={3.0} color="#ffaa00" />
-            <directionalLight position={[10, 5, 5]} intensity={3.0} color="#0088ff" />
-            <pointLight position={[0, 10, -5]} intensity={1.0} color="#ffffff" />
         </group>
     )
 }

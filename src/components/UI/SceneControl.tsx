@@ -26,12 +26,15 @@ export default function SceneControl() {
                     options={['Gradient', 'Solid + Glow', 'Lava Lamp', 'Blob Stack', 'Orbs', 'Acid Trip', 'Ripples', 'Linear Gradient', 'Liquid Metal', 'Cubic']}
                     onChange={(val) => {
                         setScene({ bgMode: val as any })
-                        // Auto-disable glass for Acid Trip if user selects it (requested behavior)
-                        if (val === 'Acid Trip') {
+
+                        // Auto-toggle Glass logic
+                        const disableGlassModes = ['Acid Trip', 'Liquid Metal', 'Cubic']
+                        const enableGlassModes = ['Solid + Glow']
+
+                        if (disableGlassModes.includes(val)) {
                             setGlass({ enabled: false })
                         }
-                        // Auto-enable glass for Solid + Glow (requested behavior)
-                        if (val === 'Solid + Glow') {
+                        if (enableGlassModes.includes(val)) {
                             setGlass({ enabled: true })
                         }
                     }}

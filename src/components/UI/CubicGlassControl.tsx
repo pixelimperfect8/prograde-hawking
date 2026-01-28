@@ -39,23 +39,21 @@ export default function CubicGlassControl() {
                         />
                     ))}
 
-                    <div className="flex gap-2 mt-2">
-                        {cubicGlass.colors.length < 5 && (
-                            <button
-                                onClick={addColor}
-                                className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-medium text-white/60 transition-colors border border-white/5"
-                            >
-                                + Add Color
-                            </button>
-                        )}
-                        {cubicGlass.colors.length > 1 && (
-                            <button
-                                onClick={removeColor}
-                                className="flex-1 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-xs font-medium text-red-400 transition-colors border border-red-500/10"
-                            >
-                                - Remove
-                            </button>
-                        )}
+                    <div className="flex gap-2 mt-4 pt-4 border-t border-white/5">
+                        <button
+                            onClick={addColor}
+                            disabled={cubicGlass.colors.length >= 5}
+                            className="flex-1 py-2 px-4 rounded-md bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] uppercase tracking-wider font-medium text-white transition-all border border-white/5 hover:border-white/20"
+                        >
+                            + Add Color
+                        </button>
+                        <button
+                            onClick={removeColor}
+                            disabled={cubicGlass.colors.length <= 1}
+                            className="flex-1 py-2 px-4 rounded-md bg-white/5 hover:bg-red-500/20 disabled:opacity-30 disabled:cursor-not-allowed text-[10px] uppercase tracking-wider font-medium text-white hover:text-red-200 transition-all border border-white/5 hover:border-red-500/20"
+                        >
+                            - Remove
+                        </button>
                     </div>
                 </div>
             </Section>

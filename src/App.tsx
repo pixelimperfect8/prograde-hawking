@@ -31,7 +31,7 @@ function Rig() {
     const y = state.mouse.y
 
     // Parallax Factor (how much camera moves)
-    const factor = 1.5
+    const factor = 0.5
 
     // Smooth lerp for fluid movement
     state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, x * factor, 0.05)
@@ -51,7 +51,7 @@ function Scene() {
     <>
       <Rig />
       {/* Scale up mesh slightly to cover edges during camera movement */}
-      <group scale={[1.1, 1.1, 1]}>
+      <group scale={[1.25, 1.25, 1]}>
         {bgMode === 'Gradient' && <MeshGradient />}
 
         {bgMode === 'Solid + Glow' && (

@@ -158,6 +158,12 @@ interface State {
         speed: number
         distortion: number
     }
+    cubicGlass: {
+        colors: string[]
+        gridSize: number
+        speed: number
+        smoothness: number
+    }
 
     orbs: {
         color1: string
@@ -199,7 +205,7 @@ interface State {
     }
     // Scene Slice
     scene: {
-        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples' | 'Linear Gradient' | 'Liquid Metal'
+        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples' | 'Linear Gradient' | 'Liquid Metal' | 'Cubic Glass'
         solidColor: string
     }
     logo: string | null
@@ -219,6 +225,7 @@ interface State {
     setScene: (partial: Partial<State['scene']>) => void
     setAdvancedGradient: (partial: Partial<State['advancedGradient']>) => void
     setLiquidMetal: (partial: Partial<State['liquidMetal']>) => void
+    setCubicGlass: (config: Partial<State['cubicGlass']>) => void
     setLogo: (logo: string | null) => void
     setAppState: (state: 'intro' | 'animating' | 'ready') => void
     applyPreset: (name: string) => void
@@ -373,6 +380,12 @@ export const useStore = create<State>((set) => {
             speed: 0.2,
             distortion: 1.5
         },
+        cubicGlass: {
+            colors: ['#ff00ea', '#ffce00', '#00e5ff'],
+            gridSize: 30,
+            speed: 0.5,
+            smoothness: 0.2
+        },
         logo: null,
         appState: new URLSearchParams(window.location.search).get('embed') === 'true' ? 'ready' : 'intro',
 
@@ -387,6 +400,7 @@ export const useStore = create<State>((set) => {
         setOrbs: (partial) => set((state) => ({ orbs: { ...state.orbs, ...partial } })),
         setFluid: (partial) => set((state) => ({ fluid: { ...state.fluid, ...partial } })),
         setRipples: (partial) => set((state) => ({ ripples: { ...state.ripples, ...partial } })),
+        setCubicGlass: (partial) => set((state) => ({ cubicGlass: { ...state.cubicGlass, ...partial } })),
         // Ripples tasks restored:
         // - [x] Implement "Ripples" Mode (Halftone/Squares)
         // - [x] Restore Ring Expansion for Ripples

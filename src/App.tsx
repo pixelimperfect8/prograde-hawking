@@ -7,13 +7,11 @@ import GlowOverlay from './components/Effects/GlowOverlay'
 import LavaLamp from './components/Effects/LavaLamp'
 import BlobStack from './components/Effects/BlobStack'
 import Orbs from './components/Effects/Orbs'
-import AcidTrip from './components/Effects/AcidTrip'
 
-import Ripples from './components/Effects/Ripples'
 import AdvancedGradient from './components/Effects/AdvancedGradient'
 import LiquidMetal from './components/Effects/LiquidMetal'
+import CubicGlass from './components/Effects/CubicGlass'
 import PostFX from './components/Effects/PostFX'
-// import Ticker from './components/Ticker'
 import Overlay from './components/UI/Overlay'
 import CustomCursor from './components/UI/CustomCursor'
 import IntroMeshit from './components/UI/IntroMeshit'
@@ -68,8 +66,9 @@ function Scene() {
         {bgMode === 'Lava Lamp' && <LavaLamp />}
         {bgMode === 'Blob Stack' && <BlobStack />}
         {bgMode === 'Orbs' && <Orbs />}
-        {bgMode === 'Acid Trip' && <AcidTrip />}
-        {bgMode === 'Ripples' && <Ripples />}
+        {/* Dynamic Backgrounds */}
+        {bgMode === 'Liquid Metal' && <LiquidMetal />}
+        {bgMode === 'Cubic Glass' && <CubicGlass />}
         {bgMode === 'Linear Gradient' && <AdvancedGradient />}
         {bgMode === 'Liquid Metal' && <LiquidMetal />}
 

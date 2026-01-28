@@ -73,17 +73,35 @@ function patchShader(shader: any) {
         
         ${noiseGLSL}
         
-        // Helper to get height (Anisotropic for 'draped' look)
+        // "Flowy Twisty" Logic using Domain Warping
+        // We distort the coordinate space (p) with noise BEFORE sampling the height noise.
+        // This creates swirling folds instead of lumps.
         float getHeight(vec3 p) {
             float t = uTime * uSpeed;
-            // Primary wave (large, slow)
-            float n1 = snoise(vec3(p.x * 0.5, p.y * 0.5, t * 0.5));
-            // Secondary wave (detail)
-            float n2 = snoise(vec3(p.x * 1.5 + 5.0, p.y * 1.5 + 5.0, t)) * 0.3;
-            // Flowing sine waves for silkiness
-            float flow = sin(p.x * 0.5 + p.y * 0.5 + t * 2.0) * 0.5;
             
-            return (n1 + n2 + flow) * uDistortion;
+            // Large scale flow
+            vec3 p1 = p * 0.8;
+            
+            // WARP 1: Distort 'p' with noise moving in one direction
+            vec3 warp = vec3(
+                snoise(vec3(p1.x, p1.y, t * 0.5)),
+                snoise(vec3(p1.x + 10.0, p1.y + 10.0, t * 0.5)),
+                0.0
+            ) * 1.5; // Strong warp strength
+            
+            // Sample height using warped coordinates
+            // We mix the original P slightly to keep some structure
+            vec3 finalP = p1 + warp;
+            
+            float h = snoise(vec3(finalP.x, finalP.y, t * 0.2));
+            
+            // Add secondary detail layer
+            float detail = snoise(vec3(p.x * 2.0 + warp.x, p.y * 2.0 + warp.y, t)) * 0.2;
+            
+            // Smooth sine folds
+            float folds = sin(finalP.x * 2.0 + cos(finalP.y * 2.0 + t)) * 0.5;
+            
+            return (h + detail + folds) * uDistortion;
         }
         `
     )
@@ -95,9 +113,8 @@ function patchShader(shader: any) {
         #include <beginnormal_vertex>
         
         vec3 p = position;
-        float offset = 0.05; // Larger offset for smooth normal smoothing
+        float offset = 0.05; // Smooth normals
         
-        // Finite difference for normals
         float h0 = getHeight(p);
         float hx = getHeight(p + vec3(offset, 0.0, 0.0));
         float hy = getHeight(p + vec3(0.0, offset, 0.0));
@@ -105,7 +122,6 @@ function patchShader(shader: any) {
         vec3 vX = vec3(offset, 0.0, hx - h0);
         vec3 vY = vec3(0.0, offset, hy - h0);
         
-        // Recompute object normal
         objectNormal = normalize(cross(vX, vY));
         `
     )
@@ -115,7 +131,6 @@ function patchShader(shader: any) {
         '#include <begin_vertex>',
         `
         #include <begin_vertex>
-        // Re-calculate height here to ensure sync
         float h = getHeight(position);
         transformed.z += h;
         `
@@ -140,12 +155,9 @@ export default function LiquidMetal() {
 
     return (
         <group>
-            {/* High Contrast Environment for Metal Reflections */}
             <Environment preset="city" />
 
-            {/* Scale mesh to cover viewport */}
             <mesh ref={meshRef} position={[0, 0, 0]} rotation={[0, 0, 0]}>
-                {/* High seg plane for smooth waves */}
                 <planeGeometry args={[viewport.width * 1.5, viewport.height * 1.5, 300, 300]} />
                 <meshStandardMaterial
                     color={liquidMetal.color}

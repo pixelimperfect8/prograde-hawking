@@ -367,11 +367,11 @@ export const useStore = create<State>((set) => {
             roughness: 0
         },
         liquidMetal: {
-            color: '#1a2a6c',
-            metalness: 1.0,
-            roughness: 0.2,
+            color: '#2244aa', // Blueprint Blue-ish
+            metalness: 1.0,   // Full Chrome
+            roughness: 0.15,  // Shiny but not perfect mirror
             speed: 0.2,
-            distortion: 1.0
+            distortion: 1.5   // Stronger waves
         },
         logo: null,
         appState: new URLSearchParams(window.location.search).get('embed') === 'true' ? 'ready' : 'intro',

@@ -6,7 +6,7 @@ import ColorPicker from './inputs/ColorPicker'
 
 export default function AdvancedGradientControl() {
     const { advancedGradient, setAdvancedGradient } = useStore()
-    const { colors, type, angle, centerX, centerY, animation, speed, roughness } = advancedGradient
+    const { colors, type, angle, centerX, centerY, animation, speed, roughness, radius, backgroundColor } = advancedGradient
 
     const handleColorChange = (index: number, val: string) => {
         const newColors = [...colors]
@@ -27,22 +27,20 @@ export default function AdvancedGradientControl() {
 
     return (
         <>
-            <Section title="Gradient Type">
-                <Select
-                    label="Type"
-                    value={type}
-                    options={['Linear', 'Radial']}
-                    onChange={(val) => setAdvancedGradient({ type: val as any })}
+            <Section title="Colors & Style">
+                <ColorPicker
+                    label="Background"
+                    value={backgroundColor}
+                    onChange={(val) => setAdvancedGradient({ backgroundColor: val })}
                 />
-            </Section>
 
-            <Section title="Colors">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px', marginTop: '10px' }}>
+                    <div style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Gradient Colors</div>
                     {colors.map((c, i) => (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <div style={{ flex: 1 }}>
                                 <ColorPicker
-                                    label={`Color ${i + 1}`}
+                                    label={`Stop ${i + 1}`}
                                     value={c}
                                     onChange={(val) => handleColorChange(i, val)}
                                 />
@@ -92,7 +90,14 @@ export default function AdvancedGradientControl() {
                 </div>
             </Section>
 
-            <Section title="Settings">
+            <Section title="Geometry">
+                <Select
+                    label="Type"
+                    value={type}
+                    options={['Linear', 'Radial']}
+                    onChange={(val) => setAdvancedGradient({ type: val as any })}
+                />
+
                 {type === 'Linear' && (
                     <Slider
                         label="Angle"
@@ -105,6 +110,14 @@ export default function AdvancedGradientControl() {
                 )}
                 {type === 'Radial' && (
                     <>
+                        <Slider
+                            label="Radius"
+                            value={radius}
+                            min={0.1}
+                            max={2.0}
+                            step={0.05}
+                            onChange={(val) => setAdvancedGradient({ radius: val })}
+                        />
                         <Slider
                             label="Center X"
                             value={centerX}
@@ -123,7 +136,9 @@ export default function AdvancedGradientControl() {
                         />
                     </>
                 )}
+            </Section>
 
+            <Section title="Effects">
                 <Select
                     label="Animation"
                     value={animation}
@@ -143,7 +158,7 @@ export default function AdvancedGradientControl() {
                 )}
 
                 <Slider
-                    label="Roughness (Grain)"
+                    label="Roughness (Frosted)"
                     value={roughness}
                     min={0}
                     max={0.5}

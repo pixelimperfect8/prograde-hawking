@@ -152,6 +152,8 @@ interface State {
         centerY: number // 0-1
         animation: 'Static' | 'Flow' | 'Pulse'
         speed: number
+        radius: number // 0.1-2.0
+        backgroundColor: string
         roughness: number
     }
     orbs: {
@@ -358,7 +360,9 @@ export const useStore = create<State>((set) => {
             centerY: 0.5,
             animation: 'Flow',
             speed: 0.2,
-            roughness: 0
+            roughness: 0,
+            radius: 1.0,
+            backgroundColor: '#000000'
         },
         logo: null,
         appState: new URLSearchParams(window.location.search).get('embed') === 'true' ? 'ready' : 'intro',

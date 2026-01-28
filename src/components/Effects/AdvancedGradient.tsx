@@ -7,12 +7,15 @@ import { useStore } from '../../store'
 const AdvancedGradientMaterial = shaderMaterial(
     {
         uTime: 0,
-        uColors: new Float32Array(5 * 3), // Max 5 colors supported initially? Or use Texture for N colors
+        // Max 5 colors provided via uniform array logic below
+        uColors: new Float32Array(30),
         uColorCount: 2,
         uType: 0, // 0 = Linear, 1 = Radial
         uAngle: 0,
         uCenter: new THREE.Vector2(0.5, 0.5),
-        uAnimation: 0, // 0=Static, 1=Flow, 2=Pulse
+        uRadius: 1.0,
+        uBackgroundColor: new THREE.Color('#000000'),
+        uAnimation: 0, // 0=Static, 1=Flow (Wave), 2=Pulse (Breathe)
         uSpeed: 0.2,
         uRoughness: 0
     },
@@ -27,41 +30,48 @@ const AdvancedGradientMaterial = shaderMaterial(
     // Fragment Shader
     `
     uniform float uTime;
-    uniform vec3 uColors[10]; // Support up to 10 colors
+    uniform vec3 uColors[10]; 
     uniform int uColorCount;
     uniform int uType;
     uniform float uAngle;
     uniform vec2 uCenter;
+    uniform float uRadius;
+    uniform vec3 uBackgroundColor;
     uniform int uAnimation;
     uniform float uSpeed;
     uniform float uRoughness;
     
     varying vec2 vUv;
 
-    // Pseudo-random noise for roughness
+    // High frequency noise for frosted look
     float random(vec2 st) {
         return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
     }
+    
+    // Perlin-ish noise for smoother wave distortion
+    // (Simplified)
+    float noise(vec2 p) {
+        return sin(p.x * 10.0 + p.y * 10.0);
+    }
 
-    // Linear interpolation between n colors
+    // Smoothstep interpolation between n colors
     vec3 getColor(float t) {
         // t is 0.0 to 1.0
         float scaledT = t * float(uColorCount - 1);
         int index = int(scaledT);
         float frac = fract(scaledT);
         
+        // Use smoothstep for buttery transitions
+        frac = smoothstep(0.0, 1.0, frac);
+        
         // Safe clamp
         if (index >= uColorCount - 1) return uColors[uColorCount - 1];
         if (index < 0) return uColors[0];
         
-        // Since GLSL ES 3.0 (WebGL 2) allows dynamic array access (usually), 
-        // but for compatibility we might need a cascading if/else if WebGL 1
-        // Assuming WebGL 2 environment mostly in Three.js recent versions
-        
-        // Fallback for uniform array access in older GLSL
         vec3 c1 = vec3(0.0);
         vec3 c2 = vec3(0.0);
 
+        // Standard loops for compatibility
         for(int i = 0; i < 10; i++) {
             if (i == index) c1 = uColors[i];
             if (i == index + 1) c2 = uColors[i];
@@ -72,12 +82,21 @@ const AdvancedGradientMaterial = shaderMaterial(
 
     void main() {
         vec2 uv = vUv;
+        
+        // --- Frosted Roughness (UV Perturbation) ---
+        // Instead of adding grain to color, we distort the UV lookup slightly.
+        if (uRoughness > 0.0) {
+           float grainX = random(uv + uTime * 0.1);
+           float grainY = random(uv + vec2(1.0) + uTime * 0.1);
+           uv += vec2(grainX - 0.5, grainY - 0.5) * (uRoughness * 0.1); // Scale down effect
+        }
+
         float t = 0.0;
+        float alpha = 1.0;
 
         // --- Linear Logic ---
         if (uType == 0) { // Linear
-            // Rotate UV based on angle
-            // Center rotation around 0.5
+            // Rotate UV
             vec2 centered = uv - 0.5;
             float s = sin(radians(uAngle));
             float c = cos(radians(uAngle));
@@ -85,59 +104,63 @@ const AdvancedGradientMaterial = shaderMaterial(
             centered = centered * rot;
             vec2 rotatedUv = centered + 0.5;
             
-            // t = y-axis usually for linear gradient, or x-axis
-            // Let's use rotated y or x. Let's say it flows along Y effectively after rotation?
-            // Actually standard linear gradient usually defines a line.
-            // Simplified: mapped to rotated Y.
             t = rotatedUv.y;
             
-            // Flow Animation: shift t
-            if (uAnimation == 1) { // Flow
-               t += uTime * uSpeed;
-               t = fract(t); // Repeat
-               
-               // Mirror/PingPong for smoother flow?
-               // Or just linear repeat
-             }
+            // --- Animations (In-Place) ---
+            if (uAnimation == 1) { // Flow = Subtle Wave
+                // Distort t based on sine wave along orthogonal axis (x)
+                float wave = sin(rotatedUv.x * 3.14 * 2.0 + uTime * uSpeed) * 0.1;
+                t += wave;
+            }
+            if (uAnimation == 2) { // Pulse = Breathe (Scale gradient)
+                float breathe = 1.0 + sin(uTime * uSpeed) * 0.1;
+                // Scale t around 0.5
+                t = (t - 0.5) * breathe + 0.5;
+            }
+            
+            t = clamp(t, 0.0, 1.0);
         } 
         // --- Radial Logic ---
         else { // Radial
             float d = distance(uv, uCenter);
             
-            // Pulse Animation: modify distance
-            if (uAnimation == 2) { // Pulse
-                float pulse = 1.0 + sin(uTime * uSpeed * 2.0) * 0.1;
-                d = d * pulse;
+            // Normalize by radius
+            // If d = 0, t = 0. If d = Radius, t = 1.
+            if (uRadius > 0.001) {
+                 t = d / uRadius;
+            } else {
+                 t = 0.0;
             }
             
-            // Flow Animation Radial: expanding rings
-             if (uAnimation == 1) { // Flow
-                 d -= uTime * uSpeed;
-                 d = fract(d);
-             }
+            // --- Animations (In-Place) ---
+            if (uAnimation == 1) { // Flow = Ripple/Wave ring
+                // Modulate radius slightly
+                 float wave = sin(d * 20.0 - uTime * uSpeed * 2.0) * 0.05;
+                 t += wave;
+            }
+            if (uAnimation == 2) { // Pulse = Breathe Size
+                float breathe = 1.0 + sin(uTime * uSpeed) * 0.15;
+                t /= breathe; // Adjust effective distance
+            }
 
-            t = d;
+            // Radial Masking for Background Color
+            // Smooth fade out at edge of radius
+            // t is usually 0 to >1
             
-            // Clamp radial to edges usually? Or repeat?
-            // Usually radial gradient is 0 at center to 1 at edge.
-            // Let's scale it slightly so 0.5 distance (edge of unit circle) covers more?
-            // Standard CSS radial is often center to farthest corner.
-            t = clamp(t, 0.0, 1.0);
+            if (t > 1.0) {
+               // Mix with background or just hard clamp? 
+               // User asked for background color.
+               // Let's implement background color blending.
+            }
         }
 
-        // --- Pulse Animation (Global color shift alternative) ---
-        // if (uAnimation == 2 && uType == 0) {
-           // Maybe pulse shifts the midpoint?
-        // }
-        
-        
         vec3 color = getColor(clamp(t, 0.0, 1.0));
-
-        // --- Roughness (Grain) ---
-        if (uRoughness > 0.0) {
-           float grain = random(uv + uTime);
-           // Overlay: grain * roughness
-           color += (grain - 0.5) * uRoughness;
+        
+        // Background Color Blending (Radial only mostly)
+        if (uType == 1) {
+             // Smooth transition to background at t=1.0
+             float edge = 1.0 - smoothstep(0.95, 1.05, t); // Soft edge
+             color = mix(uBackgroundColor, color, edge);
         }
 
         gl_FragColor = vec4(color, 1.0);
@@ -178,7 +201,6 @@ export default function AdvancedGradient() {
                 arr[i * 3 + 2] = col.b
             }
         })
-        // Fill remaining with last color to be safe
         const last = colors[colors.length - 1]
         const lastCol = new THREE.Color(last)
         for (let i = colors.length; i < 10; i++) {
@@ -191,7 +213,11 @@ export default function AdvancedGradient() {
 
     return (
         <mesh scale={[viewport.width * 2, viewport.height * 2, 1]}>
-            <planeGeometry args={[1, 1]} />
+            <planeGeometry args={[1, 1, 64, 64]} />
+            {/* Increased segments for smoother UV perturbation if we were doing vertex, 
+             but we are doing fragment. Keep pure quad is fine, but more vertices help if we ever add vertex displacement.
+             Actually fragment shader UV perturbation works on single quad.
+          */}
             {/* @ts-ignore */}
             <advancedGradientMaterial
                 ref={materialRef}
@@ -200,6 +226,8 @@ export default function AdvancedGradient() {
                 uType={advancedGradient.type === 'Linear' ? 0 : 1}
                 uAngle={advancedGradient.angle}
                 uCenter={new THREE.Vector2(advancedGradient.centerX, advancedGradient.centerY)}
+                uRadius={advancedGradient.radius}
+                uBackgroundColor={new THREE.Color(advancedGradient.backgroundColor)}
                 uAnimation={advancedGradient.animation === 'Static' ? 0 : advancedGradient.animation === 'Flow' ? 1 : 2}
                 uSpeed={advancedGradient.speed}
                 uRoughness={advancedGradient.roughness}

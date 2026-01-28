@@ -205,7 +205,7 @@ interface State {
     }
     // Scene Slice
     scene: {
-        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples' | 'Linear Gradient' | 'Liquid Metal' | 'Cubic Glass'
+        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples' | 'Linear Gradient' | 'Liquid Metal' | 'Cubic'
         solidColor: string
     }
     logo: string | null

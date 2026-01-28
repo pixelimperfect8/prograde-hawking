@@ -3,7 +3,7 @@ import { useStore } from '../../store'
 import Section from './inputs/Section'
 import Select from './inputs/Select'
 import ColorPicker from './inputs/ColorPicker'
-import Switch from './inputs/Switch'
+
 import ExportPanel from './ExportPanel'
 import AdvancedGradientControl from './AdvancedGradientControl'
 import LiquidMetalControl from './LiquidMetalControl'
@@ -11,9 +11,13 @@ import CubicGlassControl from './CubicGlassControl'
 import LavaControl from './LavaControl'
 import AcidTripControl from './AcidTripControl'
 import RipplesControl from './RipplesControl'
+import GradientControl from './GradientControl'
+import BlobControl from './BlobControl'
+import OrbsControl from './OrbsControl'
+import GlowControl from './GlowControl'
 
 export default function SceneControl() {
-    const { scene, glass, setScene, setGlass } = useStore()
+    const { scene, setScene, setGlass } = useStore()
     const [showExport, setShowExport] = useState(false)
 
     return (
@@ -44,11 +48,15 @@ export default function SceneControl() {
                     <AdvancedGradientControl />
                 )}
 
+                {scene.bgMode === 'Gradient' && <GradientControl />}
                 {scene.bgMode === 'Liquid Metal' && <LiquidMetalControl />}
                 {scene.bgMode === 'Cubic' && <CubicGlassControl />}
                 {scene.bgMode === 'Lava Lamp' && <LavaControl />}
                 {scene.bgMode === 'Acid Trip' && <AcidTripControl />}
                 {scene.bgMode === 'Ripples' && <RipplesControl />}
+                {scene.bgMode === 'Blob Stack' && <BlobControl />}
+                {scene.bgMode === 'Orbs' && <OrbsControl />}
+                {scene.bgMode === 'Solid + Glow' && <GlowControl />}
 
                 {scene.bgMode === 'Solid + Glow' && (
                     <ColorPicker
@@ -57,12 +65,6 @@ export default function SceneControl() {
                         onChange={(val) => setScene({ solidColor: val })}
                     />
                 )}
-
-                <Switch
-                    label="Glass Overlay"
-                    checked={glass.enabled}
-                    onChange={(val) => setGlass({ enabled: val })}
-                />
 
                 {/* Global Export Button */}
                 <button

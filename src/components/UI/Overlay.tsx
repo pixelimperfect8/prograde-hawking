@@ -1,20 +1,12 @@
 import { useRef, useEffect } from 'react'
 import { useStore } from '../../store'
 import SceneControl from './SceneControl'
-import GradientControl from './GradientControl'
 import GlassControl from './GlassControl'
 import EffectsControl from './EffectsControl'
-import LavaControl from './LavaControl'
-import BlobControl from './BlobControl'
-import GlowControl from './GlowControl'
-import OrbsControl from './OrbsControl'
-import AcidTripControl from './AcidTripControl'
-import RipplesControl from './RipplesControl'
 
 
 export default function Overlay() {
-    const { scene, appState } = useStore()
-    const { bgMode } = scene
+    const { appState } = useStore()
     const isReady = appState === 'ready'
 
     // Custom Momentum Scroll Logic (Ref-based, no re-renders)
@@ -123,14 +115,7 @@ export default function Overlay() {
             >
                 <SceneControl />
 
-                {/* Dynamic Controls based on Background Mode */}
-                {bgMode === 'Gradient' && <GradientControl />}
-                {bgMode === 'Lava Lamp' && <LavaControl />}
-                {bgMode === 'Blob Stack' && <BlobControl />}
-                {bgMode === 'Solid + Glow' && <GlowControl />}
-                {bgMode === 'Orbs' && <OrbsControl />}
-                {bgMode === 'Acid Trip' && <AcidTripControl />}
-                {bgMode === 'Ripples' && <RipplesControl />}
+
 
 
                 <GlassControl />

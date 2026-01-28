@@ -144,6 +144,16 @@ interface State {
         pos1: { x: number, y: number }
         pos2: { x: number, y: number }
     }
+    advancedGradient: {
+        colors: string[]
+        type: 'Linear' | 'Radial'
+        angle: number // 0-360
+        centerX: number // 0-1
+        centerY: number // 0-1
+        animation: 'Static' | 'Flow' | 'Pulse'
+        speed: number
+        roughness: number
+    }
     orbs: {
         color1: string
         color2: string
@@ -184,7 +194,7 @@ interface State {
     }
     // Scene Slice
     scene: {
-        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples'
+        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples' | 'Linear Gradient' | 'Radial Gradient'
         solidColor: string
     }
     logo: string | null
@@ -202,6 +212,7 @@ interface State {
 
     setPostFX: (partial: Partial<State['postfx']>) => void
     setScene: (partial: Partial<State['scene']>) => void
+    setAdvancedGradient: (partial: Partial<State['advancedGradient']>) => void
     setLogo: (logo: string | null) => void
     setAppState: (state: 'intro' | 'animating' | 'ready') => void
     applyPreset: (name: string) => void
@@ -339,6 +350,16 @@ export const useStore = create<State>((set) => {
             bgMode: 'Acid Trip',
             solidColor: '#012265'
         },
+        advancedGradient: {
+            colors: ['#4facfe', '#00f2fe'],
+            type: 'Linear',
+            angle: 135,
+            centerX: 0.5,
+            centerY: 0.5,
+            animation: 'Flow',
+            speed: 0.2,
+            roughness: 0
+        },
         logo: null,
         appState: new URLSearchParams(window.location.search).get('embed') === 'true' ? 'ready' : 'intro',
 
@@ -348,6 +369,7 @@ export const useStore = create<State>((set) => {
         setLava: (partial) => set((state) => ({ lava: { ...state.lava, ...partial } })),
         setBlob: (partial) => set((state) => ({ blob: { ...state.blob, ...partial } })),
         setGlow: (partial) => set((state) => ({ glow: { ...state.glow, ...partial } })),
+        setAdvancedGradient: (partial) => set((state) => ({ advancedGradient: { ...state.advancedGradient, ...partial } })),
         setOrbs: (partial) => set((state) => ({ orbs: { ...state.orbs, ...partial } })),
         setFluid: (partial) => set((state) => ({ fluid: { ...state.fluid, ...partial } })),
         setRipples: (partial) => set((state) => ({ ripples: { ...state.ripples, ...partial } })),

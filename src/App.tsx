@@ -10,6 +10,7 @@ import Orbs from './components/Effects/Orbs'
 import AcidTrip from './components/Effects/AcidTrip'
 
 import Ripples from './components/Effects/Ripples'
+import AdvancedGradient from './components/Effects/AdvancedGradient'
 import PostFX from './components/Effects/PostFX'
 // import Ticker from './components/Ticker'
 import Overlay from './components/UI/Overlay'
@@ -68,6 +69,7 @@ function Scene() {
         {bgMode === 'Orbs' && <Orbs />}
         {bgMode === 'Acid Trip' && <AcidTrip />}
         {bgMode === 'Ripples' && <Ripples />}
+        {(bgMode === 'Linear Gradient' || bgMode === 'Radial Gradient') && <AdvancedGradient />}
 
 
         {showGlass && <GlassOverlay />}

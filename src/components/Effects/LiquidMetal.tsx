@@ -46,7 +46,7 @@ function patchShader(shader: any) {
         vec4 s1 = floor(b1)*2.0 + 1.0;
         vec4 sh = -step(h, vec4(0.0));
         vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
-        vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+        vec4 a1 = b1.xzyw + s1.xzyw*zzww ;
         vec3 p0 = vec3(a0.xy,h.x);
         vec3 p1 = vec3(a0.zw,h.y);
         vec3 p2 = vec3(a1.xy,h.z);
@@ -62,13 +62,32 @@ function patchShader(shader: any) {
     }
     `
 
-    shader.vertexShader = `
+    // Inject Uniforms & Globals into <common>
+    // This is safer than prepending to vertexShader
+    shader.vertexShader = shader.vertexShader.replace(
+        '#include <common>',
+        `
+        #include <common>
         uniform float uTime;
         uniform float uSpeed;
         uniform float uDistortion;
+        
         ${noiseGLSL}
-        ${shader.vertexShader}
-    `
+        
+        // Helper to get height (Anisotropic for 'draped' look)
+        float getHeight(vec3 p) {
+            float t = uTime * uSpeed;
+            // Primary wave (large, slow)
+            float n1 = snoise(vec3(p.x * 0.5, p.y * 0.5, t * 0.5));
+            // Secondary wave (detail)
+            float n2 = snoise(vec3(p.x * 1.5 + 5.0, p.y * 1.5 + 5.0, t)) * 0.3;
+            // Flowing sine waves for silkiness
+            float flow = sin(p.x * 0.5 + p.y * 0.5 + t * 2.0) * 0.5;
+            
+            return (n1 + n2 + flow) * uDistortion;
+        }
+        `
+    )
 
     // Inject Normal Recalculation
     shader.vertexShader = shader.vertexShader.replace(
@@ -76,19 +95,8 @@ function patchShader(shader: any) {
         `
         #include <beginnormal_vertex>
         
-        float t = uTime * uSpeed;
-        float noiseScale = 1.5;
-        
-        // Helper to get height
-        // Using a combination of noise frequencies for nicer waves
-         float getHeight(vec3 p) {
-            float n1 = snoise(vec3(p.x * noiseScale, p.y * noiseScale, t));
-            float n2 = snoise(vec3(p.x * noiseScale * 2.0 + 10.0, p.y * noiseScale * 2.0 + 10.0, t * 1.5)) * 0.5;
-            return (n1 + n2) * uDistortion;
-        }
-
         vec3 p = position;
-        float offset = 0.01;
+        float offset = 0.05; // Larger offset for smooth normal smoothing
         
         // Finite difference for normals
         float h0 = getHeight(p);
@@ -131,17 +139,14 @@ export default function LiquidMetal() {
         }
     })
 
-    // We used onBeforeCompile, so we need to set color/roughness directly on material props
-    // or via uniforms if we wanted to control them in shader, but props is easier for StandardMaterial
-
     return (
         <group>
-            {/* Environment for reflections */}
-            <Environment preset="warehouse" />
+            {/* High Contrast Environment for Metal Reflections */}
+            <Environment preset="city" />
 
             <mesh ref={meshRef} position={[0, 0, 0]} rotation={[0, 0, 0]}>
                 {/* High seg plane for smooth waves */}
-                <planeGeometry args={[viewport.width * 1.5, viewport.height * 1.5, 256, 256]} />
+                <planeGeometry args={[viewport.width * 1.5, viewport.height * 1.5, 300, 300]} />
                 <meshStandardMaterial
                     color={liquidMetal.color}
                     metalness={liquidMetal.metalness}
@@ -150,14 +155,15 @@ export default function LiquidMetal() {
                         patchShader(shader)
                         shaderRef.current = shader
                     }}
-                    // Ensure we can see both sides if waves get wild?
                     side={THREE.DoubleSide}
                 />
             </mesh>
 
-            {/* Optional: Add some lights to enhance the metal if Env is not enough */}
-            <directionalLight position={[10, 10, 5]} intensity={2} />
-            <directionalLight position={[-10, -10, -5]} intensity={1} color="blue" />
+            {/* Backup Lights to ensure visibility if Env fails */}
+            <ambientLight intensity={0.5} />
+            <directionalLight position={[5, 10, 5]} intensity={2.0} color="#ffffff" />
+            <pointLight position={[-10, 0, 5]} intensity={2.0} color="#ff0000" />
+            <pointLight position={[10, 0, 5]} intensity={2.0} color="#0000ff" />
         </group>
     )
 }

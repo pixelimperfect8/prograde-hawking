@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { Environment } from '@react-three/drei'
 import * as THREE from 'three'
 import { useStore } from '../../store'
@@ -73,35 +73,29 @@ function patchShader(shader: any) {
         
         ${noiseGLSL}
         
-        // "Flowy Twisty" Logic using Domain Warping
-        // We distort the coordinate space (p) with noise BEFORE sampling the height noise.
-        // This creates swirling folds instead of lumps.
+        // "Windblown Silk" Logic
         float getHeight(vec3 p) {
             float t = uTime * uSpeed;
             
-            // Large scale flow
-            vec3 p1 = p * 0.8;
+            // Directional flow (Wind)
+            // We adding 't' primarily to one axis to simulate flow direction
+            vec3 flowP = p + vec3(t * 1.5, t * 0.5, 0.0);
             
-            // WARP 1: Distort 'p' with noise moving in one direction
             vec3 warp = vec3(
-                snoise(vec3(p1.x, p1.y, t * 0.5)),
-                snoise(vec3(p1.x + 10.0, p1.y + 10.0, t * 0.5)),
+                snoise(vec3(p.x * 0.5, p.y * 0.5, t * 0.2)),
+                snoise(vec3(p.x * 0.5 + 4.2, p.y * 0.5, t * 0.2)),
                 0.0
-            ) * 1.5; // Strong warp strength
+            ) * 2.0;
             
-            // Sample height using warped coordinates
-            // We mix the original P slightly to keep some structure
-            vec3 finalP = p1 + warp;
+            vec3 finalP = flowP + warp;
             
-            float h = snoise(vec3(finalP.x, finalP.y, t * 0.2));
+            // Large sweeping folds
+            float folds = sin(finalP.x * 1.0 - finalP.y * 0.5) * 1.0;
             
-            // Add secondary detail layer
-            float detail = snoise(vec3(p.x * 2.0 + warp.x, p.y * 2.0 + warp.y, t)) * 0.2;
+            // Finer wrinkles
+            float wrinkles = snoise(vec3(finalP.x * 2.0, finalP.y * 2.0, t)) * 0.3;
             
-            // Smooth sine folds
-            float folds = sin(finalP.x * 2.0 + cos(finalP.y * 2.0 + t)) * 0.5;
-            
-            return (h + detail + folds) * uDistortion;
+            return (folds + wrinkles) * uDistortion;
         }
         `
     )
@@ -113,7 +107,7 @@ function patchShader(shader: any) {
         #include <beginnormal_vertex>
         
         vec3 p = position;
-        float offset = 0.05; // Smooth normals
+        float offset = 0.05; 
         
         float h0 = getHeight(p);
         float hx = getHeight(p + vec3(offset, 0.0, 0.0));
@@ -140,7 +134,6 @@ function patchShader(shader: any) {
 export default function LiquidMetal() {
     const meshRef = useRef<THREE.Mesh>(null)
     const { liquidMetal } = useStore()
-    const { viewport } = useThree()
 
     // Keep reference to shader to update uniforms
     const shaderRef = useRef<any>(null)
@@ -155,11 +148,24 @@ export default function LiquidMetal() {
 
     return (
         <group>
+            {/* Studio Environment for sharp reflections */}
             <Environment preset="city" />
 
-            <mesh ref={meshRef} position={[0, 0, 0]} rotation={[0, 0, 0]}>
-                <planeGeometry args={[viewport.width * 1.5, viewport.height * 1.5, 300, 300]} />
+            {/* 
+                Tilted Plane for Perspective "Landscape" view 
+                Rotated -60 deg on X to look like it's laying flow on a table
+                Positioned lower to fill the bottom half
+            */}
+            <mesh
+                ref={meshRef}
+                position={[0, -2, -5]}
+                rotation={[-Math.PI / 2.5, 0, 0]}
+            >
+                {/* Large geometry to cover horizon */}
+                <planeGeometry args={[30, 30, 400, 400]} />
                 <meshStandardMaterial
+                    // Overwrite user color with Black to allow colored lights to pop
+                    // Or maintain user color if they want it, but suggest dark
                     color={liquidMetal.color}
                     metalness={liquidMetal.metalness}
                     roughness={liquidMetal.roughness}
@@ -171,11 +177,34 @@ export default function LiquidMetal() {
                 />
             </mesh>
 
-            {/* Backup Lights */}
-            <ambientLight intensity={0.5} />
-            <directionalLight position={[5, 10, 5]} intensity={2.0} color="#ffffff" />
-            <pointLight position={[-10, 0, 5]} intensity={2.0} color="#ff0000" />
-            <pointLight position={[10, 0, 5]} intensity={2.0} color="#0000ff" />
+            {/* 
+                Dual-Tone Cinematic Lighting 
+                Warm (Gold/Orange) from Left
+                Cool (Cyan/Blue) from Right
+                This creates the iridescent metallic look on a dark/black surface.
+            */}
+            <ambientLight intensity={0.2} />
+
+            {/* Warm Light - Gold/Orange */}
+            <directionalLight
+                position={[-10, 5, 5]}
+                intensity={3.0}
+                color="#ffaa00"
+            />
+
+            {/* Cool Light - Cyan/Blue */}
+            <directionalLight
+                position={[10, 5, 5]}
+                intensity={3.0}
+                color="#0088ff"
+            />
+
+            {/* Top Rim Light - White */}
+            <pointLight
+                position={[0, 10, -5]}
+                intensity={1.0}
+                color="#ffffff"
+            />
         </group>
     )
 }

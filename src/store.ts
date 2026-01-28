@@ -145,7 +145,7 @@ interface State {
         pos2: { x: number, y: number }
     }
     advancedGradient: {
-        stops: Array<{ id: string, color: string, pos: number }>
+        stops: Array<{ id: string, color: string, pos: number, opacity: number }>
         angle: number // 0-360
         animation: 'Static' | 'Flow' | 'Pulse' // Pulse = Breathe
         speed: number
@@ -349,8 +349,8 @@ export const useStore = create<State>((set) => {
         },
         advancedGradient: {
             stops: [
-                { id: '1', color: '#012265', pos: 0.0 }, // Deep Blue
-                { id: '2', color: '#00f2fe', pos: 1.0 }  // Cyan
+                { id: '1', color: '#012265', pos: 0.0, opacity: 1.0 }, // Deep Blue
+                { id: '2', color: '#00f2fe', pos: 1.0, opacity: 1.0 }  // Cyan
             ],
             angle: 135,
             animation: 'Flow',

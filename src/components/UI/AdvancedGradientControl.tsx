@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useStore } from '../../store'
 import Section from './inputs/Section'
 import Slider from './inputs/Slider'
 import Select from './inputs/Select'
-import ColorPicker from './inputs/ColorPicker'
+import GradientBar from './inputs/GradientBar'
+
 // Simple ID gen if UUID not available in environment
 const generateId = () => Math.random().toString(36).substr(2, 9)
 
@@ -10,183 +12,178 @@ export default function AdvancedGradientControl() {
     const { advancedGradient, setAdvancedGradient } = useStore()
     const { stops, angle, animation, speed, roughness } = advancedGradient
 
-    // Sort stops just for display order? 
-    // Actually, user wants to re-arrange. 
-    // But logically, gradient stops MUST be ordered by position for the shader interpolation to work linearly.
-    // Wait, standard gradients (CSS) allow stops to be out of order? No, they usually sort by % internally.
-    // BUT the user asked to "re-arrange the colors".
-    // If we have Red at 0% and Blue at 100%, and "re-arrange", maybe they mean swap Red to 100% and Blue to 0%?
-    // OR swap the logical order in the array?
-    // If I swap logical order: 
-    // Stop 0: Blue at 0%
-    // Stop 1: Red at 100%
-    // The shader iterates 0 to N. It expects stops to be sorted by position to find interval.
-    // SO, if I just swap array indices but keep positions, it might break searching interval if I don't sort before sending to shader.
-    // My shader does: "We assume stops are sorted".
-    // So the UI should manage the `pos` value.
-    // "Re-arrange" usually means changing the order in the list.
-    // If I drag Item 1 (Red) below Item 2 (Blue), usually that implies swapping their positions?
-    // OR swapping their colors?
-    // Let's implement robust "Move Up / Move Down" that swaps the entire Stop object (Color + ID) but *keeps* the Position? 
-    // Or Swaps Positions?
-    // If I swap Stop A (pos 0) and Stop B (pos 0.5):
-    // Result: Stop B is at pos 0, Stop A is at pos 0.5.
-    // This effectively swaps the colors at those positions.
-    // This seems most intuitive for 're-arranging'.
+    const [selectedId, setSelectedId] = useState<string | null>(stops[0]?.id || null)
 
-    const updateStop = (id: string, partial: Partial<{ color: string, pos: number }>) => {
+    const updateStop = (id: string, partial: Partial<{ color: string, pos: number, opacity: number }>) => {
         const newStops = stops.map(s => s.id === id ? { ...s, ...partial } : s)
-        // Sort by position? No, let the user adjust manually. 
-        // But shader needs sorted.
-        // Actually, if user puts 80% before 20% in the list, the shader logic "t <= uStops[0]" etc relies on order.
-        // I should probably AUTO-SORT by position before sending to shader? I did that in the component: "const sorted = [...stops].sort(...)".
-        // So the Array Order in Store doesn't theoretically matter for rendering, ONLY for UI list order.
-        // But if UI list order is independent of Position, it gets confusing.
-        // A "Stop List" usually is ordered by Position.
-        // If the user wants to "Re-arrange", they likely mean changing the position logic.
-        // Let's strictly enforce list order == position order?
-        // NO, user asked for "re-arrange" explicitly.
-        // Maybe they want the controls to be re-ordered?
-        // Let's implement: List is sorted by Position automatically. 
-        // "Re-arrange" -> "Swap Color". 
-        // Wait, if I want 80/20.
-        // Stop 1: 0.0
-        // Stop 2: 0.8 (Color A)
-        // Stop 3: 0.81 (Color B) ? Hard cut?
-        // User said: "adjust the height of each color... if I want gradient to be 80/20". This implies controlling the Stop Position.
-
         setAdvancedGradient({ stops: newStops })
     }
 
     const addStop = () => {
         if (stops.length >= 10) return
 
-        // Find a spot. Midpoint of last segment? Or just 0.5?
-        // Smart placement
+        // Smart Placement
         const sorted = [...stops].sort((a, b) => a.pos - b.pos)
         let newPos = 0.5
-        if (sorted.length >= 1) {
-            const last = sorted[sorted.length - 1]
-            if (last.pos < 1.0) newPos = 1.0
-            else newPos = last.pos // Duplicate last?
+        // Try to place in largest gap
+        let maxGap = 0;
+        let gapStart = 0;
 
-            // Try to find a gap?
-            // Simplest: Add at 0.5 or 1.0
-            newPos = 0.5
+        if (sorted.length > 0) {
+            if (sorted[0].pos > maxGap) { maxGap = sorted[0].pos; gapStart = 0; }
+            for (let i = 0; i < sorted.length - 1; i++) {
+                const gap = sorted[i + 1].pos - sorted[i].pos
+                if (gap > maxGap) {
+                    maxGap = gap;
+                    gapStart = sorted[i].pos;
+                }
+            }
+            if (1.0 - sorted[sorted.length - 1].pos > maxGap) {
+                maxGap = 1.0 - sorted[sorted.length - 1].pos;
+                gapStart = sorted[sorted.length - 1].pos;
+            }
+            newPos = gapStart + maxGap / 2;
         }
 
         const newStop = {
             id: generateId(),
             color: '#ffffff',
-            pos: newPos
+            pos: newPos,
+            opacity: 1.0
         }
 
         setAdvancedGradient({ stops: [...stops, newStop] })
+        setSelectedId(newStop.id)
     }
 
     const removeStop = (id: string) => {
         if (stops.length <= 2) return
         setAdvancedGradient({ stops: stops.filter(s => s.id !== id) })
+        if (selectedId === id) setSelectedId(null)
     }
 
-    // Move Stop Up/Down in the array index (Swapping colors effectively if we assume sort-by-pos for rendering)
-    // Actually since we sort by pos in shader, the array index in store doesn't affect render order.
-    // Changing array index only changes UI order. 
-    // To "Re-arrange" the gradient visually, we must swap POSITIONS.
-    // Let's provide "Swap Position with Next/Prev" buttons?
-    // Or just simple Position Sliders and let them handle it.
-
-    // User asked "allow to re-arrange the colors".
-    // I will Sort the UI list by Position automatically.
-    // If they change Position slider, the item might jump in the list.
-    // That's standard gradient editor behavior (e.g. Photoshop).
-
-    // BUT user asked "allow to re-arrange". Maybe they want to drag the color A to position of color B?
-    // Swapping positions seems valid.
-
-    // Let's implement: Sort UI by Position.
-    // Add Stop.
-    // Remove Stop.
-    // Position Slider.
-
-    // Wait, "re-arrange" might mean "I put Red first, Blue second... wait I want Blue first".
-    // Changing positions accomplishes this.
-    // I will trust that Position Sliders + Auto-Sort is the best specific solution.
-
+    // Sort logic for list display only? Or just render in random order?
+    // User screenshot implies sorted list by position usually.
+    // Let's sort list by position for display.
     const sortedStops = [...stops].sort((a, b) => a.pos - b.pos)
 
     return (
         <>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px', marginTop: '10px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Gradient Stops</div>
-                    {stops.length < 10 && (
-                        <button
-                            onClick={addStop}
-                            style={{
-                                background: 'rgba(255,255,255,0.05)',
-                                border: '1px dashed rgba(255,255,255,0.2)',
-                                color: 'rgba(255,255,255,0.6)',
-                                padding: '4px 8px',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontSize: '10px',
-                                textTransform: 'uppercase'
-                            }}
-                        >
-                            + Add
-                        </button>
-                    )}
-                </div>
-
-                {sortedStops.map((stop, i) => (
-                    <div key={stop.id} style={{
-                        background: 'rgba(255,255,255,0.03)',
-                        padding: '8px',
-                        borderRadius: '4px',
-                        border: '1px solid rgba(255,255,255,0.05)'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                            <div style={{ flex: 1 }}>
-                                <ColorPicker
-                                    label={`Stop ${i + 1}`}
-                                    value={stop.color}
-                                    onChange={(val) => updateStop(stop.id, { color: val })}
-                                />
-                            </div>
-                            <button
-                                onClick={() => removeStop(stop.id)}
-                                disabled={stops.length <= 2}
-                                style={{
-                                    background: 'transparent',
-                                    border: '1px solid rgba(255,255,255,0.2)',
-                                    color: stops.length <= 2 ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.6)',
-                                    width: '24px',
-                                    height: '24px',
-                                    borderRadius: '4px',
-                                    cursor: stops.length <= 2 ? 'not-allowed' : 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '16px'
-                                }}
-                            >
-                                -
-                            </button>
-                        </div>
-                        <Slider
-                            label="Position %"
-                            value={Math.round(stop.pos * 100)}
-                            min={0}
-                            max={100}
-                            step={1}
-                            onChange={(val) => updateStop(stop.id, { pos: val / 100 })}
+            <div style={{ marginBottom: '20px', padding: '0 4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'center' }}>
+                    <div style={{ width: '100px' }}>
+                        <Select
+                            label=""
+                            value={'Linear'}
+                            options={['Linear']}
+                            onChange={() => { }}
                         />
                     </div>
-                ))}
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        {/* Fake Swap/Rotate icons for visual parity if requested, or functional? */}
+                        <button
+                            onClick={() => setAdvancedGradient({ angle: (angle + 45) % 360 })}
+                            style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}
+                        >
+                            ↻
+                        </button>
+                    </div>
+                </div>
+
+                <GradientBar
+                    stops={stops}
+                    onChange={(id, pos) => updateStop(id, { pos })}
+                    onSelect={setSelectedId}
+                    selectedId={selectedId}
+                />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Stops</span>
+                    <button onClick={addStop} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '16px', cursor: 'pointer' }}>+ Add</button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {sortedStops.map((stop) => {
+                        const isSel = selectedId === stop.id
+                        return (
+                            <div
+                                key={stop.id}
+                                onClick={() => setSelectedId(stop.id)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    background: isSel ? 'rgba(0,153,255,0.2)' : 'transparent',
+                                    border: isSel ? '1px solid rgba(0,153,255,0.5)' : '1px solid transparent'
+                                }}
+                            >
+                                {/* Position Input */}
+                                <div style={{ width: '50px', display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', padding: '2px' }}>
+                                    <input
+                                        type="number"
+                                        value={Math.round(stop.pos * 100)}
+                                        onChange={(e) => {
+                                            const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0))
+                                            updateStop(stop.id, { pos: val / 100 })
+                                        }}
+                                        style={{ width: '100%', background: 'transparent', border: 'none', color: 'white', textAlign: 'right', fontSize: '11px' }}
+                                    />
+                                    <span style={{ fontSize: '10px', color: '#888', marginLeft: '2px' }}>%</span>
+                                </div>
+
+                                {/* Color Swatch/Picker */}
+                                <div style={{ flex: 1 }}>
+                                    <input
+                                        type="color"
+                                        value={stop.color}
+                                        onChange={(e) => updateStop(stop.id, { color: e.target.value })}
+                                        style={{
+                                            width: '100%',
+                                            height: '24px',
+                                            border: 'none',
+                                            background: 'transparent',
+                                            cursor: 'pointer'
+                                        }}
+                                    />
+                                    <span style={{ fontSize: '10px', marginLeft: '4px', color: '#aaa' }}>{stop.color.toUpperCase()}</span>
+                                </div>
+
+                                {/* Opacity Input */}
+                                <div style={{ width: '50px', display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', padding: '2px' }}>
+                                    <input
+                                        type="number"
+                                        value={Math.round((stop.opacity ?? 1) * 100)}
+                                        onChange={(e) => {
+                                            const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0))
+                                            updateStop(stop.id, { opacity: val / 100 })
+                                        }}
+                                        style={{ width: '100%', background: 'transparent', border: 'none', color: 'white', textAlign: 'right', fontSize: '11px' }}
+                                    />
+                                    <span style={{ fontSize: '10px', color: '#888', marginLeft: '2px' }}>%</span>
+                                </div>
+
+                                {/* Remove */}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); removeStop(stop.id); }}
+                                    disabled={stops.length <= 2}
+                                    style={{
+                                        background: 'transparent',
+                                        border: 'none',
+                                        color: stops.length <= 2 ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.6)',
+                                        cursor: stops.length <= 2 ? 'not-allowed' : 'pointer',
+                                    }}
+                                >
+                                    –
+                                </button>
+                            </div>
+                        )
+                    })}
+                </div>
             </div>
 
-            <Section title="Settings">
+            <Section title="Effects">
                 <Slider
                     label="Angle"
                     value={angle}
@@ -215,7 +212,7 @@ export default function AdvancedGradientControl() {
                 )}
 
                 <Slider
-                    label="Roughness (Frosted)"
+                    label="Frosted"
                     value={roughness}
                     min={0}
                     max={0.5}

@@ -9,7 +9,6 @@ function patchShader(shader: any) {
     shader.uniforms.uSpeed = { value: 0.2 }
     shader.uniforms.uDistortion = { value: 1.0 }
 
-    // Simplex Noise 3D
     const noiseGLSL = `
     vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
     vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -62,7 +61,6 @@ function patchShader(shader: any) {
     }
     `
 
-    // Inject Uniforms & Globals into <common>
     shader.vertexShader = shader.vertexShader.replace(
         '#include <common>',
         `
@@ -73,33 +71,27 @@ function patchShader(shader: any) {
         
         ${noiseGLSL}
         
-        // "Rolling Ocean of Silk"
+        // "Giant Horizontal Waves"
         float getHeight(vec3 p) {
-            float t = uTime * uSpeed * 0.5; // Slow down for majesty
+            float t = uTime * uSpeed * 0.5;
             
-            // Giant waves
-            // Low frequency, high amplitude
-            float giant = sin(p.x * 0.2 + t) * sin(p.y * 0.1 + t * 0.8) * 2.0;
+            vec3 pStretch = vec3(p.x * 0.1, p.y * 0.5, 0.0);
             
-            // Rolling Swell
-            float swell = snoise(vec3(p.x * 0.3, p.y * 0.3, t)) * 1.5;
+            float giant = sin(pStretch.x + t) * sin(pStretch.y + t * 0.5) * 2.0;
+            float swell = snoise(vec3(p.x * 0.2, p.y * 0.2, t)) * 1.5;
             
-            // Detail (very smooth)
-            float detail = snoise(vec3(p.x * 0.8, p.y * 0.8, t * 1.5)) * 0.2;
-            
-            return (giant + swell + detail) * uDistortion;
+            return (giant + swell) * uDistortion;
         }
         `
     )
 
-    // Inject Normal Recalculation
     shader.vertexShader = shader.vertexShader.replace(
         '#include <beginnormal_vertex>',
         `
         #include <beginnormal_vertex>
         
         vec3 p = position;
-        float offset = 0.2; // Huge offset for broad, smooth reflections
+        float offset = 0.2; 
         
         float h0 = getHeight(p);
         float hx = getHeight(p + vec3(offset, 0.0, 0.0));
@@ -112,7 +104,6 @@ function patchShader(shader: any) {
         `
     )
 
-    // Inject Position Displacement
     shader.vertexShader = shader.vertexShader.replace(
         '#include <begin_vertex>',
         `
@@ -123,43 +114,37 @@ function patchShader(shader: any) {
     )
 }
 
-function StudioLights() {
+function PhysicalLights() {
     return (
         <group>
             {/* 
-                VIRTUAL REFLECTION STUDIO
-                These invisible meshes are purely to create reflections on the metal.
-                We use bright Emissive materials.
+                PHYSICAL LIGHT STRIPS
+                These are actual meshes in the scene. 
+                Standard Material will reflect them because they are bright.
             */}
 
-            {/* 1. Main Horizon Strip (Blue/Cyan/Purple Grade) */}
-            <mesh position={[0, 0, 10]} rotation={[0, 0, 0]}>
-                <planeGeometry args={[40, 10]} />
-                <meshBasicMaterial color="#0044aa" toneMapped={false} />
-            </mesh>
-
-            {/* 2. Highlight Strip (Warm Gold/White) - The "Key Light" reflection */}
-            <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
-                <mesh position={[-5, 5, 8]} rotation={[0, 0.5, 0]}>
-                    <planeGeometry args={[20, 1]} />
-                    <meshBasicMaterial color="#ffcc88" toneMapped={false} />
+            {/* 1. Gold Strip (Warm) - Left */}
+            <Float speed={2} rotationIntensity={0.2} floatIntensity={0.5}>
+                <mesh position={[-8, 5, -2]} rotation={[0, 0.5, 0]}>
+                    <planeGeometry args={[15, 2]} />
+                    {/* High Emissive intensity makes it glow and reflect effectively */}
+                    <meshBasicMaterial color="#ffaa00" toneMapped={false} />
                 </mesh>
             </Float>
 
-            {/* 3. Secondary Highlight (Cool White) */}
-            <Float speed={3} rotationIntensity={0.5} floatIntensity={0.5}>
-                <mesh position={[5, -2, 8]} rotation={[0, -0.5, 0]}>
-                    <planeGeometry args={[20, 0.5]} />
-                    <meshBasicMaterial color="#ccffff" toneMapped={false} />
+            {/* 2. Blue Strip (Cool) - Right */}
+            <Float speed={3} rotationIntensity={0.2} floatIntensity={0.5}>
+                <mesh position={[8, 0, -2]} rotation={[0, -0.5, 0]}>
+                    <planeGeometry args={[15, 2]} />
+                    <meshBasicMaterial color="#0088ff" toneMapped={false} />
                 </mesh>
             </Float>
 
-            {/* 4. Deep Purple Underglow */}
-            <mesh position={[0, -10, 5]} rotation={[-0.5, 0, 0]}>
-                <planeGeometry args={[50, 10]} />
-                <meshBasicMaterial color="#440055" toneMapped={false} />
+            {/* 3. White Rim - Top */}
+            <mesh position={[0, 8, -5]} rotation={[Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[20, 1]} />
+                <meshBasicMaterial color="#ffffff" toneMapped={false} />
             </mesh>
-
         </group>
     )
 }
@@ -179,25 +164,23 @@ export default function LiquidMetal() {
 
     return (
         <group>
-            {/* 
-               Custom Environment:
-               We render the "StudioLights" into a cube map that the metal reflects.
-               background={false} keeps the actual background black.
-            */}
-            <Environment resolution={512} background={false}>
-                <StudioLights />
-            </Environment>
+            {/* Standard Environment as backup */}
+            <Environment preset="city" />
+
+            {/* Physical Light Meshes (Visible in Scene) */}
+            <PhysicalLights />
 
             <mesh
                 ref={meshRef}
                 position={[0, -2, -6]}
-                rotation={[-Math.PI / 2.2, 0, 0]}
+                rotation={[-Math.PI / 2.5, 0, 0]}
             >
                 <planeGeometry args={[40, 40, 400, 400]} />
                 <meshStandardMaterial
-                    color="black" // Metal must be black to purely reflect the environment
-                    metalness={1.0}
-                    roughness={liquidMetal.roughness * 0.5} // Enhance shininess
+                    // Safe Dark Blue instead of Black, so it's always visible
+                    color="#001133"
+                    metalness={0.9} // Slight reduction to pick up the blue base color
+                    roughness={liquidMetal.roughness * 0.5}
                     onBeforeCompile={(shader) => {
                         patchShader(shader)
                         shaderRef.current = shader

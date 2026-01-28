@@ -46,7 +46,7 @@ function patchShader(shader: any) {
         vec4 s1 = floor(b1)*2.0 + 1.0;
         vec4 sh = -step(h, vec4(0.0));
         vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
-        vec4 a1 = b1.xzyw + s1.xzyw*zzww ;
+        vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
         vec3 p0 = vec3(a0.xy,h.x);
         vec3 p1 = vec3(a0.zw,h.y);
         vec3 p2 = vec3(a1.xy,h.z);
@@ -63,7 +63,6 @@ function patchShader(shader: any) {
     `
 
     // Inject Uniforms & Globals into <common>
-    // This is safer than prepending to vertexShader
     shader.vertexShader = shader.vertexShader.replace(
         '#include <common>',
         `
@@ -144,6 +143,7 @@ export default function LiquidMetal() {
             {/* High Contrast Environment for Metal Reflections */}
             <Environment preset="city" />
 
+            {/* Scale mesh to cover viewport */}
             <mesh ref={meshRef} position={[0, 0, 0]} rotation={[0, 0, 0]}>
                 {/* High seg plane for smooth waves */}
                 <planeGeometry args={[viewport.width * 1.5, viewport.height * 1.5, 300, 300]} />
@@ -159,7 +159,7 @@ export default function LiquidMetal() {
                 />
             </mesh>
 
-            {/* Backup Lights to ensure visibility if Env fails */}
+            {/* Backup Lights */}
             <ambientLight intensity={0.5} />
             <directionalLight position={[5, 10, 5]} intensity={2.0} color="#ffffff" />
             <pointLight position={[-10, 0, 5]} intensity={2.0} color="#ff0000" />

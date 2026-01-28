@@ -145,15 +145,10 @@ interface State {
         pos2: { x: number, y: number }
     }
     advancedGradient: {
-        colors: string[]
-        type: 'Linear' | 'Radial'
+        stops: Array<{ id: string, color: string, pos: number }>
         angle: number // 0-360
-        centerX: number // 0-1
-        centerY: number // 0-1
-        animation: 'Static' | 'Flow' | 'Pulse'
+        animation: 'Static' | 'Flow' | 'Pulse' // Pulse = Breathe
         speed: number
-        radius: number // 0.1-2.0
-        backgroundColor: string
         roughness: number
     }
     orbs: {
@@ -353,16 +348,14 @@ export const useStore = create<State>((set) => {
             solidColor: '#012265'
         },
         advancedGradient: {
-            colors: ['#4facfe', '#00f2fe'],
-            type: 'Linear',
+            stops: [
+                { id: '1', color: '#012265', pos: 0.0 }, // Deep Blue
+                { id: '2', color: '#00f2fe', pos: 1.0 }  // Cyan
+            ],
             angle: 135,
-            centerX: 0.5,
-            centerY: 0.5,
             animation: 'Flow',
             speed: 0.2,
-            roughness: 0,
-            radius: 1.0,
-            backgroundColor: '#000000'
+            roughness: 0
         },
         logo: null,
         appState: new URLSearchParams(window.location.search).get('embed') === 'true' ? 'ready' : 'intro',

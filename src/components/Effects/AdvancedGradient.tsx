@@ -117,7 +117,8 @@ const AdvancedGradientMaterial = shaderMaterial(
         // We use the noise function to generate offsets.
         // Scaling noise frequency higher makes it finer grain, lower makes it wavy.
         // "Frosted" usually implies fine grain but smooth edges.
-        float noiseScale = 1500.0; // Higher freq for finer grain
+        // Balanced freq for fine grain that is still visible
+        float noiseScale = 800.0; 
         
         // 5 Samples with jitter
         // Center
@@ -125,8 +126,8 @@ const AdvancedGradientMaterial = shaderMaterial(
         totalWeight += 1.0;
         
         // Jitter amount based on roughness
-        // Reduced spread to avoid "blurry" look, just soften
-        float spread = uRoughness * 0.01;
+        // 0.025 gives a tight but visible diffusion (max ~1.2% blur radius)
+        float spread = uRoughness * 0.025;
 
         // Sample 1
         float n1 = noise(uv * noiseScale + vec2(0.0, uTime * 0.1));
@@ -149,9 +150,13 @@ const AdvancedGradientMaterial = shaderMaterial(
         // Average
         vec4 finalColor = accColor / totalWeight;
         
-        // Optional: Add very subtle grain texturing on top for "tactile" feel?
-        // float g = hash(uv * 1000.0 + uTime) - 0.5;
-        // finalColor.rgb += g * uRoughness * 0.05;
+        // Additive Grain Texture
+        // This simulates the physical micro-surface of frosted glass.
+        // We use hash for white noise (fine grit).
+        float surfaceGrain = hash(uv * 2000.0 + uTime * 0.1) - 0.5;
+        
+        // Mix grain based on roughness, but keep it subtle
+        finalColor.rgb += surfaceGrain * uRoughness * 0.15;
 
         gl_FragColor = finalColor;
     }

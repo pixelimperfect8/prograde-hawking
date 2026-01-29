@@ -6,7 +6,23 @@ interface ExportPanelProps {
 }
 
 export default function ExportPanel({ onClose }: ExportPanelProps) {
-    const { gradient, glass } = useStore()
+    // 1. Read generic state
+    const {
+        scene,
+        gradient,
+        fluid,
+        lava,
+        orbs,
+        glow,
+        cubicGlass,
+        liquidMetal,
+        flowGradient,
+        glass,
+        ripples,
+        blob,
+
+    } = useStore()
+
     const [copied, setCopied] = useState<string | null>(null)
     const [activeTab, setActiveTab] = useState<'iframe' | 'framer' | 'webflow' | 'javascript'>('iframe')
 
@@ -14,23 +30,74 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
     const baseUrl = 'https://prograde-hawking-tl51-git-master-ivans-projects-bf0d2689.vercel.app'
     const scriptUrl = `${baseUrl}/meshit.js`
 
+    // Helper: Extract params based on active mode
+    // We map specifics to generic 'c1', 'c2', 'spd' etc. that store.ts now respects
+    const getModeParams = () => {
+        const mode = scene.bgMode
+        let params: any = { mode: mode } // ALWAYS include mode
+
+        switch (mode) {
+            case 'Gradient': // Neon Legacy
+                params = { ...params, c1: gradient.color1, c2: gradient.color2, c3: gradient.color3, c4: gradient.color4, spd: gradient.speed, den: gradient.noiseDensity, str: gradient.noiseStrength }
+                break
+            case 'Acid Trip': // Fluid
+                params = { ...params, c1: fluid.color1, c2: fluid.color2, c3: fluid.color3, c4: fluid.color4, spd: fluid.speed, den: fluid.density, str: fluid.strength }
+                break
+            case 'Lava Lamp':
+                params = { ...params, c1: lava.color1, c2: lava.color2, c3: lava.color3, spd: lava.speed }
+                break
+            case 'Orbs':
+                params = { ...params, c1: orbs.color1, c2: orbs.color2, c3: orbs.color3, c4: orbs.color4, spd: orbs.speed }
+                break
+            case 'Solid + Glow':
+                params = { ...params, c1: glow.color1, c2: glow.color2 }
+                break
+            case 'Cubic': // Cubic Glass
+                params = { ...params, c1: cubicGlass.colors[0], c2: cubicGlass.colors[1], c3: cubicGlass.colors[2], spd: cubicGlass.speed }
+                break
+            case 'Liquid Metal':
+                params = { ...params, c1: liquidMetal.colors[0], c2: liquidMetal.colors[1], c3: liquidMetal.colors[2], c4: liquidMetal.colors[3], spd: liquidMetal.speed }
+                break
+            case 'Flow Gradient':
+                params = { ...params, c1: flowGradient.color1, c2: flowGradient.color2, c3: flowGradient.color3, c4: flowGradient.color4, spd: flowGradient.speed }
+                break
+            case 'Ripples':
+                params = { ...params, c1: ripples.color, spd: ripples.speed, den: ripples.cellDensity, str: ripples.spread }
+                // Note: Ripples uses 'color' not c1, but hydration aligns c1 -> color1 usually. 
+                // Store.ts: colors: '#0081f7' (single color). 
+                // We'll map to c1. I need to update Store hydration for Ripples if I want deep linking to work perfectly for it.
+                break
+            case 'Blob Stack':
+                params = { ...params, c1: blob.blob1.color, c2: blob.blob2.color, c3: blob.background.color }
+                break
+            case 'Linear Gradient': // Advanced
+                // Advanced gradient is complex (array of stops). 
+                // For now, we just map the start/end if simple, or skip params to force defaults.
+                // Deep linking advanced gradient perfectly requires JSON param.
+                // Fallback to defaults.
+                break
+            default:
+                // Fallback to Acid/Gradient params if undefined
+                params = { ...params, c1: gradient.color1, c2: gradient.color2, spd: gradient.speed }
+        }
+        return params
+    }
+
     // Build URL params for iframe (includes ALL settings)
     const buildIframeUrl = () => {
         const params = new URLSearchParams()
-        // Gradient
-        params.set('c1', gradient.color1)
-        params.set('c2', gradient.color2)
-        params.set('c3', gradient.color3)
-        params.set('c4', gradient.color4)
-        params.set('spd', gradient.speed.toString())
-        params.set('den', gradient.noiseDensity.toString())
-        params.set('str', gradient.noiseStrength.toString())
-        params.set('wire', gradient.wireframe.toString())
-        params.set('kal', gradient.kaleidoscope.toString())
-        params.set('seg', gradient.kSegments.toString())
-        params.set('loop', gradient.loop.toString())
-        // Glass
+        const modeParams = getModeParams()
+
+        // Append all key/values from modeParams
+        Object.entries(modeParams).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+                params.set(key, value.toString())
+            }
+        })
+
+        // Glass settings (always include transparency/glassiness if enabled)
         params.set('glass', glass.enabled.toString())
+
         // Embed mode
         params.set('embed', 'true')
         return `${baseUrl}/?${params.toString()}`
@@ -45,18 +112,10 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
   allow="accelerometer; autoplay; encrypted-media; gyroscope"
 ></iframe>`
 
-    // Build config JSON for meshit.js (simplified)
-    const config = JSON.stringify({
-        c1: gradient.color1,
-        c2: gradient.color2,
-        c3: gradient.color3,
-        c4: gradient.color4,
-        speed: gradient.speed,
-        density: gradient.noiseDensity,
-        strength: gradient.noiseStrength
-    })
+    // Build config JSON for meshit.js (Dynamic params)
+    const config = JSON.stringify(getModeParams())
 
-    // Simple JS embed (basic gradient only)
+    // Simple JS embed (Dynamic)
     const javascriptCode = `<div data-meshit='${config}' style="width:100%; height:400px;"></div>
 <script src="${scriptUrl}"></script>`
 

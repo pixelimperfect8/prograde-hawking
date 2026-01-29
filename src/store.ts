@@ -262,9 +262,20 @@ export const useStore = create<State>((set) => {
     // Actually appState handles intro. If embed=true, we might want 'ready' immediately.
     // We'll handle that in appState init.
 
+    // Generic Helper to hydrate colors/speed based on common keys
+    const c1 = getParam('c1', null);
+    const c2 = getParam('c2', null);
+    const c3 = getParam('c3', null);
+    const c4 = getParam('c4', null);
+    const spd = getParam('spd', null);
+
+    // Determine active mode from URL (default 'Acid Trip')
+    const urlMode = getParam('mode', 'Acid Trip');
+
     return {
         gradient: {
             ...PRESETS['Neon'],
+            // Only hydrate if we are really targeting this (legacy support)
             color1: getParam('c1', PRESETS['Neon'].color1),
             color2: getParam('c2', PRESETS['Neon'].color2),
             color3: getParam('c3', PRESETS['Neon'].color3),
@@ -298,25 +309,25 @@ export const useStore = create<State>((set) => {
         },
 
         ripples: {
-            color: '#0081f7',
-            speed: 0.2,
+            color: c1 || '#0081f7',
+            speed: spd || 0.2,
             cellDensity: 120, // Finer grid by default
             spread: 0.15,
             backgroundColor: '#000000',
             effectType: 'Expand'
         },
         lava: {
-            color1: '#ff0055',
-            color2: '#ffff00',
-            color3: '#00ccff',
+            color1: c1 || '#ff0055',
+            color2: c2 || '#ffff00',
+            color3: c3 || '#00ccff',
             background: '#0a0a0a',
-            speed: 0.3,
+            speed: spd || 0.3,
             threshold: 1.0
         },
         blob: {
-            blob1: { color: '#8db39a', size: 0.44, offsetX: 0, offsetY: 0 },
-            blob2: { color: '#ebff94', size: 0.26, offsetX: 0, offsetY: 0 },
-            background: { color: '#79ba59' },
+            blob1: { color: c1 || '#8db39a', size: 0.44, offsetX: 0, offsetY: 0 },
+            blob2: { color: c2 || '#ebff94', size: 0.26, offsetX: 0, offsetY: 0 },
+            background: { color: c3 || '#79ba59' },
             noise: 0.05,
             direction: 'Left-to-Right',
             animation: {
@@ -326,8 +337,8 @@ export const useStore = create<State>((set) => {
             }
         },
         glow: {
-            color1: '#4facfe',
-            color2: '#f093fb',
+            color1: c1 || '#4facfe',
+            color2: c2 || '#f093fb',
             radius1: 1.65,
             radius2: 1.03,
             intensity: 1.20,
@@ -336,22 +347,22 @@ export const useStore = create<State>((set) => {
             pos2: { x: 0.31, y: 0.45 }
         },
         orbs: {
-            color1: '#4f46e5',
-            color2: '#7c3aed',
-            color3: '#06b6d4',
-            color4: '#8b5cf6',
-            speed: 0.3,
+            color1: c1 || '#4f46e5',
+            color2: c2 || '#7c3aed',
+            color3: c3 || '#06b6d4',
+            color4: c4 || '#8b5cf6',
+            speed: spd || 0.3,
             blur: 0.4,
             scale: 1.0
         },
 
         fluid: {
-            color1: '#38bdf8',
-            color2: '#e879f9',
-            color3: '#34d399',
-            color4: '#fbbf24',
+            color1: c1 || '#38bdf8',
+            color2: c2 || '#e879f9',
+            color3: c3 || '#34d399',
+            color4: c4 || '#fbbf24',
             background: '#0f172a',
-            speed: 0.2,
+            speed: spd || 0.2,
             density: 0.7,
             strength: 0.4,
             smoothing: 0.5,
@@ -375,7 +386,7 @@ export const useStore = create<State>((set) => {
             filmDirt: 0.5
         },
         scene: {
-            bgMode: 'Acid Trip',
+            bgMode: urlMode,
             solidColor: '#012265'
         },
         advancedGradient: {
@@ -389,24 +400,24 @@ export const useStore = create<State>((set) => {
             roughness: 0
         },
         liquidMetal: {
-            colors: ['#ffffff', '#ffafaf', '#0099ff', '#aaffff'],
+            colors: (c1 && c2 && c3) ? [c1, c2, c3, c4 || '#ffffff'] : ['#ffffff', '#ffafaf', '#0099ff', '#aaffff'],
             metalness: 0.5,
             roughness: 0.5,
-            speed: 0.2,
+            speed: spd || 0.2,
             distortion: 1.5
         },
         cubicGlass: {
-            colors: ['#ff00ea', '#ffce00', '#00e5ff'],
+            colors: (c1 && c2 && c3) ? [c1, c2, c3] : ['#ff00ea', '#ffce00', '#00e5ff'],
             gridSize: 30,
-            speed: 0.5,
+            speed: spd || 0.5,
             smoothness: 0.2
         },
         flowGradient: {
-            color1: '#a960ee',
-            color2: '#ff333d',
-            color3: '#90e0ff',
-            color4: '#ffcb57',
-            speed: 0.15,
+            color1: c1 || '#a960ee',
+            color2: c2 || '#ff333d',
+            color3: c3 || '#90e0ff',
+            color4: c4 || '#ffcb57',
+            speed: spd || 0.15,
             noiseFreq: { x: 14e-5, y: 29e-5 }, // From reference
             noiseAmp: 320,
             density: 0.08,

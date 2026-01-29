@@ -1,5 +1,6 @@
+
 import { useStore } from '../../store'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 interface ExportPanelProps {
     onClose: () => void
@@ -24,14 +25,18 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
     } = useStore()
 
     const [copied, setCopied] = useState<string | null>(null)
-    const [activeTab, setActiveTab] = useState<'iframe' | 'framer' | 'webflow' | 'javascript'>('iframe')
+    const [activeTab, setActiveTab] = useState<'iframe' | 'framer' | 'webflow' | 'javascript' | 'video'>('iframe')
+
+    // Video Recording State
+    const [isRecording, setIsRecording] = useState(false)
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+    const chunksRef = useRef<Blob[]>([])
 
     // Base URL for the app
     const baseUrl = 'https://prograde-hawking-tl51-git-master-ivans-projects-bf0d2689.vercel.app'
     const scriptUrl = `${baseUrl}/meshit.js`
 
     // Helper: Extract params based on active mode
-    // We map specifics to generic 'c1', 'c2', 'spd' etc. that store.ts now respects
     const getModeParams = () => {
         const mode = scene.bgMode
         let params: any = { mode: mode } // ALWAYS include mode
@@ -89,13 +94,10 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
             }
         })
 
-        // Glass settings (User requested "Exact Duplicate")
+        // Glass settings
         params.set('glass', glass.enabled.toString())
 
         // Effects (Grain)
-        // If Global Grain is set (> 0), include it. 
-        // Note: Flow Gradient has its own grain local param, but store uses ONE hydration key 'grain' for postfx. 
-        // We'll map generic 'grain' param.
         const activeGrain = (scene.bgMode === 'Flow Gradient' ? flowGradient.grain : postfx.grain) || 0
         if (activeGrain > 0) {
             params.set('grain', activeGrain.toString())
@@ -108,31 +110,92 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
 
     const iframeUrl = buildIframeUrl()
 
-    // Iframe embed (includes ALL effects)
+    // Iframe embed
     const iframeCode = `<iframe 
   src="${iframeUrl}"
   style="width:100%; height:100%; min-height:400px; border:none; display:block;"
   allow="accelerometer; autoplay; encrypted-media; gyroscope"
 ></iframe>`
 
-    // Build config JSON for meshit.js (Dynamic params)
+    // Build config JSON
     const config = JSON.stringify({
         ...getModeParams(),
-        glass: glass.enabled, // Export JSON config should also respect glass
+        glass: glass.enabled,
         grain: (scene.bgMode === 'Flow Gradient' ? flowGradient.grain : postfx.grain) || 0
     })
 
-    // Simple JS embed (Dynamic)
+    // Video Recording Logic
+    const startRecording = () => {
+        const canvas = document.querySelector('canvas');
+        if (!canvas) {
+            alert('Could not find canvas to record.');
+            return;
+        }
+
+        try {
+            // Capture at 60 FPS
+            const stream = canvas.captureStream(60);
+
+            // Prefer VP9 for high quality, fallback to defaults
+            let options = { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8000000 }; // 8 Mbps
+            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                options = { mimeType: 'video/webm', videoBitsPerSecond: 8000000 } as any;
+            }
+
+            const recorder = new MediaRecorder(stream, options);
+            mediaRecorderRef.current = recorder;
+            chunksRef.current = [];
+
+            recorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    chunksRef.current.push(e.data);
+                }
+            };
+
+            recorder.onstop = () => {
+                const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+                chunksRef.current = []; // Clear
+
+                // Trigger Download
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `meshit-export-${Date.now()}.webm`;
+                document.body.appendChild(a);
+                a.click();
+
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            };
+
+            recorder.start();
+            setIsRecording(true);
+        } catch (err) {
+            console.error(err);
+            alert('Failed to start recording. Browser might not support this.');
+        }
+    }
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current && isRecording) {
+            mediaRecorderRef.current.stop();
+            setIsRecording(false);
+        }
+    }
+
+    // Embed strings...
     const javascriptCode = `<div data-meshit='${config}' style="width:100%; height:400px;"></div>
 <script src="${scriptUrl}"></script>`
 
-    const webflowCode = `<!-- Add this to your page's custom code (before </body>) -->
+    const webflowCode = `<!-- Add this before </body> -->
 <script src="${scriptUrl}"></script>
 
-<!-- Add this as an Embed element where you want the gradient -->
+<!-- Add this embed -->
 <div data-meshit='${config}' style="width:100%; height:100%;"></div>`
 
-    // Framer iframe version (simpler, includes all effects)
     const framerCode = `export default function MeshitGradient(props) {
     return (
         <iframe
@@ -169,7 +232,11 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
         fontSize: '11px',
         textTransform: 'uppercase' as const,
         letterSpacing: '1px',
-        transition: 'all 0.2s'
+        transition: 'all 0.2s',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '6px'
     })
 
     const buttonStyle = {
@@ -216,7 +283,7 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
             }}>
                 {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#fff' }}>Export Gradient</h2>
+                    <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#fff' }}>Export</h2>
                     <button
                         onClick={onClose}
                         style={{
@@ -230,69 +297,108 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
                     >×</button>
                 </div>
 
-                {/* Quick Copy Buttons */}
-                <div style={{ marginBottom: '20px' }}>
-                    <button
-                        style={{ ...buttonStyle, background: 'rgba(138, 43, 226, 0.2)', border: '1px solid rgba(138, 43, 226, 0.4)' }}
-                        onClick={() => copyToClipboard(iframeCode, 'iframe')}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(138, 43, 226, 0.3)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(138, 43, 226, 0.2)'}
-                    >
-                        {copied === 'iframe' ? '✓ Copied!' : '🎨 Copy Iframe (Full Effects)'}
-                    </button>
-                    <button
-                        style={buttonStyle}
-                        onClick={() => copyToClipboard(framerCode, 'framer')}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                    >
-                        {copied === 'framer' ? '✓ Copied!' : '⚡ Copy to Framer'}
-                    </button>
-                    <button
-                        style={buttonStyle}
-                        onClick={() => copyToClipboard(webflowCode, 'webflow')}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                    >
-                        {copied === 'webflow' ? '✓ Copied!' : '🌐 Copy to Webflow'}
-                    </button>
-                </div>
-
                 {/* Tabs */}
                 <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: '16px' }}>
                     <button style={tabStyle(activeTab === 'iframe')} onClick={() => setActiveTab('iframe')}>Iframe</button>
+                    <button style={tabStyle(activeTab === 'video')} onClick={() => setActiveTab('video')}>Video</button>
                     <button style={tabStyle(activeTab === 'framer')} onClick={() => setActiveTab('framer')}>Framer</button>
-                    <button style={tabStyle(activeTab === 'webflow')} onClick={() => setActiveTab('webflow')}>Webflow</button>
-                    <button style={tabStyle(activeTab === 'javascript')} onClick={() => setActiveTab('javascript')}>JS Only</button>
+                    <button style={tabStyle(activeTab === 'javascript')} onClick={() => setActiveTab('javascript')}>JS</button>
                 </div>
 
-                {/* Code Preview */}
-                <pre style={{
-                    background: 'rgba(0,0,0,0.5)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '8px',
-                    padding: '16px',
-                    fontSize: '11px',
-                    fontFamily: 'monospace',
-                    color: 'rgba(255,255,255,0.8)',
-                    overflow: 'auto',
-                    maxHeight: '200px',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-all'
-                }}>
-                    {activeTab === 'iframe' && iframeCode}
-                    {activeTab === 'framer' && framerCode}
-                    {activeTab === 'webflow' && webflowCode}
-                    {activeTab === 'javascript' && javascriptCode}
-                </pre>
+                {/* Content */}
+                {activeTab === 'video' ? (
+                    <div style={{ padding: '20px', textAlign: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: '8px' }}>
+                        <div style={{ marginBottom: '16px', fontSize: '12px', color: '#aaa', lineHeight: 1.5 }}>
+                            Records a high-quality <strong>WebM (1080p+)</strong> video of the current animation.<br />
+                            Perfect for social media or background assets.
+                        </div>
 
-                {/* Instructions */}
-                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '16px', lineHeight: 1.5 }}>
-                    {activeTab === 'framer' && 'In Framer: Assets → Code → New Code File → Paste'}
-                    {activeTab === 'webflow' && 'In Webflow: Add Embed element → Paste the HTML'}
-                    {activeTab === 'javascript' && 'Paste this code anywhere in your HTML'}
-                </p>
+                        {!isRecording ? (
+                            <button
+                                onClick={startRecording}
+                                style={{
+                                    ...buttonStyle,
+                                    background: '#ef4444',
+                                    border: '1px solid #dc2626',
+                                    padding: '16px',
+                                    fontSize: '14px',
+                                    fontWeight: 600
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = '#dc2626'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
+                            >
+                                <div style={{ width: '10px', height: '10px', background: 'white', borderRadius: '50%' }} />
+                                Start Recording
+                            </button>
+                        ) : (
+                            <button
+                                onClick={stopRecording}
+                                style={{
+                                    ...buttonStyle,
+                                    background: 'rgba(255,255,255,0.1)',
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    padding: '16px',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    animation: 'pulse 1.5s infinite' // Optional pulse effect via inline style logic or CSS
+                                }}
+                            >
+                                <div style={{ width: '10px', height: '10px', background: 'red', borderRadius: '2px' }} />
+                                Stop Recording...
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    <>
+                        {/* Quick Copy Buttons for Code */}
+                        <div style={{ marginBottom: '20px' }}>
+                            {activeTab === 'iframe' && (
+                                <button
+                                    style={{ ...buttonStyle, background: 'rgba(138, 43, 226, 0.2)', border: '1px solid rgba(138, 43, 226, 0.4)' }}
+                                    onClick={() => copyToClipboard(iframeCode, 'iframe')}
+                                >
+                                    {copied === 'iframe' ? '✓ Copied!' : '🎨 Copy Iframe Code'}
+                                </button>
+                            )}
+                            {/* Other buttons specific to tab could act here */}
+                        </div>
+
+                        {/* Code Preview */}
+                        <pre style={{
+                            background: 'rgba(0,0,0,0.5)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '8px',
+                            padding: '16px',
+                            fontSize: '11px',
+                            fontFamily: 'monospace',
+                            color: 'rgba(255,255,255,0.8)',
+                            overflow: 'auto',
+                            maxHeight: '200px',
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-all'
+                        }}>
+                            {activeTab === 'iframe' && iframeCode}
+                            {activeTab === 'framer' && framerCode}
+                            {activeTab === 'webflow' && webflowCode}
+                            {activeTab === 'javascript' && javascriptCode}
+                        </pre>
+
+                        {/* Instructions */}
+                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '16px', lineHeight: 1.5 }}>
+                            {activeTab === 'framer' && 'In Framer: Assets → Code → New Code File → Paste'}
+                            {activeTab === 'webflow' && 'In Webflow: Add Embed element → Paste the HTML'}
+                            {activeTab === 'javascript' && 'Paste this code anywhere in your HTML'}
+                        </p>
+                    </>
+                )}
             </div>
+            <style>{`
+                @keyframes pulse {
+                    0% { border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+                    70% { border-color: rgba(239, 68, 68, 0); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+                    100% { border-color: rgba(239, 68, 68, 0); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+                }
+            `}</style>
         </div>
     )
 }

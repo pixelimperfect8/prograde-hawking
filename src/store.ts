@@ -473,6 +473,8 @@ export const useStore = create<State>((set) => {
                     return { fluid: { ...state.fluid, color1: p[0], color2: p[1], color3: p[2], color4: p[3] } }
                 } else if (mode === 'Flow Gradient') {
                     return { flowGradient: { ...state.flowGradient, color1: p[0], color2: p[1], color3: p[2], color4: p[3] } }
+                } else if (mode === 'Liquid Metal') {
+                    return { liquidMetal: { ...state.liquidMetal, colors: [p[0], p[1], p[2], p[3] || '#ffffff'] } }
                 }
                 return {}
             })

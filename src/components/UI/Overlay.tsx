@@ -1,8 +1,7 @@
 import { useRef, useEffect } from 'react'
 import { useStore } from '../../store'
 import SceneControl from './SceneControl'
-import GlassControl from './GlassControl'
-import EffectsControl from './EffectsControl'
+
 
 
 export default function Overlay() {
@@ -114,12 +113,6 @@ export default function Overlay() {
                 }}
             >
                 <SceneControl />
-
-
-
-
-                <GlassControl />
-                <EffectsControl />
             </div>
         </div>
     )

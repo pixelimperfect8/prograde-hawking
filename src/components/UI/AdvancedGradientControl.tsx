@@ -4,13 +4,14 @@ import Section from './inputs/Section'
 import Slider from './inputs/Slider'
 import Select from './inputs/Select'
 import GradientBar from './inputs/GradientBar'
+import GradientStopRow from './inputs/GradientStopRow'
 
 // Simple ID gen if UUID not available in environment
 const generateId = () => Math.random().toString(36).substr(2, 9)
 
 export default function AdvancedGradientControl() {
     const { advancedGradient, setAdvancedGradient } = useStore()
-    const { stops, angle, animation, speed, roughness } = advancedGradient
+    const { stops, angle, animation } = advancedGradient
 
     const [selectedId, setSelectedId] = useState<string | null>(stops[0]?.id || null)
 
@@ -73,78 +74,43 @@ export default function AdvancedGradientControl() {
                 selectedId={selectedId}
             />
 
-            <div className="flex justify-between items-center mt-2 mb-2">
-                <span className="text-xs font-bold text-white/80 uppercase tracking-wide">Stops</span>
+            {/* Stops Header & Add Button */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.7rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>Stops</span>
                 <button
                     onClick={addStop}
-                    className="text-white hover:text-white/80 text-sm font-medium transition-colors"
+                    style={{
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: '#fff',
+                        fontSize: '9px',
+                        padding: '4px 8px',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase',
+                        letterSpacing: '1px'
+                    }}
                 >
                     + Add
                 </button>
             </div>
 
-            <div className="flex flex-col gap-1">
-                {sortedStops.map((stop) => {
-                    const isSel = selectedId === stop.id
-                    return (
-                        <div
-                            key={stop.id}
-                            onClick={() => setSelectedId(stop.id)}
-                            className={`flex items-center gap-2 p-1 rounded transition-colors border ${isSel ? 'bg-blue-500/20 border-blue-500/50' : 'border-transparent hover:bg-white/5'}`}
-                        >
-                            {/* Position Input */}
-                            <div className="w-[50px] flex items-center bg-black/20 rounded p-0.5">
-                                <input
-                                    type="number"
-                                    value={Math.round(stop.pos * 100)}
-                                    onChange={(e) => {
-                                        const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0))
-                                        updateStop(stop.id, { pos: val / 100 })
-                                    }}
-                                    className="w-full bg-transparent border-none text-white text-right text-[11px] focus:outline-none"
-                                />
-                                <span className="text-[10px] text-gray-400 ml-0.5">%</span>
-                            </div>
-
-                            {/* Color Swatch/Picker */}
-                            <div className="flex-1 flex items-center">
-                                <input
-                                    type="color"
-                                    value={stop.color}
-                                    onChange={(e) => updateStop(stop.id, { color: e.target.value })}
-                                    className="w-full h-6 border-none bg-transparent cursor-pointer"
-                                />
-                                <span className="text-[10px] text-gray-400 ml-1 font-mono">{stop.color.toUpperCase()}</span>
-                            </div>
-
-                            {/* Opacity Input */}
-                            <div className="w-[50px] flex items-center bg-black/20 rounded p-0.5">
-                                <input
-                                    type="number"
-                                    value={Math.round((stop.opacity ?? 1) * 100)}
-                                    onChange={(e) => {
-                                        const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0))
-                                        updateStop(stop.id, { opacity: val / 100 })
-                                    }}
-                                    className="w-full bg-transparent border-none text-white text-right text-[11px] focus:outline-none"
-                                />
-                                <span className="text-[10px] text-gray-400 ml-0.5">%</span>
-                            </div>
-
-                            {/* Remove */}
-                            <button
-                                onClick={(e) => { e.stopPropagation(); removeStop(stop.id); }}
-                                disabled={stops.length <= 2}
-                                className={`text-sm px-2 ${stops.length <= 2 ? 'text-white/10 cursor-not-allowed' : 'text-white/60 hover:text-red-400 cursor-pointer'}`}
-                            >
-                                –
-                            </button>
-                        </div>
-                    )
-                })}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '16px' }}>
+                {sortedStops.map((stop) => (
+                    <GradientStopRow
+                        key={stop.id}
+                        id={stop.id}
+                        color={stop.color}
+                        pos={stop.pos}
+                        opacity={stop.opacity}
+                        selected={selectedId === stop.id}
+                        onSelect={() => setSelectedId(stop.id)}
+                        onChange={(partial) => updateStop(stop.id, partial)}
+                        onRemove={() => removeStop(stop.id)}
+                        canRemove={stops.length > 2}
+                    />
+                ))}
             </div>
-
-            <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '16px 0 16px 0' }} />
 
             <Slider
                 label="Angle"
@@ -164,23 +130,14 @@ export default function AdvancedGradientControl() {
 
             {animation !== 'Static' && (
                 <Slider
-                    label="Speed"
-                    value={speed}
+                    label="Animation Speed"
+                    value={advancedGradient.speed}
                     min={0}
-                    max={2}
-                    step={0.05}
+                    max={5}
+                    step={0.1}
                     onChange={(val) => setAdvancedGradient({ speed: val })}
                 />
             )}
-
-            <Slider
-                label="Frosted"
-                value={roughness}
-                min={0}
-                max={0.5}
-                step={0.01}
-                onChange={(val) => setAdvancedGradient({ roughness: val })}
-            />
         </Section>
     )
 }

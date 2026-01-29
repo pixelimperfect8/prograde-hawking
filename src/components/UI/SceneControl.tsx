@@ -2,9 +2,14 @@ import { useState } from 'react'
 import { useStore } from '../../store'
 import Section from './inputs/Section'
 import Select from './inputs/Select'
-import ColorPicker from './inputs/ColorPicker'
+// import ColorPicker from './inputs/ColorPicker' // Removed, replaced by ColorsControl
 
 import ExportPanel from './ExportPanel'
+import ColorsControl from './ColorsControl'
+import GeneralSettingsControl from './GeneralSettingsControl'
+import EffectsControl from './EffectsControl' // Now contains Bloom, CRT, Vintage sections
+import GlassControl from './GlassControl'
+
 import AdvancedGradientControl from './AdvancedGradientControl'
 import LiquidMetalControl from './LiquidMetalControl'
 import CubicGlassControl from './CubicGlassControl'
@@ -24,9 +29,11 @@ export default function SceneControl() {
     return (
         <>
             {showExport && <ExportPanel onClose={() => setShowExport(false)} />}
-            <Section title="Scene Settings">
+
+            {/* 1. SCENE CONTROLS (Mode + Export) */}
+            <Section title="Scene Controls">
                 <Select
-                    label="Background Mode"
+                    label="Mode"
                     value={scene.bgMode}
                     options={['Gradient', 'Solid + Glow', 'Lava Lamp', 'Blob Stack', 'Orbs', 'Acid Trip', 'Ripples', 'Linear Gradient', 'Liquid Metal', 'Cubic', 'Flow Gradient']}
                     onChange={(val) => {
@@ -45,68 +52,71 @@ export default function SceneControl() {
                     }}
                 />
 
-                {(scene.bgMode === 'Linear Gradient') && (
-                    <AdvancedGradientControl />
-                )}
-
-                {scene.bgMode === 'Gradient' && <GradientControl />}
-                {scene.bgMode === 'Liquid Metal' && <LiquidMetalControl />}
-                {scene.bgMode === 'Cubic' && <CubicGlassControl />}
-                {scene.bgMode === 'Lava Lamp' && <LavaControl />}
-                {scene.bgMode === 'Acid Trip' && <AcidTripControl />}
-                {scene.bgMode === 'Ripples' && <RipplesControl />}
-                {scene.bgMode === 'Blob Stack' && <BlobControl />}
-                {scene.bgMode === 'Orbs' && <OrbsControl />}
-                {scene.bgMode === 'Flow Gradient' && <FlowGradientControl />}
-                {scene.bgMode === 'Solid + Glow' && <GlowControl />}
-
-                {scene.bgMode === 'Solid + Glow' && (
-                    <ColorPicker
-                        label="Solid Color"
-                        value={scene.solidColor}
-                        onChange={(val) => setScene({ solidColor: val })}
-                    />
-                )}
-
-                {/* Global Export Button */}
                 <button
                     onClick={() => setShowExport(true)}
                     style={{
                         width: '100%',
-                        background: 'transparent',
+                        background: 'rgba(0, 153, 255, 0.1)',
                         border: '1px solid rgba(0, 153, 255, 0.3)',
-                        color: 'rgba(0, 153, 255, 0.8)',
-                        padding: '10px',
+                        color: '#0099ff',
+                        padding: '12px',
                         borderRadius: '4px',
                         cursor: 'pointer',
                         fontFamily: 'Inter, sans-serif',
                         fontSize: '11px',
                         textTransform: 'uppercase',
                         letterSpacing: '1px',
-                        fontWeight: 500,
+                        fontWeight: 600,
                         transition: 'all 0.2s',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '8px'
+                        gap: '8px',
+                        marginTop: '16px'
                     }}
                     onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(0, 153, 255, 0.2)'
                         e.currentTarget.style.borderColor = 'rgba(0, 153, 255, 0.6)'
-                        e.currentTarget.style.color = '#0099ff'
                     }}
                     onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(0, 153, 255, 0.1)'
                         e.currentTarget.style.borderColor = 'rgba(0, 153, 255, 0.3)'
-                        e.currentTarget.style.color = 'rgba(0, 153, 255, 0.8)'
                     }}
                 >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                    </svg>
-                    Export
+                    EXPORT
                 </button>
             </Section>
+
+            {/* 2. COLORS */}
+            <ColorsControl />
+
+            {/* 3. MODE SETTINGS (Unique Params Only) */}
+            {/* NOTE: These components currently have Colors/Speed duplications. I will clean them up next. */}
+            {(scene.bgMode === 'Linear Gradient') ? (
+                <AdvancedGradientControl />
+            ) : (
+                <>
+                    {scene.bgMode === 'Gradient' && <GradientControl />}
+                    {scene.bgMode === 'Liquid Metal' && <LiquidMetalControl />}
+                    {scene.bgMode === 'Cubic' && <CubicGlassControl />}
+                    {scene.bgMode === 'Lava Lamp' && <LavaControl />}
+                    {scene.bgMode === 'Acid Trip' && <AcidTripControl />}
+                    {scene.bgMode === 'Ripples' && <RipplesControl />}
+                    {scene.bgMode === 'Blob Stack' && <BlobControl />}
+                    {scene.bgMode === 'Orbs' && <OrbsControl />}
+                    {scene.bgMode === 'Flow Gradient' && <FlowGradientControl />}
+                    {scene.bgMode === 'Solid + Glow' && <GlowControl />}
+                </>
+            )}
+
+            {/* 4. GENERAL SETTINGS (Speed, Grain, Dither) */}
+            <GeneralSettingsControl />
+
+            {/* 5. EFFECTS (Bloom, CRT, Vintage) */}
+            <EffectsControl />
+
+            {/* 6. GLASS */}
+            <GlassControl />
         </>
     )
 }

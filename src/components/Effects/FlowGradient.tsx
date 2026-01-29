@@ -174,6 +174,18 @@ export default function FlowGradient() {
 
       materialRef.current.uniforms.resolution.value.set(width, height)
 
+      // Speed Control
+      // Default baseline speed is ~1.0, we multiply by the global speed slider
+      // The vertex shader u_global_noiseSpeed already handles time scaling, 
+      // but we need to ensure "time" passed is scaled OR we scale the speed uniform.
+      // Better: Scale the time uniform itself by the speed multiplier? 
+      // Actually vertex shader does: float time = u_time * u_global_noiseSpeed;
+      // We can just modulate u_global_noiseSpeed or pass a new multiplier.
+      // For simplicity let's just scale u_time if we want global slowdown, OR update u_global_noiseSpeed.
+      // Let's update u_global_noiseSpeed to include the user's slider value.
+      const baseSpeed = 5e-6; // Original value
+      materialRef.current.uniforms.u_global_noiseSpeed.value = baseSpeed * (currentFlow.speed * 2.5); // Multiply by slider
+
       // Calculate World Scale: 1 Pixel = X World Units
       // Multiplied by 0.3 for gentle wave height
       materialRef.current.uniforms.u_worldScale.value = (viewport.height / height) * 0.3;
@@ -235,6 +247,7 @@ export default function FlowGradient() {
         uniforms={uniforms}
         depthTest={false} // CRITICAL: Fix for "Solid Glitch" (Z-Fighting or Self-Intersection)
         depthWrite={false}
+        toneMapped={false} // Disable Tone Mapping to allow colors > 1.0 (Bloom Support)
       />
     </mesh>
   )

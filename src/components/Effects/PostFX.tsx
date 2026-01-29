@@ -7,22 +7,19 @@ import { VintageFilm } from './VintageFilm'
 import { StaticGrain } from './StaticGrain'
 
 export default function PostFX() {
-    const { postfx, scene, flowGradient } = useStore()
+    const { postfx } = useStore()
 
-    const isFlowMode = scene.bgMode === 'Flow Gradient';
+
 
     // Logic: 
-    // - Flow Mode: Use local `flowGradient.grain`
-    // - Other Modes: Use global `postfx.grain`
-    // - Dither: Kept as legacy "Animated Noise" option (separate from Static Grain)
+    // - Flow Mode: Use global `postfx.grain` (Standardized)
+    // - Dither: Enabled if `postfx.dither` is true
+    // - Bloom: Enabled if `postfx.bloom` is true
 
-    const grainOpacity = isFlowMode ? flowGradient.grain : (postfx.grain || 0);
+    const grainOpacity = postfx.grain || 0;
     const ditherOpacity = postfx.dither ? postfx.ditherOpacity : 0;
-
-    // Force Disable Bloom/Dither for Flow Gradient unless explicitly wanted (kept clean by default)
-    // For Flow Mode, we ONLY allow Static Grain. No Dither/Bloom to avoid glitches.
-    const effectiveDither = isFlowMode ? 0 : ditherOpacity;
-    const bloomIntensity = (postfx.bloom && !isFlowMode) ? postfx.bloomIntensity : 0
+    const effectiveDither = ditherOpacity;
+    const bloomIntensity = postfx.bloom ? postfx.bloomIntensity : 0
 
     // CRT Logic
     const scanlineOpacity = postfx.crt ? postfx.scanlines : 0

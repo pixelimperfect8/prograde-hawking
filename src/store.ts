@@ -215,9 +215,20 @@ interface State {
         density: number
         grain: number
     }
+    intelligenceGlow: {
+        color1: string
+        color2: string
+        color3: string
+        color4: string
+        speed: number
+        pulseSpeed: number
+        thickness: number
+        noiseScale: number
+        distortion: number
+    }
     // Scene Slice
     scene: {
-        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples' | 'Linear Gradient' | 'Liquid Metal' | 'Cubic' | 'Flow Gradient'
+        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples' | 'Linear Gradient' | 'Liquid Metal' | 'Cubic' | 'Flow Gradient' | 'Intelligence Glow'
         solidColor: string
     }
     logo: string | null
@@ -239,6 +250,7 @@ interface State {
 
     setLiquidMetal: (partial: Partial<State['liquidMetal']>) => void
     setFlowGradient: (partial: Partial<State['flowGradient']>) => void
+    setIntelligenceGlow: (partial: Partial<State['intelligenceGlow']>) => void
     setCubicGlass: (config: Partial<State['cubicGlass']>) => void
     setLogo: (logo: string | null) => void
     setAppState: (state: 'intro' | 'animating' | 'ready') => void
@@ -423,6 +435,17 @@ export const useStore = create<State>((set) => {
             density: 0.08,
             grain: 0.0 // Default 0 (Off) until user adjusts
         },
+        intelligenceGlow: {
+            color1: c1 || '#2952ff', // Apple-ish Blue
+            color2: c2 || '#d15beb', // Purple
+            color3: c3 || '#ff295c', // Red/Pink
+            color4: c4 || '#ffc640', // Yellow
+            speed: spd || 0.50,
+            pulseSpeed: 0.70,
+            thickness: 0.22,
+            noiseScale: 1.50,
+            distortion: 0.30
+        },
         logo: null,
         appState: new URLSearchParams(window.location.search).get('embed') === 'true' ? 'ready' : 'intro',
 
@@ -440,6 +463,7 @@ export const useStore = create<State>((set) => {
 
         setCubicGlass: (partial) => set((state) => ({ cubicGlass: { ...state.cubicGlass, ...partial } })),
         setFlowGradient: (partial) => set((state) => ({ flowGradient: { ...state.flowGradient, ...partial } })),
+        setIntelligenceGlow: (partial) => set((state) => ({ intelligenceGlow: { ...state.intelligenceGlow, ...partial } })),
         // Ripples tasks restored:
         // - [x] Implement "Ripples" Mode (Halftone/Squares)
         // - [x] Restore Ring Expansion for Ripples
@@ -473,6 +497,8 @@ export const useStore = create<State>((set) => {
                     return { fluid: { ...state.fluid, color1: p[0], color2: p[1], color3: p[2], color4: p[3] } }
                 } else if (mode === 'Flow Gradient') {
                     return { flowGradient: { ...state.flowGradient, color1: p[0], color2: p[1], color3: p[2], color4: p[3] } }
+                } else if (mode === 'Intelligence Glow') {
+                    return { intelligenceGlow: { ...state.intelligenceGlow, color1: p[0], color2: p[1], color3: p[2], color4: p[3] } }
                 } else if (mode === 'Liquid Metal') {
                     return { liquidMetal: { ...state.liquidMetal, colors: [p[0], p[1], p[2], p[3] || '#ffffff'] } }
                 }

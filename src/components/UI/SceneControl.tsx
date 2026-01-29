@@ -21,6 +21,7 @@ import BlobControl from './BlobControl'
 import OrbsControl from './OrbsControl'
 import GlowControl from './GlowControl'
 import FlowGradientControl from './FlowGradientControl'
+import IntelligenceGlowControl from './IntelligenceGlowControl'
 
 export default function SceneControl() {
     const { scene, setScene, setGlass } = useStore()
@@ -35,7 +36,7 @@ export default function SceneControl() {
                 <Select
                     label="Mode"
                     value={scene.bgMode}
-                    options={['Gradient', 'Solid + Glow', 'Lava Lamp', 'Blob Stack', 'Orbs', 'Acid Trip', 'Ripples', 'Linear Gradient', 'Liquid Metal', 'Cubic', 'Flow Gradient']}
+                    options={['Gradient', 'Solid + Glow', 'Lava Lamp', 'Blob Stack', 'Orbs', 'Acid Trip', 'Ripples', 'Linear Gradient', 'Liquid Metal', 'Cubic', 'Flow Gradient', 'Intelligence Glow']}
                     onChange={(val) => {
                         setScene({ bgMode: val as any })
 
@@ -48,6 +49,15 @@ export default function SceneControl() {
                         }
                         if (enableGlassModes.includes(val)) {
                             setGlass({ enabled: true })
+                        }
+
+                        // Default Glass Tunings per mode
+                        if (val === 'Intelligence Glow') {
+                            setGlass({
+                                enabled: true,
+                                roughness: 0.72,
+                                rippleDensity: 3.00
+                            })
                         }
                     }}
                 />
@@ -105,6 +115,7 @@ export default function SceneControl() {
                     {scene.bgMode === 'Blob Stack' && <BlobControl />}
                     {scene.bgMode === 'Orbs' && <OrbsControl />}
                     {scene.bgMode === 'Flow Gradient' && <FlowGradientControl />}
+                    {scene.bgMode === 'Intelligence Glow' && <IntelligenceGlowControl />}
                     {scene.bgMode === 'Solid + Glow' && <GlowControl />}
                 </>
             )}

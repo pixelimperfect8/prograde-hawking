@@ -14,6 +14,7 @@ export default function GeneralSettingsControl() {
         ripples, setRipples,
         orbs, setOrbs,
         flowGradient, setFlowGradient,
+        intelligenceGlow, setIntelligenceGlow,
         postfx, setPostFX
     } = useStore()
 
@@ -40,6 +41,8 @@ export default function GeneralSettingsControl() {
                 value = orbs.speed; onChange = (v) => setOrbs({ speed: v }); break
             case 'Flow Gradient':
                 value = flowGradient.speed; onChange = (v) => setFlowGradient({ speed: v }); break
+            case 'Intelligence Glow':
+                value = intelligenceGlow.speed; onChange = (v) => setIntelligenceGlow({ speed: v }); break
             case 'Ripples':
                 value = ripples.speed; onChange = (v) => setRipples({ speed: v }); break
             case 'Linear Gradient':

@@ -21,6 +21,7 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
         glass,
         ripples,
         blob,
+        intelligenceGlow,
         postfx // Ensure we read effects
     } = useStore()
 
@@ -71,6 +72,9 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
                 break
             case 'Blob Stack':
                 params = { ...params, c1: blob.blob1.color, c2: blob.blob2.color, c3: blob.background.color }
+                break
+            case 'Intelligence Glow':
+                params = { ...params, c1: intelligenceGlow.color1, c2: intelligenceGlow.color2, c3: intelligenceGlow.color3, c4: intelligenceGlow.color4, spd: intelligenceGlow.speed }
                 break
             case 'Linear Gradient': // Advanced
                 // Fallback to defaults.

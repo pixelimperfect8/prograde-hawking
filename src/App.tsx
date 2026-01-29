@@ -13,6 +13,7 @@ import AdvancedGradient from './components/Effects/AdvancedGradient'
 import LiquidMetal from './components/Effects/LiquidMetal'
 import CubicGlass from './components/Effects/CubicGlass'
 import FlowGradient from './components/Effects/FlowGradient'
+import IntelligenceGlow from './components/Effects/IntelligenceGlow'
 import PostFX from './components/Effects/PostFX'
 import Overlay from './components/UI/Overlay'
 import CustomCursor from './components/UI/CustomCursor'
@@ -77,6 +78,7 @@ function Scene() {
         {bgMode === 'Linear Gradient' && <AdvancedGradient />}
         {bgMode === 'Liquid Metal' && <LiquidMetal />}
         {bgMode === 'Flow Gradient' && <FlowGradient />}
+        {bgMode === 'Intelligence Glow' && <IntelligenceGlow />}
 
 
         {showGlass && <GlassOverlay />}

@@ -15,7 +15,8 @@ export default function ColorsControl() {
         blob, setBlob,
         orbs, setOrbs,
         glow, setGlow,
-        flowGradient, setFlowGradient
+        flowGradient, setFlowGradient,
+        intelligenceGlow, setIntelligenceGlow
     } = useStore()
 
     const mode = scene.bgMode
@@ -120,6 +121,7 @@ export default function ColorsControl() {
             case 'Gradient': return renderFixed4(gradient, setGradient)
             case 'Acid Trip': return renderFixed4(fluid, setFluid)
             case 'Flow Gradient': return renderFixed4(flowGradient, setFlowGradient)
+            case 'Intelligence Glow': return renderFixed4(intelligenceGlow, setIntelligenceGlow)
             case 'Orbs': return renderFixed4(orbs, setOrbs)
 
             case 'Liquid Metal': return renderArrayColors(liquidMetal.colors, setLiquidMetal)

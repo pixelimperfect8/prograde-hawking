@@ -20,7 +20,7 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
         glass,
         ripples,
         blob,
-
+        postfx // Ensure we read effects
     } = useStore()
 
     const [copied, setCopied] = useState<string | null>(null)
@@ -63,17 +63,11 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
                 break
             case 'Ripples':
                 params = { ...params, c1: ripples.color, spd: ripples.speed, den: ripples.cellDensity, str: ripples.spread }
-                // Note: Ripples uses 'color' not c1, but hydration aligns c1 -> color1 usually. 
-                // Store.ts: colors: '#0081f7' (single color). 
-                // We'll map to c1. I need to update Store hydration for Ripples if I want deep linking to work perfectly for it.
                 break
             case 'Blob Stack':
                 params = { ...params, c1: blob.blob1.color, c2: blob.blob2.color, c3: blob.background.color }
                 break
             case 'Linear Gradient': // Advanced
-                // Advanced gradient is complex (array of stops). 
-                // For now, we just map the start/end if simple, or skip params to force defaults.
-                // Deep linking advanced gradient perfectly requires JSON param.
                 // Fallback to defaults.
                 break
             default:
@@ -95,8 +89,17 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
             }
         })
 
-        // Glass settings (always include transparency/glassiness if enabled)
+        // Glass settings (User requested "Exact Duplicate")
         params.set('glass', glass.enabled.toString())
+
+        // Effects (Grain)
+        // If Global Grain is set (> 0), include it. 
+        // Note: Flow Gradient has its own grain local param, but store uses ONE hydration key 'grain' for postfx. 
+        // We'll map generic 'grain' param.
+        const activeGrain = (scene.bgMode === 'Flow Gradient' ? flowGradient.grain : postfx.grain) || 0
+        if (activeGrain > 0) {
+            params.set('grain', activeGrain.toString())
+        }
 
         // Embed mode
         params.set('embed', 'true')
@@ -113,7 +116,11 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
 ></iframe>`
 
     // Build config JSON for meshit.js (Dynamic params)
-    const config = JSON.stringify(getModeParams())
+    const config = JSON.stringify({
+        ...getModeParams(),
+        glass: glass.enabled, // Export JSON config should also respect glass
+        grain: (scene.bgMode === 'Flow Gradient' ? flowGradient.grain : postfx.grain) || 0
+    })
 
     // Simple JS embed (Dynamic)
     const javascriptCode = `<div data-meshit='${config}' style="width:100%; height:400px;"></div>

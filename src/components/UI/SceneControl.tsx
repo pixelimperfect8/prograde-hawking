@@ -9,6 +9,7 @@ import ColorsControl from './ColorsControl'
 import GeneralSettingsControl from './GeneralSettingsControl'
 import EffectsControl from './EffectsControl' // Now contains Bloom, CRT, Vintage sections
 import GlassControl from './GlassControl'
+import OverlayControl from './OverlayControl'
 
 import AdvancedGradientControl from './AdvancedGradientControl'
 import LiquidMetalControl from './LiquidMetalControl'
@@ -126,7 +127,10 @@ export default function SceneControl() {
             {/* 5. EFFECTS (Bloom, CRT, Vintage) */}
             <EffectsControl />
 
-            {/* 6. GLASS */}
+            {/* 6. OVERLAY */}
+            {(scene.bgMode !== 'Cubic') && <OverlayControl />}
+
+            {/* 7. GLASS */}
             <GlassControl />
         </>
     )

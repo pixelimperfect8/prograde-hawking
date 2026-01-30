@@ -93,8 +93,8 @@ interface State {
         roughness: number
         chromaticAberration: number
         fluteScale: number
-        patternType: 'Linear' | 'Kaleidoscope'
-        ridgeProfile: 'Round' | 'Sharp' | 'Square'
+        patternType: 'Linear' | 'Kaleidoscope' | 'Chevrons' | 'Diagonal' | 'Hexagon'
+        ridgeProfile: 'Round' | 'Sharp' | 'Square' | 'Bezel' | 'Sawtooth' | 'Double'
         segments: number
         rippleDensity: number
         waviness: number
@@ -226,6 +226,16 @@ interface State {
         noiseScale: number
         distortion: number
     }
+    overlay: {
+        enabled: boolean
+        type: 'Grid' | 'Grid + Dot' | 'Cross' | 'Hexagon' | 'Tech'
+        color: string
+        opacity: number
+        scale: number
+        thickness: number
+        speed: number
+        spotlight: boolean
+    }
     // Scene Slice
     scene: {
         bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples' | 'Linear Gradient' | 'Liquid Metal' | 'Cubic' | 'Flow Gradient' | 'Intelligence Glow'
@@ -251,6 +261,7 @@ interface State {
     setLiquidMetal: (partial: Partial<State['liquidMetal']>) => void
     setFlowGradient: (partial: Partial<State['flowGradient']>) => void
     setIntelligenceGlow: (partial: Partial<State['intelligenceGlow']>) => void
+    setOverlay: (partial: Partial<State['overlay']>) => void
     setCubicGlass: (config: Partial<State['cubicGlass']>) => void
     setLogo: (logo: string | null) => void
     setAppState: (state: 'intro' | 'animating' | 'ready') => void
@@ -364,8 +375,8 @@ export const useStore = create<State>((set) => {
             color3: c3 || '#06b6d4',
             color4: c4 || '#8b5cf6',
             speed: spd || 0.3,
-            blur: 0.4,
-            scale: 1.0
+            blur: 0.27,
+            scale: 0.50
         },
 
         fluid: {
@@ -446,6 +457,16 @@ export const useStore = create<State>((set) => {
             noiseScale: 1.50,
             distortion: 0.30
         },
+        overlay: {
+            enabled: false,
+            type: 'Grid',
+            color: '#ffffff',
+            opacity: 0.1,
+            scale: 1.0,
+            thickness: 0.05,
+            speed: 0.5,
+            spotlight: false
+        },
         logo: null,
         appState: new URLSearchParams(window.location.search).get('embed') === 'true' ? 'ready' : 'intro',
 
@@ -464,6 +485,7 @@ export const useStore = create<State>((set) => {
         setCubicGlass: (partial) => set((state) => ({ cubicGlass: { ...state.cubicGlass, ...partial } })),
         setFlowGradient: (partial) => set((state) => ({ flowGradient: { ...state.flowGradient, ...partial } })),
         setIntelligenceGlow: (partial) => set((state) => ({ intelligenceGlow: { ...state.intelligenceGlow, ...partial } })),
+        setOverlay: (partial) => set((state) => ({ overlay: { ...state.overlay, ...partial } })),
         // Ripples tasks restored:
         // - [x] Implement "Ripples" Mode (Halftone/Squares)
         // - [x] Restore Ring Expansion for Ripples

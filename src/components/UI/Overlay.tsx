@@ -65,6 +65,7 @@ export default function Overlay() {
 
     return (
         <div
+            id="ui-panel"
             style={{
                 position: 'fixed',
                 top: 0,

@@ -5,13 +5,60 @@ import { MeshTransmissionMaterial } from '@react-three/drei'
 import { useStore } from '../../store'
 import * as THREE from 'three'
 
+function applyRidgeProfile(
+    signal: number, // expecting input roughly -1 to 1 or cyclic
+    profile: 'Round' | 'Sharp' | 'Square' | 'Bezel' | 'Sawtooth' | 'Double'
+): number {
+    let normal = 0
+    // Normalize input to 0-1 cycle for some profiles
+    // But most patterns output cosine (-1 to 1)
+
+    // Map cosine (-1 to 1) to angle (0 to 2PI) approximation if needed
+    // Or just treat signal as the "height" directly.
+
+    // NOTE: The previous logic used 'angle' (Linear) or 'finalAngleSignal' (Kaleidoscope).
+    // Let's standardise: signal is an Angle (radians) or a normalized phase (0-1).
+    // Let's assume SIGNAL is raw phase (0 to 1).
+
+    const t = signal % 1
+
+    if (profile === 'Round') {
+        normal = Math.cos(t * Math.PI * 2)
+    }
+    else if (profile === 'Sharp') {
+        // Triangle wave
+        normal = 2 * Math.abs(2 * (t - Math.floor(t + 0.5))) - 1
+        // Invert to match previous look if needed
+        normal *= -1
+    }
+    else if (profile === 'Square') {
+        normal = Math.cos(t * Math.PI * 2) > 0 ? 0.8 : -0.8
+    }
+    else if (profile === 'Bezel') {
+        // Flat top, sharp sides
+        // Triangle 0-1
+        const tri = Math.abs(t - 0.5) * 2
+        // Thresholds
+        normal = tri > 0.8 ? (tri - 0.8) * 5.0 : (tri < 0.2 ? (0.2 - tri) * 5.0 : 0.0)
+        if (Math.cos(t * Math.PI * 2) < 0) normal *= -1
+    }
+    else if (profile === 'Sawtooth') {
+        normal = (t - Math.floor(t)) * 2.0 - 1.0
+    }
+    else if (profile === 'Double') {
+        normal = Math.cos(t * Math.PI * 4)
+    }
+
+    return normal
+}
+
 function generateFlutedNormalMap(
     density: number,
     waveFreq: number,
     waveAmp: number,
-    patternType: 'Linear' | 'Kaleidoscope',
+    patternType: 'Linear' | 'Kaleidoscope' | 'Chevrons' | 'Diagonal' | 'Hexagon',
     segments: number,
-    ridgeProfile: 'Round' | 'Sharp' | 'Square',
+    ridgeProfile: 'Round' | 'Sharp' | 'Square' | 'Bezel' | 'Sawtooth' | 'Double',
     curvature: number
 ) {
     const res = 1024
@@ -35,14 +82,13 @@ function generateFlutedNormalMap(
         for (let x = 0; x < res; x++) {
             let totalR = 0
 
-            // 4 samples: (0.25, 0.25), (0.75, 0.25), (0.25, 0.75), (0.75, 0.75)
             const offsets = [0.25, 0.75]
             for (let dy of offsets) {
                 for (let dx of offsets) {
                     const sampleX = x + dx
                     const sampleY = y + dy
 
-                    let angle = 0
+                    let phase = 0 // 0 to 1
 
                     if (patternType === 'Kaleidoscope') {
                         const dxk = sampleX - cx
@@ -55,59 +101,56 @@ function generateFlutedNormalMap(
                         const effectiveAngle = angleRad + waveOffset
                         const sectorSize = (Math.PI * 2) / segments
 
-                        const finalAngleSignal = (Math.abs((effectiveAngle % sectorSize) - sectorSize / 2)) * density
+                        // Normalized phase within sector
+                        phase = (Math.abs((effectiveAngle % sectorSize) - sectorSize / 2)) * density * 3.0 // scale adjust
 
-                        let normalSignal = 0
-                        if (ridgeProfile === 'Round') {
-                            normalSignal = Math.cos(finalAngleSignal * 20)
-                        } else if (ridgeProfile === 'Sharp') {
-                            const t = (finalAngleSignal * 20) / (Math.PI * 2)
-                            normalSignal = 2 * Math.abs(2 * (t - Math.floor(t + 0.5))) - 1
-                        } else {
-                            normalSignal = Math.cos(finalAngleSignal * 20) > 0 ? 0.8 : -0.8
-                        }
+                    } else if (patternType === 'Chevrons') {
+                        const u = sampleX / res * density
+                        const v = sampleY / res * density
+                        const uv = { x: u % 1, y: v % 1 }
+                        const xSym = Math.abs(uv.x - 0.5)
+                        const d = Math.abs(uv.y - xSym)
+                        phase = d * 4.0 // Scale up frequency
 
-                        totalR += (normalSignal * 0.5 + 0.5)
-
-                    } else {
+                    } else if (patternType === 'Diagonal') {
+                        const u = sampleX / res
                         const v = sampleY / res
-                        // Seamless Loop
+                        const rotU = (u + v) * density
+                        phase = rotU
+
+                    } else if (patternType === 'Hexagon') {
+                        const u = sampleX / res * density
+                        const v = sampleY / res * density
+                        // Hex Math
+                        const r = { x: 1, y: 1.73 }
+                        const h = { x: 0.5, y: 0.866 }
+                        const a = { x: (u % r.x) - h.x, y: (v % r.y) - h.y }
+                        const b = { x: ((u - h.x) % r.x) - h.x, y: ((v - h.y) % r.y) - h.y }
+                        const lenA = Math.sqrt(a.x * a.x + a.y * a.y)
+                        const lenB = Math.sqrt(b.x * b.x + b.y * b.y)
+                        const dist = lenA < lenB ? lenA : lenB
+                        phase = dist * 2.0
+
+                    } else { // Linear
+                        const v = sampleY / res
                         const safeFreq = Math.round(waveFreq)
                         const waveOffset = Math.sin(v * Math.PI * 2 * safeFreq) * waveAmp
-
-                        // Smooth Bell Curve
                         const bell = (1 - Math.cos(v * Math.PI * 2)) * 0.5
                         const curveOffset = bell * curvature
-
                         const xNorm = sampleX / res
-                        angle = (xNorm + waveOffset + curveOffset) * Math.PI * 2 * density
-
-                        let normalX = 0
-                        if (ridgeProfile === 'Round') {
-                            normalX = Math.cos(angle)
-                        } else if (ridgeProfile === 'Sharp') {
-                            const t = angle / (Math.PI * 2)
-                            normalX = 2 * Math.abs(2 * (t - Math.floor(t + 0.5))) - 1
-                            normalX *= -1
-                        } else {
-                            const t = Math.cos(angle)
-                            normalX = t > 0 ? 0.9 : -0.9
-                        }
-
-                        totalR += (normalX * 0.5 + 0.5)
+                        phase = (xNorm + waveOffset + curveOffset) * density
                     }
+
+                    const normal = applyRidgeProfile(phase, ridgeProfile)
+                    totalR += (normal * 0.5 + 0.5)
                 }
             }
 
-            // Average the 4 samples
             const avgR = (totalR / 4) * 255
-            const g = 128
-            const b = 255
-
             const idx = (y * res + x) * 4
             data[idx] = avgR
-            data[idx + 1] = g
-            data[idx + 2] = b
+            data[idx + 1] = 128
+            data[idx + 2] = 255
             data[idx + 3] = 255
         }
     }
@@ -118,7 +161,7 @@ function generateFlutedNormalMap(
     texture.wrapT = THREE.RepeatWrapping
     texture.minFilter = THREE.LinearFilter
     texture.magFilter = THREE.LinearFilter
-    texture.anisotropy = 16 // Max quality
+    texture.anisotropy = 16
     texture.needsUpdate = true
     return texture
 }
@@ -127,13 +170,8 @@ export default function GlassOverlay() {
     const { width, height } = useThree((state) => state.viewport)
 
     const { glass } = useStore()
-
-    // Leva Removed
-
-    // Use "glass" from store instead of "config"
     const config = glass
 
-    // Debounce the expensive texture generation props
     const [debouncedConfig, setDebouncedConfig] = useState({
         rippleDensity: config.rippleDensity,
         waveFreq: config.waveFreq,
@@ -155,7 +193,7 @@ export default function GlassOverlay() {
                 ridgeProfile: config.ridgeProfile,
                 curvature: config.curvature
             })
-        }, 200) // 200ms delay
+        }, 200)
 
         return () => {
             clearTimeout(handler)
@@ -170,16 +208,14 @@ export default function GlassOverlay() {
         config.curvature
     ])
 
-    // Memoize the texture so we don't regenerate it every frame
-    // Use debouncedConfig for dependencies
     const flutedNormalMap = useMemo(() => {
         const tex = generateFlutedNormalMap(
             debouncedConfig.rippleDensity,
             debouncedConfig.waveFreq,
             debouncedConfig.waviness,
-            debouncedConfig.patternType as 'Linear' | 'Kaleidoscope',
+            debouncedConfig.patternType as 'Linear' | 'Kaleidoscope' | 'Chevrons' | 'Diagonal' | 'Hexagon',
             debouncedConfig.segments,
-            debouncedConfig.ridgeProfile as 'Round' | 'Sharp' | 'Square',
+            debouncedConfig.ridgeProfile as 'Round' | 'Sharp' | 'Square' | 'Bezel' | 'Sawtooth' | 'Double',
             debouncedConfig.curvature || 0
         )
         if (tex) {
@@ -199,11 +235,9 @@ export default function GlassOverlay() {
     useFrame((_state, delta) => {
         if (!flutedNormalMap) return
 
-        // Always apply rotation
         flutedNormalMap.rotation = (config.patternRotation * Math.PI) / 180
 
         if (config.animate) {
-            // Update Offset
             const rad = (config.flowDirection * Math.PI) / 180
             const moveX = Math.cos(rad) * config.flowSpeed * delta
             const moveY = Math.sin(rad) * config.flowSpeed * delta

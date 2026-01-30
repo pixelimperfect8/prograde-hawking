@@ -17,13 +17,13 @@ export default function GlassControl() {
                     <Select
                         label="Pattern"
                         value={glass.patternType}
-                        options={['Linear', 'Kaleidoscope']}
+                        options={['Linear', 'Kaleidoscope', 'Chevrons', 'Diagonal', 'Hexagon']}
                         onChange={(v) => setGlass({ patternType: v as any })}
                     />
                     <Select
                         label="Ridge Shape"
                         value={glass.ridgeProfile}
-                        options={['Round', 'Sharp', 'Square']}
+                        options={['Round', 'Sharp', 'Square', 'Bezel', 'Sawtooth', 'Double']}
                         onChange={(v) => setGlass({ ridgeProfile: v as any })}
                     />
 

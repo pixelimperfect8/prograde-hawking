@@ -14,6 +14,7 @@ import LiquidMetal from './components/Effects/LiquidMetal'
 import CubicGlass from './components/Effects/CubicGlass'
 import FlowGradient from './components/Effects/FlowGradient'
 import IntelligenceGlow from './components/Effects/IntelligenceGlow'
+import PatternOverlay from './components/Effects/Overlay'
 import PostFX from './components/Effects/PostFX'
 import Overlay from './components/UI/Overlay'
 import CustomCursor from './components/UI/CustomCursor'
@@ -79,6 +80,9 @@ function Scene() {
         {bgMode === 'Liquid Metal' && <LiquidMetal />}
         {bgMode === 'Flow Gradient' && <FlowGradient />}
         {bgMode === 'Intelligence Glow' && <IntelligenceGlow />}
+
+        {/* Overlays (Except for Cubic which is its own 3D scene) */}
+        {(bgMode !== 'Cubic') && <PatternOverlay />}
 
 
         {showGlass && <GlassOverlay />}

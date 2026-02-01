@@ -25,7 +25,7 @@ export default function Overlay() {
 
             // Only update DOM if there's significant movement
             if (Math.abs(diff) > 0.1) {
-                currentScrollRef.current += diff * 0.05
+                currentScrollRef.current += diff * 0.1 // Snappier smoothing (was 0.05)
                 if (contentRef.current) {
                     contentRef.current.style.transform = `translateY(${-currentScrollRef.current}px)`
                 }
@@ -50,7 +50,7 @@ export default function Overlay() {
             const maxScroll = (contentRef.current?.offsetHeight || 0) - (containerRef.current?.offsetHeight || 0) + 144 // + padding
             const clampedMax = Math.max(0, maxScroll)
 
-            const next = targetScroll.current + e.deltaY * 0.8 // 0.8 speed factor
+            const next = targetScroll.current + e.deltaY * 1.2 // Faster speed (was 0.8)
             targetScroll.current = Math.max(0, Math.min(next, clampedMax))
         }
 

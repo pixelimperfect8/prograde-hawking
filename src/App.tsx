@@ -5,7 +5,7 @@ import SceneContent from './components/SceneContent'
 import Overlay from './components/UI/Overlay'
 import CustomCursor from './components/UI/CustomCursor'
 import LandingPage from './components/UI/LandingPage'
-import LandingPageViews from './components/UI/LandingPageViews'
+
 import { useStore } from './store'
 import './index.css'
 

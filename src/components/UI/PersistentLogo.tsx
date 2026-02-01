@@ -1,4 +1,4 @@
-import { useStore } from '../../store'
+
 import AnimatedSmiley from './AnimatedSmiley'
 
 export default function PersistentLogo() {

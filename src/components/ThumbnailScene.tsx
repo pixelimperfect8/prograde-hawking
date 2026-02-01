@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { CanvasTexture } from 'three'
-import MeshGradient from './MeshGradient'
+
 import LavaLamp from './Effects/LavaLamp'
 import BlobStack from './Effects/BlobStack'
 import Orbs from './Effects/Orbs'

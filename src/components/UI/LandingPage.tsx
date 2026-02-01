@@ -1,50 +1,20 @@
-import { View, PerspectiveCamera, Html } from '@react-three/drei'
 import { useRef, useState, useEffect } from 'react'
-import { useFrame } from '@react-three/fiber'
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactDOM from 'react-dom'
 import { useStore } from '../../store'
-import ThumbnailScene from '../ThumbnailScene'
 import AnimatedSmiley from './AnimatedSmiley'
 import AnimatedCross from './AnimatedCross'
 
-function CameraController({ hovered }: { hovered: boolean }) {
-    useFrame((state) => {
-        const targetZ = hovered ? 2.5 : 3.5
-        state.camera.position.z += (targetZ - state.camera.position.z) * 0.1
-    })
-    return null
-}
+
+
 
 const CYBER_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;:,.<>?'
 const ORIGINAL_TEXT = 'create'
 
 function HeroText({ scrollOffset, onClick }: { scrollOffset: number, onClick: () => void }) {
-    const [scale, setScale] = useState(1)
     const [displayText, setDisplayText] = useState(ORIGINAL_TEXT)
-    const textRef = useRef<HTMLDivElement>(null)
     const intervalRef = useRef<number | null>(null)
 
-    useEffect(() => {
-        const resize = () => {
-            if (textRef.current) {
-                const container = textRef.current.parentElement?.parentElement
-                const containerWidth = container?.offsetWidth || window.innerWidth
-                const textWidth = textRef.current.scrollWidth
-
-                if (textWidth > 0) {
-                    // Scale to fit width (105% for edge-to-edge overflow)
-                    const newScale = (containerWidth / textWidth) * 1.05
-                    setScale(newScale)
-                }
-            }
-        }
-        // Force calculation
-        resize()
-        setTimeout(resize, 100) // Double check after render
-        window.addEventListener('resize', resize)
-        return () => window.removeEventListener('resize', resize)
-    }, [])
 
     const handleMouseEnter = () => {
         if (intervalRef.current) clearInterval(intervalRef.current)
@@ -259,7 +229,7 @@ function HeroSection({ scrollOffset, onEnter }: { scrollOffset: number, onEnter:
 
 // Loading Overlay Component
 // Uses Portal to guarantee window-relative positioning
-function LoadingScreen({ mode, rect }: { mode: any, rect: DOMRect }) {
+function LoadingScreen({ rect }: { rect: DOMRect }) {
     const cx = rect.left + rect.width / 2
     const cy = rect.top + rect.height / 2
 
@@ -303,7 +273,7 @@ function LoadingScreen({ mode, rect }: { mode: any, rect: DOMRect }) {
 }
 
 export default function LandingPage() {
-    const { setScene, setAppState, appState, scene, setGlass } = useStore()
+    const { setScene, setAppState, appState, setGlass } = useStore()
     const [scrolled, setScrolled] = useState(false)
     const [scrollOffset, setScrollOffset] = useState(0)
     const containerRef = useRef<HTMLDivElement>(null)
@@ -316,16 +286,7 @@ export default function LandingPage() {
         }
     }, [])
 
-    const handleSelect = (mode: any, rect: DOMRect) => {
-        setLoadingState({ mode, rect })
-        setAppState('animating')
 
-        setTimeout(() => {
-            setScene({ bgMode: mode.id as any })
-            setGlass({ enabled: true }) // Ensure enabled
-            setAppState('ready')
-        }, 1500)
-    }
 
     // Background Carousel Logic
     // Background Carousel Logic
@@ -438,7 +399,7 @@ export default function LandingPage() {
             {/* Loading State Overlay */}
             <AnimatePresence>
                 {appState === 'animating' && loadingState && (
-                    <LoadingScreen mode={loadingState.mode} rect={loadingState.rect} />
+                    <LoadingScreen rect={loadingState.rect} />
                 )}
             </AnimatePresence>
 
@@ -471,65 +432,4 @@ export default function LandingPage() {
     )
 }
 
-function GridItem({ mode, onSelect }: {
-    mode: any,
-    onSelect: (rect: DOMRect) => void,
-}) {
-    const ref = useRef<HTMLDivElement>(null)
-    const [hovered, setHovered] = useState(false)
 
-    return (
-        <div
-            ref={ref}
-            className={`${mode.span || ''} grid-item`}
-            onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect()
-                onSelect(rect)
-            }}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            style={{
-                position: 'relative',
-                borderRadius: '16px',
-                overflow: 'visible',
-                border: '1px solid rgba(255,255,255,0.1)',
-                cursor: 'pointer',
-                // Removed scale transform on hover
-                transform: 'translateZ(0)',
-                transition: 'none'
-            }}
-        >
-            <View track={ref as any} style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}>
-                <PerspectiveCamera makeDefault position={[0, 0, 3.5]} fov={50} />
-                <CameraController hovered={hovered} />
-                <ThumbnailScene mode={mode.id} />
-            </View>
-            <div style={{
-                position: 'absolute',
-                inset: 0,
-                borderRadius: '16px',
-                boxShadow: '0 0 0 8px #000',
-                pointerEvents: 'none',
-                zIndex: -1
-            }} />
-            <div style={{
-                position: 'absolute',
-                bottom: '20px',
-                left: '20px',
-                color: '#fff',
-                fontFamily: 'Inter',
-                fontWeight: 700,
-                fontSize: '14px',
-                pointerEvents: 'none',
-                textTransform: 'lowercase',
-                background: 'transparent',
-                padding: '4px 12px',
-                borderRadius: '100px',
-                zIndex: 10
-            }}>
-                {mode.label}
-            </div>
-            {/* Removed Hover Border overlay */}
-        </div>
-    )
-}

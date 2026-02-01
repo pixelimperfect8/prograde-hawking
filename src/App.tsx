@@ -87,7 +87,7 @@ function App() {
       {/* 2. UI LAYER (Controls, Cursor) only when Ready */}
       {!isEmbed && appState === 'ready' && <Overlay />}
       {!isEmbed && <CustomCursor />}
-      {!isEmbed && appState === 'ready' && <PersistentLogo />}
+      {!isEmbed && <PersistentLogo />}
       {!isEmbed && appState === 'ready' && <UI />}
 
       {/* 3. APP CONTAINER STYLE (Resizing for Export) */}

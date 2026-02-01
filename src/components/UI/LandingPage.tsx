@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactDOM from 'react-dom'
 import { useStore } from '../../store'
-import AnimatedSmiley from './AnimatedSmiley'
+
 import AnimatedCross from './AnimatedCross'
 
 
@@ -178,7 +178,7 @@ function Nav({ scrolled }: { scrolled: boolean }) {
                 opacity: scrolled ? 1 : 0,
                 transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s', // Delay slightly
             }}>
-                <AnimatedSmiley size={40} />
+
                 <div style={{
                     transform: scrolled ? 'translateY(0)' : 'translateY(20px)', // Text from bottom
                     opacity: scrolled ? 1 : 0,
@@ -219,9 +219,7 @@ function HeroSection({ scrollOffset, onEnter }: { scrollOffset: number, onEnter:
                 flexShrink: 0 // Ensure it never collapses
             }}
         >
-            <div style={{ position: 'absolute', top: '40px', left: '40px', zIndex: 10 }}>
-                <AnimatedSmiley size={118} />
-            </div>
+
             <HeroText scrollOffset={scrollOffset} onClick={onEnter} />
         </header>
     )

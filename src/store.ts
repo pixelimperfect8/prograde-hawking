@@ -238,7 +238,7 @@ interface State {
     }
     // Scene Slice
     scene: {
-        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples' | 'Linear Gradient' | 'Liquid Metal' | 'Cubic' | 'Flow Gradient' | 'Intelligence Glow'
+        bgMode: 'Gradient' | 'Solid + Glow' | 'Lava Lamp' | 'Blob Stack' | 'Orbs' | 'Acid Trip' | 'Ripples' | 'Linear Gradient' | 'Liquid Metal' | 'Cubic' | 'Flow Gradient' | 'Intelligence Glow' | '3D Gradient'
         solidColor: string
     }
     logo: string | null
@@ -261,12 +261,36 @@ interface State {
     setLiquidMetal: (partial: Partial<State['liquidMetal']>) => void
     setFlowGradient: (partial: Partial<State['flowGradient']>) => void
     setIntelligenceGlow: (partial: Partial<State['intelligenceGlow']>) => void
+    threeDGradient: {
+        color1: string
+        color2: string
+        color3: string
+        uSpeed: number
+        uStrength: number
+        uDensity: number
+        cAzimuthAngle: number
+        cPolarAngle: number
+        cDistance: number
+        lightType: '3d' | 'env'
+        type: 'plane' | 'sphere' | 'waterPlane'
+        backgroundColor: string
+    }
+
+    setThreeDGradient: (partial: Partial<State['threeDGradient']>) => void
     setOverlay: (partial: Partial<State['overlay']>) => void
     setCubicGlass: (config: Partial<State['cubicGlass']>) => void
     setLogo: (logo: string | null) => void
     setAppState: (state: 'intro' | 'animating' | 'ready') => void
     applyPreset: (name: string) => void
     randomizeColors: () => void
+
+    // Export Slice
+    export: {
+        isRecording: boolean
+        resolution: 'window' | '1080p' | '4k'
+        quality: 'high' | 'ultra' | 'lossless'
+    }
+    setExport: (partial: Partial<State['export']>) => void
 }
 
 
@@ -393,7 +417,7 @@ export const useStore = create<State>((set) => {
         },
         postfx: {
             dither: true,
-            ditherOpacity: 0.76,
+            ditherOpacity: 0.05, // Reduced from 0.76 to 0.05 to prevent visible "dots"
             grain: getParam('grain', 0.0), // Hydrate grain!
             bloom: true,
             bloomIntensity: 0.76,
@@ -485,6 +509,22 @@ export const useStore = create<State>((set) => {
         setCubicGlass: (partial) => set((state) => ({ cubicGlass: { ...state.cubicGlass, ...partial } })),
         setFlowGradient: (partial) => set((state) => ({ flowGradient: { ...state.flowGradient, ...partial } })),
         setIntelligenceGlow: (partial) => set((state) => ({ intelligenceGlow: { ...state.intelligenceGlow, ...partial } })),
+        threeDGradient: {
+            color1: '#94ffd1',
+            color2: '#6bf5ff',
+            color3: '#ffffff',
+            uSpeed: 0.2,
+            uStrength: 3.4,
+            uDensity: 1.2,
+            cAzimuthAngle: 170,
+            cPolarAngle: 70,
+            cDistance: 4.4,
+            lightType: '3d',
+            type: 'waterPlane',
+            backgroundColor: '#000000'
+        },
+
+        setThreeDGradient: (partial) => set((state) => ({ threeDGradient: { ...state.threeDGradient, ...partial } })),
         setOverlay: (partial) => set((state) => ({ overlay: { ...state.overlay, ...partial } })),
         // Ripples tasks restored:
         // - [x] Implement "Ripples" Mode (Halftone/Squares)
@@ -494,6 +534,14 @@ export const useStore = create<State>((set) => {
         setScene: (partial) => set((state) => ({ scene: { ...state.scene, ...partial } })),
         setLogo: (logo) => set({ logo }),
         setAppState: (appState) => set({ appState }),
+
+        // Export Init
+        export: {
+            isRecording: false,
+            resolution: 'window',
+            quality: 'high'
+        },
+        setExport: (partial) => set((state) => ({ export: { ...state.export, ...partial } })),
 
         applyPreset: (name) => {
             const p = PRESETS[name as keyof typeof PRESETS]

@@ -76,6 +76,17 @@ export default function GeneralSettingsControl() {
                 checked={postfx.dither}
                 onChange={(v) => setPostFX({ dither: v })}
             />
+
+            {postfx.dither && (
+                <Slider
+                    label="Dither Intensity"
+                    value={postfx.ditherOpacity}
+                    min={0.01}
+                    max={0.5}
+                    step={0.01}
+                    onChange={(v) => setPostFX({ ditherOpacity: v })}
+                />
+            )}
         </Section>
     )
 }

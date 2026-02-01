@@ -29,7 +29,12 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
     const [activeTab, setActiveTab] = useState<'iframe' | 'framer' | 'webflow' | 'javascript' | 'video'>('iframe')
 
     // Video Recording State
-    const [isRecording, setIsRecording] = useState(false)
+    const {
+        export: exportState,
+        setExport
+    } = useStore()
+
+    // We keep local ref for the specific MediaRecorder instance
     const mediaRecorderRef = useRef<MediaRecorder | null>(null)
     const chunksRef = useRef<Blob[]>([])
 
@@ -129,21 +134,43 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
     })
 
     // Video Recording Logic
-    const startRecording = () => {
+    const startRecording = async () => {
         const canvas = document.querySelector('canvas');
-        if (!canvas) {
-            alert('Could not find canvas to record.');
-            return;
-        }
+        if (!canvas) return;
+
+        // 1. Set global recording state to Trigger Resize in App.tsx
+        setExport({ isRecording: true })
+
+        // 2. Wait a tick for Resize to apply if strictly needed?
+        // In React, the resize in App.tsx will happen, but MediaRecorder needs the stream immediately.
+        // Actually, capturing the stream *after* resize is safer.
+        await new Promise(r => setTimeout(r, 200)) // Short delay for React render
 
         try {
             // Capture at 60 FPS
             const stream = canvas.captureStream(60);
 
-            // Prefer VP9 for high quality, fallback to defaults
-            let options = { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8000000 }; // 8 Mbps
-            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                options = { mimeType: 'video/webm', videoBitsPerSecond: 8000000 } as any;
+            // Determine Bitrate (Massively increased for complex gradients)
+            let bitrate = 15000000; // 15 Mbps (High)
+            if (exportState.quality === 'ultra') bitrate = 50000000; // 50 Mbps
+            if (exportState.quality === 'lossless') bitrate = 500000000; // 500 Mbps (Insane)
+
+            // Preferred Codecs (VP9 -> H264 -> VP8)
+            const mimeTypes = [
+                'video/webm;codecs=vp9',
+                'video/webm;codecs=h264', // Chrome might support this hardware acc.
+                'video/webm;codecs=vp8',
+                'video/webm'
+            ];
+
+            let options = { mimeType: 'video/webm', videoBitsPerSecond: bitrate } as any;
+
+            for (const type of mimeTypes) {
+                if (MediaRecorder.isTypeSupported(type)) {
+                    options = { mimeType: type, videoBitsPerSecond: bitrate };
+                    console.log(`Using MimeType: ${type}`);
+                    break;
+                }
             }
 
             const recorder = new MediaRecorder(stream, options);
@@ -151,21 +178,18 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
             chunksRef.current = [];
 
             recorder.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    chunksRef.current.push(e.data);
-                }
+                if (e.data.size > 0) chunksRef.current.push(e.data);
             };
 
             recorder.onstop = () => {
                 const blob = new Blob(chunksRef.current, { type: 'video/webm' });
-                chunksRef.current = []; // Clear
+                chunksRef.current = [];
 
-                // Trigger Download
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = `meshit-export-${Date.now()}.webm`;
+                a.download = `meshit-export-${exportState.resolution}-${exportState.quality}-${Date.now()}.webm`;
                 document.body.appendChild(a);
                 a.click();
 
@@ -173,20 +197,23 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
                 }, 100);
+
+                // Reset State
+                setExport({ isRecording: false })
             };
 
             recorder.start();
-            setIsRecording(true);
         } catch (err) {
             console.error(err);
-            alert('Failed to start recording. Browser might not support this.');
+            setExport({ isRecording: false })
+            alert('Failed to start recording.');
         }
     }
 
     const stopRecording = () => {
-        if (mediaRecorderRef.current && isRecording) {
+        if (mediaRecorderRef.current && exportState.isRecording) {
             mediaRecorderRef.current.stop();
-            setIsRecording(false);
+            // isRecording set to false in onstop
         }
     }
 
@@ -313,11 +340,42 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
                 {activeTab === 'video' ? (
                     <div style={{ padding: '20px', textAlign: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: '8px' }}>
                         <div style={{ marginBottom: '16px', fontSize: '12px', color: '#aaa', lineHeight: 1.5 }}>
-                            Records a high-quality <strong>WebM (1080p+)</strong> video of the current animation.<br />
-                            Perfect for social media or background assets.
+                            Records a high-quality <strong>WebM</strong> video of the current animation.<br />
+                            The screen might resize during recording if a specific resolution is selected.
                         </div>
 
-                        {!isRecording ? (
+                        {/* Export Options */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+                            {/* Resolution */}
+                            <label style={{ display: 'block', textAlign: 'left' }}>
+                                <span style={{ fontSize: '11px', color: '#888', display: 'block', marginBottom: '4px' }}>Resolution</span>
+                                <select
+                                    value={exportState.resolution}
+                                    onChange={(e) => setExport({ resolution: e.target.value as any })}
+                                    style={{ width: '100%', padding: '8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                                >
+                                    <option value="window">Window Size</option>
+                                    <option value="1080p">1080p (FHD)</option>
+                                    <option value="4k">4K (UHD)</option>
+                                </select>
+                            </label>
+
+                            {/* Quality */}
+                            <label style={{ display: 'block', textAlign: 'left' }}>
+                                <span style={{ fontSize: '11px', color: '#888', display: 'block', marginBottom: '4px' }}>Quality (Bitrate)</span>
+                                <select
+                                    value={exportState.quality}
+                                    onChange={(e) => setExport({ quality: e.target.value as any })}
+                                    style={{ width: '100%', padding: '8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                                >
+                                    <option value="high">High (8 Mbps)</option>
+                                    <option value="ultra">Ultra (30 Mbps)</option>
+                                    <option value="lossless">Lossless (100 Mbps)</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        {!exportState.isRecording ? (
                             <button
                                 onClick={startRecording}
                                 style={{
@@ -344,7 +402,7 @@ export default function ExportPanel({ onClose }: ExportPanelProps) {
                                     padding: '16px',
                                     fontSize: '14px',
                                     fontWeight: 600,
-                                    animation: 'pulse 1.5s infinite' // Optional pulse effect via inline style logic or CSS
+                                    animation: 'pulse 1.5s infinite'
                                 }}
                             >
                                 <div style={{ width: '10px', height: '10px', background: 'red', borderRadius: '2px' }} />

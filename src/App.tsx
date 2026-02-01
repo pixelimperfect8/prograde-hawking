@@ -1,101 +1,18 @@
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas } from '@react-three/fiber'
 import React, { useRef } from 'react'
-import * as THREE from 'three'
-import MeshGradient from './components/MeshGradient'
-import GlassOverlay from './components/Effects/GlassOverlay'
-import GlowOverlay from './components/Effects/GlowOverlay'
-import LavaLamp from './components/Effects/LavaLamp'
-import BlobStack from './components/Effects/BlobStack'
-import Orbs from './components/Effects/Orbs'
-import AcidTrip from './components/Effects/AcidTrip'
-import Ripples from './components/Effects/Ripples'
-import AdvancedGradient from './components/Effects/AdvancedGradient'
-import LiquidMetal from './components/Effects/LiquidMetal'
-import CubicGlass from './components/Effects/CubicGlass'
-import FlowGradient from './components/Effects/FlowGradient'
-import IntelligenceGlow from './components/Effects/IntelligenceGlow'
-import PatternOverlay from './components/Effects/Overlay'
-import PostFX from './components/Effects/PostFX'
+import { View } from '@react-three/drei'
+import SceneContent from './components/SceneContent'
 import Overlay from './components/UI/Overlay'
 import CustomCursor from './components/UI/CustomCursor'
-import IntroMeshit from './components/UI/IntroMeshit'
-// import BrandLogo from './components/UI/BrandLogo'
+import LandingPage from './components/UI/LandingPage'
+import LandingPageViews from './components/UI/LandingPageViews'
 import { useStore } from './store'
 import './index.css'
 
-// Custom hook no longer needed
-// function useLevaArrowFix() ...
-
-function Rig() {
-  useFrame((state) => {
-    // Read mouse position (-1 to 1)
-    // Move camera slightly towards mouse for perspective shift
-    const x = state.mouse.x
-    const y = state.mouse.y
-
-    // Parallax Factor (how much camera moves)
-    const factor = 0.5
-
-    // Smooth lerp for fluid movement
-    state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, x * factor, 0.05)
-    state.camera.position.y = THREE.MathUtils.lerp(state.camera.position.y, y * factor, 0.05)
-
-    state.camera.lookAt(0, 0, 0)
-  })
-  return null
-}
-
-function Scene() {
-  const { scene, glass } = useStore()
-  const { bgMode, solidColor } = scene
-  const showGlass = glass.enabled
-
-  return (
-    <>
-      <Rig />
-      {/* Scale up mesh slightly to cover edges during camera movement */}
-      <group scale={[1.25, 1.25, 1]}>
-        {bgMode === 'Gradient' && <MeshGradient />}
-
-        {bgMode === 'Solid + Glow' && (
-          <>
-            <mesh scale={[10, 10, 1]} position={[0, 0, -0.1]}>
-              <planeGeometry args={[1, 1]} />
-              <meshBasicMaterial color={solidColor} />
-            </mesh>
-            <GlowOverlay />
-          </>
-        )}
-
-        {bgMode === 'Lava Lamp' && <LavaLamp />}
-        {bgMode === 'Blob Stack' && <BlobStack />}
-        {bgMode === 'Orbs' && <Orbs />}
-        {bgMode === 'Acid Trip' && <AcidTrip />}
-        {bgMode === 'Ripples' && <Ripples />}
-        {/* Dynamic Backgrounds */}
-        {bgMode === 'Liquid Metal' && <LiquidMetal />}
-        {bgMode === 'Cubic' && <CubicGlass />}
-        {bgMode === 'Linear Gradient' && <AdvancedGradient />}
-        {bgMode === 'Linear Gradient' && <AdvancedGradient />}
-        {bgMode === 'Liquid Metal' && <LiquidMetal />}
-        {bgMode === 'Flow Gradient' && <FlowGradient />}
-        {bgMode === 'Intelligence Glow' && <IntelligenceGlow />}
-
-        {/* Overlays (Except for Cubic which is its own 3D scene) */}
-        {(bgMode !== 'Cubic') && <PatternOverlay />}
-
-
-        {showGlass && <GlassOverlay />}
-      </group>
-      <PostFX />
-    </>
-  )
-}
-
 function UI() {
-  const { logo, setLogo, appState } = useStore()
+  const { logo, setLogo } = useStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const isReady = appState === 'ready'
+  /* isReady logic moved to global App state checks */
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -110,13 +27,8 @@ function UI() {
     }
   }
 
-  /* Leva Controls moved to custom UI */
-
-
-
   return (
     <>
-      {/* Hidden File Input */}
       <input
         type="file"
         ref={fileInputRef}
@@ -137,7 +49,7 @@ function UI() {
         alignItems: 'center',
         width: '100%',
       }}>
-        {logo ? (
+        {logo && (
           <img
             src={logo}
             alt="Brand Logo"
@@ -145,24 +57,12 @@ function UI() {
               maxWidth: '80vw',
               maxHeight: '60vh',
               objectFit: 'contain',
-              mixBlendMode: 'overlay', // Optional: Makes it blend cool like the text
+              mixBlendMode: 'overlay',
               filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.3))'
             }}
           />
-        ) : (
-          <IntroMeshit />
         )}
       </div>
-
-      <div style={{
-        opacity: isReady ? 1 : 0,
-        transition: 'opacity 1s ease 0.5s', // Delay to sync with controls
-        pointerEvents: isReady ? 'auto' : 'none'
-      }}>
-        {/* <BrandLogo /> REMOVED as per user request */}
-      </div>
-
-
     </>
   )
 }
@@ -171,31 +71,65 @@ function App() {
   // Check if we're in embed mode
   const isEmbed = new URLSearchParams(window.location.search).get('embed') === 'true'
 
+  const { export: exportState, appState } = useStore()
+  const isRecording = exportState.isRecording
+
+  // Container ref for event sourcing (so Canvas events work on scrolled content)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   return (
-    <>
-      {/* Only show UI controls when NOT in embed mode */}
-      {!isEmbed && <Overlay />}
+    <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+      {/* DEBUG OVERLAY */}
+      {/* 1. LAYOUT LAYER (Landing Page vs Main) */}
+
+      {/* 2. UI LAYER (Controls, Cursor) only when Ready */}
+      {!isEmbed && appState === 'ready' && <Overlay />}
       {!isEmbed && <CustomCursor />}
+      {!isEmbed && appState === 'ready' && <UI />}
 
-      {/* Leva Removed */}
+      {/* 3. APP CONTAINER STYLE (Resizing for Export) */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        // Export Logic: Force dimensions if recording specific resolution
+        width: (isRecording && exportState.resolution === '1080p') ? '1920px' :
+          (isRecording && exportState.resolution === '4k') ? '3840px' : '100%',
 
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+        height: (isRecording && exportState.resolution === '1080p') ? '1080px' :
+          (isRecording && exportState.resolution === '4k') ? '2160px' : '100%',
+
+        zIndex: 0,
+        pointerEvents: (appState === 'intro') ? 'none' : 'auto' // Let clicks pass through canvas in intro? No, canvas is background. 
+        // Actually for View to work, canvas needs to receive events.
+        // We set eventSource on Canvas to containerRef.
+      }}>
         <Canvas
-          gl={{ preserveDrawingBuffer: true, antialias: true }}
-          dpr={[1, 1.5]}
+          eventSource={containerRef as any}
+          className="canvas"
+          // optimize: no depth/stencil needed for these 2D shaders usually -> faster capture
+          gl={{ preserveDrawingBuffer: true, antialias: true, alpha: false, depth: false, stencil: false }}
+          dpr={isRecording ? 1 : [1, 1.5]}
           camera={{ position: [0, 0, 5], fov: 45 }}
         >
           <color attach="background" args={['#000']} />
-          <React.Suspense fallback={null}>
-            <Scene />
-          </React.Suspense>
+
+          {/* A. View Portals (Thumbnails will render here) */}
+          <View.Port />
+
+          {/* B. Main Scene (Only when ready) */}
+          {appState === 'ready' && (
+            <React.Suspense fallback={null}>
+              <SceneContent />
+            </React.Suspense>
+          )}
+
         </Canvas>
       </div>
 
-      {/* Only show UI overlay when NOT in embed mode */}
-      {!isEmbed && <UI />}
-    </>
+      {/* 4. LANDING PAGE OVERLAY (Moved to end for Z-Index priority) */}
+      {(appState === 'intro' || appState === 'animating') && !isEmbed && <LandingPage />}
+    </div>
   )
 }
 

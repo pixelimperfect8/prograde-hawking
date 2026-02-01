@@ -455,7 +455,7 @@ export const useStore = create<State>((set) => {
         },
         cubicGlass: {
             colors: (c1 && c2 && c3) ? [c1, c2, c3] : ['#ff00ea', '#ffce00', '#00e5ff'],
-            gridSize: 30,
+            gridSize: 80,
             speed: spd || 0.5,
             smoothness: 0.2
         },

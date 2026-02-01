@@ -67,6 +67,8 @@ function UI() {
   )
 }
 
+import PersistentLogo from './components/UI/PersistentLogo'
+
 function App() {
   // Check if we're in embed mode
   const isEmbed = new URLSearchParams(window.location.search).get('embed') === 'true'
@@ -85,6 +87,7 @@ function App() {
       {/* 2. UI LAYER (Controls, Cursor) only when Ready */}
       {!isEmbed && appState === 'ready' && <Overlay />}
       {!isEmbed && <CustomCursor />}
+      {!isEmbed && appState === 'ready' && <PersistentLogo />}
       {!isEmbed && appState === 'ready' && <UI />}
 
       {/* 3. APP CONTAINER STYLE (Resizing for Export) */}
@@ -118,11 +121,9 @@ function App() {
           <View.Port />
 
           {/* B. Main Scene (Only when ready) */}
-          {appState === 'ready' && (
-            <React.Suspense fallback={null}>
-              <SceneContent />
-            </React.Suspense>
-          )}
+          <React.Suspense fallback={null}>
+            <SceneContent />
+          </React.Suspense>
 
         </Canvas>
       </div>

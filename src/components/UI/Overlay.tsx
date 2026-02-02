@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { useStore } from '../../store'
 import SceneControl from './SceneControl'
 
@@ -20,6 +20,7 @@ export default function Overlay() {
         let animationFrameId: number
 
         const loop = () => {
+            if (isMobile) return // Disable on mobile
             // Lerp formula: current = current + (target - current) * factor
             const diff = targetScroll.current - currentScrollRef.current
 
@@ -63,15 +64,31 @@ export default function Overlay() {
         }
     }, [])
 
+    // Mobile Check
+    const [isMobile, setIsMobile] = useState(false)
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768)
+        checkMobile()
+        window.addEventListener('resize', checkMobile)
+        return () => window.removeEventListener('resize', checkMobile)
+    }, [])
+
     return (
         <div
             id="ui-panel"
             style={{
                 position: 'fixed',
-                top: 0,
+                // Mobile: Bottom / Desktop: Right
+                top: isMobile ? 'auto' : 0,
+                bottom: 0,
                 right: 0,
-                width: '320px', // Slick standard width
-                height: '100vh',
+                left: isMobile ? 0 : 'auto', // Span full width on mobile
+
+                width: isMobile ? '100vw' : '320px', // Full width vs Sidebar
+                height: isMobile ? 'auto' : '100vh', // Auto height vs Full height
+                maxHeight: isMobile ? '50vh' : '100vh', // Cap height on mobile
+
                 zIndex: 100,
 
                 // The "Glass" Background
@@ -79,24 +96,29 @@ export default function Overlay() {
                 backdropFilter: 'blur(50px)',
                 WebkitBackdropFilter: 'blur(50px)',
 
-                // The "Fade Away" Mask
-                maskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)',
+                // The "Fade Away" Mask (Vertical for desktop, Horizontal/None for mobile)
+                maskImage: isMobile ? 'none' : 'linear-gradient(to bottom, black 70%, transparent 100%)',
+                WebkitMaskImage: isMobile ? 'none' : 'linear-gradient(to bottom, black 70%, transparent 100%)',
 
                 display: 'flex',
-                flexDirection: 'column',
+                flexDirection: isMobile ? 'row' : 'column',
 
                 // Border/Separation
-                borderLeft: '1px solid rgba(255, 255, 255, 0.08)',
-                boxShadow: '-20px 0 60px rgba(0,0,0,0.5)',
-                // Hide overflow, we handle it manually
-                overflow: 'hidden',
+                borderLeft: isMobile ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
+                borderTop: isMobile ? '1px solid rgba(255, 255, 255, 0.08)' : 'none',
+                boxShadow: isMobile ? '0 -10px 40px rgba(0,0,0,0.5)' : '-20px 0 60px rgba(0,0,0,0.5)',
+
+                // Scroll handling
+                overflowY: isMobile ? 'hidden' : 'hidden', // Desktop handles manually, Mobile handles X
+                overflowX: isMobile ? 'auto' : 'hidden', // Mobile scrolls horizontally
 
                 // Entrance Animation
                 opacity: isReady ? 1 : 0,
-                transform: isReady ? 'translateX(0)' : 'translateX(100px)',
+                transform: isReady
+                    ? 'translate(0,0)'
+                    : (isMobile ? 'translateY(100px)' : 'translateX(100px)'),
                 pointerEvents: isReady ? 'auto' : 'none',
-                transition: 'opacity 1s ease 0.5s, transform 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s', // Delay slightly after explosion
+                transition: 'opacity 1s ease 0.5s, transform 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s',
             }}
             ref={containerRef}
         >
@@ -105,12 +127,18 @@ export default function Overlay() {
                 style={{
                     padding: '24px',
                     display: 'flex',
-                    flexDirection: 'column',
+                    flexDirection: isMobile ? 'row' : 'column', // Horizontal stack on mobile
                     gap: '24px',
-                    paddingBottom: '120px', // Space for fade
-                    width: '100%',
-                    willChange: 'transform', // Hardware accel
-                    boxSizing: 'border-box' // Fix clipping
+                    paddingBottom: isMobile ? '24px' : '120px',
+                    paddingRight: isMobile ? '24px' : '24px',
+
+                    width: isMobile ? 'auto' : '100%',
+                    height: isMobile ? '100%' : 'auto',
+
+                    // Kill transform on mobile (native scroll)
+                    transform: isMobile ? 'none' : undefined,
+                    willChange: isMobile ? 'auto' : 'transform',
+                    boxSizing: 'border-box'
                 }}
             >
                 <SceneControl />

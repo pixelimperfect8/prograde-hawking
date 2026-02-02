@@ -5,18 +5,26 @@ export default function CustomCursor() {
     const pos = useRef({ x: 0, y: 0 })
     const glitch = useRef({ x: 0, y: 0 })
     const [isHoveringPanel, setIsHoveringPanel] = useState(false)
+    const [isMobile, setIsMobile] = useState(false)
 
+    // Hook for mobile check
     useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768)
+        checkMobile()
+        window.addEventListener('resize', checkMobile)
+        return () => window.removeEventListener('resize', checkMobile)
+    }, [])
+
+    // Hook for mouse move
+    useEffect(() => {
+        if (isMobile) return // Don't attach listener on mobile
+
         const handleMouseMove = (e: MouseEvent) => {
             pos.current = { x: e.clientX, y: e.clientY }
 
             // Check hover state (efficient enough for mousemove)
             const target = e.target as HTMLElement
             const isOverPanel = !!target.closest('#ui-panel')
-
-            // Only trigger state update if changed to avoid re-renders (React batches, but good practice)
-            // Actually, accessing state in event listener needs ref or functional update, 
-            // but we can just invoke set state, React bails out if value is same.
             setIsHoveringPanel(isOverPanel)
 
             // Direct DOM update for instant response
@@ -29,7 +37,9 @@ export default function CustomCursor() {
 
         window.addEventListener('mousemove', handleMouseMove)
         return () => window.removeEventListener('mousemove', handleMouseMove)
-    }, [])
+    }, [isMobile])
+
+
 
     // Glitch Loop (Direct DOM)
     useEffect(() => {
@@ -58,6 +68,8 @@ export default function CustomCursor() {
         }, 100)
         return () => clearInterval(interval)
     }, [])
+
+    if (isMobile) return null
 
     return (
         <div

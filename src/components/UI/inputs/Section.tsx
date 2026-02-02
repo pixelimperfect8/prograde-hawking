@@ -7,7 +7,7 @@ export default function Section({ title, children }: { title?: string, children:
             display: 'flex',
             flexDirection: 'column',
             gap: '16px',
-            paddingBottom: '24px',
+            paddingBottom: '16px',
             borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
         }}>
             {title && (

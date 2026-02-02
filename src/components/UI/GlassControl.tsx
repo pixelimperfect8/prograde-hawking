@@ -35,7 +35,7 @@ export default function GlassControl() {
                     <Slider label="Ripple Density" value={glass.rippleDensity} min={1} max={50} step={1} onChange={(v) => setGlass({ rippleDensity: v })} />
                     <Slider label="Curvature" value={glass.curvature || 0} min={-1} max={1} step={0.01} onChange={(v) => setGlass({ curvature: v })} />
 
-                    <div style={{ marginTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+                    <div style={{ marginTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '24px' }}>
                         <SubSectionHeader title="Animation" />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
                             <Switch label="Enable" checked={glass.animate} onChange={(v) => setGlass({ animate: v })} />

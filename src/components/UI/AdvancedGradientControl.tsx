@@ -74,42 +74,46 @@ export default function AdvancedGradientControl() {
                 selectedId={selectedId}
             />
 
-            {/* Stops Header & Add Button */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.7rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>Stops</span>
-                <button
-                    onClick={addStop}
-                    style={{
-                        background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        color: '#fff',
-                        fontSize: '9px',
-                        padding: '4px 8px',
-                        borderRadius: '3px',
-                        cursor: 'pointer',
-                        textTransform: 'uppercase',
-                        letterSpacing: '1px'
-                    }}
-                >
-                    + Add
-                </button>
-            </div>
+            {/* Stops Section Group */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.7rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>Stops</span>
+                    <button
+                        onClick={addStop}
+                        style={{
+                            background: 'rgba(255,255,255,0.05)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            color: '#fff',
+                            fontSize: '9px',
+                            padding: '4px 8px',
+                            borderRadius: '3px',
+                            cursor: 'pointer',
+                            textTransform: 'uppercase',
+                            letterSpacing: '1px'
+                        }}
+                    >
+                        + Add
+                    </button>
+                </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '16px' }}>
-                {sortedStops.map((stop) => (
-                    <GradientStopRow
-                        key={stop.id}
-                        id={stop.id}
-                        color={stop.color}
-                        pos={stop.pos}
-                        opacity={stop.opacity}
-                        selected={selectedId === stop.id}
-                        onSelect={() => setSelectedId(stop.id)}
-                        onChange={(partial) => updateStop(stop.id, partial)}
-                        onRemove={() => removeStop(stop.id)}
-                        canRemove={stops.length > 2}
-                    />
-                ))}
+                {/* List */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {sortedStops.map((stop) => (
+                        <GradientStopRow
+                            key={stop.id}
+                            id={stop.id}
+                            color={stop.color}
+                            pos={stop.pos}
+                            opacity={stop.opacity}
+                            selected={selectedId === stop.id}
+                            onSelect={() => setSelectedId(stop.id)}
+                            onChange={(partial) => updateStop(stop.id, partial)}
+                            onRemove={() => removeStop(stop.id)}
+                            canRemove={stops.length > 2}
+                        />
+                    ))}
+                </div>
             </div>
 
             <Slider

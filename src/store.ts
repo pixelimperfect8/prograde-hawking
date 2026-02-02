@@ -71,7 +71,21 @@ export const TRENDY_PALETTES = [
     ['#9D50BB', '#6E48AA', '#F3F9A7', '#CAC531'],
 ]
 
+interface SavedCreation {
+    id: string
+    name: string
+    date: number
+    data: Partial<State> // Snapshot of visual state
+}
+
 interface State {
+    presets: {
+        creations: SavedCreation[]
+    }
+    saveCreation: (name: string) => void
+    removeCreation: (id: string) => void
+    loadCreation: (id: string) => void
+
     gradient: {
         color1: string
         color2: string
@@ -574,6 +588,54 @@ export const useStore = create<State>((set) => {
                 }
                 return {}
             })
-        }
+        },
+        presets: {
+            creations: (() => {
+                try {
+                    const saved = localStorage.getItem('prograde_creations')
+                    return saved ? JSON.parse(saved) : []
+                } catch { return [] }
+            })()
+        },
+        saveCreation: (name) => set((state) => {
+            const newCreation: SavedCreation = {
+                id: crypto.randomUUID(),
+                name,
+                date: Date.now(),
+                data: {
+                    gradient: state.gradient,
+                    glass: state.glass,
+                    lava: state.lava,
+                    blob: state.blob,
+                    glow: state.glow,
+                    orbs: state.orbs,
+                    fluid: state.fluid,
+                    postfx: state.postfx,
+                    scene: state.scene,
+                    advancedGradient: state.advancedGradient,
+                    liquidMetal: state.liquidMetal,
+                    cubicGlass: state.cubicGlass,
+                    flowGradient: state.flowGradient,
+                    intelligenceGlow: state.intelligenceGlow,
+                    threeDGradient: state.threeDGradient,
+                    overlay: state.overlay,
+                    ripples: state.ripples
+                }
+            }
+            const updated = [newCreation, ...state.presets.creations]
+            localStorage.setItem('prograde_creations', JSON.stringify(updated))
+            return { presets: { creations: updated } }
+        }),
+        removeCreation: (id) => set((state) => {
+            const updated = state.presets.creations.filter(c => c.id !== id)
+            localStorage.setItem('prograde_creations', JSON.stringify(updated))
+            return { presets: { creations: updated } }
+        }),
+        loadCreation: (id) => set((state) => {
+            const creation = state.presets.creations.find(c => c.id === id)
+            if (!creation) return {}
+            // Merge all data slices
+            return { ...creation.data }
+        })
     }
 })

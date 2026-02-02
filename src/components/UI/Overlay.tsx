@@ -154,7 +154,7 @@ export default function Overlay() {
                         bottom: 0,
                         left: 0,
                         width: '100vw',
-                        height: '75vh',
+                        height: '35vh', // Reduced from 75vh (approx 30-35% of screen)
                         zIndex: 100,
                         background: 'rgba(10, 10, 10, 0.9)',
                         backdropFilter: 'blur(40px)',

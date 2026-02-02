@@ -126,7 +126,7 @@ export default function Overlay() {
                             padding: '24px',
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: '32px', // Increased hierarchy (was 24px)
+                            gap: '0px', // Spacing now handled by Section top/bottom padding
                             paddingBottom: '120px',
                             width: '100%',
                             willChange: 'transform',

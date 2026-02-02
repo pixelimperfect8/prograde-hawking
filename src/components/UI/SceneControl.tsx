@@ -33,7 +33,7 @@ export default function SceneControl() {
             {showExport && <ExportPanel onClose={() => setShowExport(false)} />}
 
             {/* 1. SCENE CONTROLS (Mode + Export) */}
-            <Section title="Scene Controls">
+            <Section title="Scene Controls" isFirst={true}>
                 <Select
                     label="Mode"
                     value={scene.bgMode}

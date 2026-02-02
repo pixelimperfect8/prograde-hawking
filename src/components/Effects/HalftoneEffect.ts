@@ -9,6 +9,7 @@ uniform float uScale;
 uniform float uMonochrome; // 0.0: Color, 1.0: B&W/Tinted
 uniform float uRotate;
 uniform vec3 uColor;
+uniform vec2 uAspect; // Replaces implicit 'resolution'
 
 float luminance(vec3 color) {
     return dot(color, vec3(0.299, 0.587, 0.114));
@@ -24,15 +25,17 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     vec3 color = inputColor.rgb;
     float alpha = inputColor.a;
 
-    // Aspect corrected UVs for square grid
-    vec2 aspect = vec2(resolution.x / resolution.y, 1.0);
-    vec2 st = uv * aspect;
+    // Aspect corrected UVs
+    // uAspect.x is aspect ratio, uAspect.y is usually 1.0, or passed as { aspect, 1.0 }
+    vec2 st = uv * uAspect;
     
     // Rotate UVs
     if (uRotate != 0.0) {
-        st -= aspect * 0.5;
+        // Center rotation correction
+        vec2 center = 0.5 * uAspect;
+        st -= center;
         st = rotate2d(radians(uRotate)) * st;
-        st += aspect * 0.5;
+        st += center;
     }
 
     // Grid cells
@@ -69,8 +72,6 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     
     if (uMonochrome > 0.5) {
         // Monochrome: Pattern is intensity, tinted by uColor
-        // If pattern is 1, we show uColor. If 0, we show Black (or void).
-        // Let's assume black background for now.
         finalColor = uColor * pattern; 
     } else {
         // Color: Mask original color with pattern
@@ -88,7 +89,8 @@ export class HalftoneEffect extends Effect {
         scale = 1.0,
         monochrome = false,
         color = '#ffffff',
-        rotate = 0
+        rotate = 0,
+        aspect = 1.77
     }: any = {}) {
         let shapeVal = 0;
         if (shape === 'Square') shapeVal = 1.0;
@@ -101,8 +103,11 @@ export class HalftoneEffect extends Effect {
                 ['uScale', new Uniform(scale)],
                 ['uMonochrome', new Uniform(monochrome ? 1.0 : 0.0)],
                 ['uColor', new Uniform(new Color(color))],
-                ['uRotate', new Uniform(rotate)]
+                ['uRotate', new Uniform(rotate)],
+                ['uAspect', new Uniform(new THREE.Vector2(aspect, 1.0))] // Fix: Use Vector2
             ])
         })
     }
 }
+// Fix: Import THREE for Vector2 used in Map
+import * as THREE from 'three'

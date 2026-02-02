@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { useStore } from '../../store'
 import SceneControl from './SceneControl'
 
@@ -65,7 +66,9 @@ export default function Overlay() {
     }, [])
 
     // Mobile Check
+    // Mobile Drawer State
     const [isMobile, setIsMobile] = useState(false)
+    const [isOpen, setIsOpen] = useState(true)
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -74,75 +77,144 @@ export default function Overlay() {
         return () => window.removeEventListener('resize', checkMobile)
     }, [])
 
+    // Drawer Animations
+    const drawerVariants = {
+        open: { y: 0 },
+        closed: { y: '85%' }
+    }
+
+    const onDragEnd = (_: any, info: any) => {
+        const offset = info.offset.y
+        const velocity = info.velocity.y
+        if (offset > 100 || velocity > 200) setIsOpen(false)
+        else if (offset < -100 || velocity < -200) setIsOpen(true)
+    }
+
     return (
-        <div
-            id="ui-panel"
-            style={{
-                position: 'fixed',
-                // Mobile: Bottom / Desktop: Right
-                top: isMobile ? 'auto' : 0,
-                bottom: 0,
-                right: 0,
-                left: isMobile ? 0 : 'auto', // Span full width on mobile
+        <>
+            {/* Desktop Overlay */}
+            {!isMobile && (
+                <div
+                    id="ui-panel"
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        right: 0,
+                        width: '320px',
+                        height: '100vh',
+                        zIndex: 100,
+                        background: 'rgba(5, 5, 5, 0.65)',
+                        backdropFilter: 'blur(50px)',
+                        WebkitBackdropFilter: 'blur(50px)',
+                        maskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        borderLeft: '1px solid rgba(255, 255, 255, 0.08)',
+                        boxShadow: '-20px 0 60px rgba(0,0,0,0.5)',
+                        overflow: 'hidden',
+                        opacity: isReady ? 1 : 0,
+                        transform: isReady ? 'translateX(0)' : 'translateX(100px)',
+                        pointerEvents: isReady ? 'auto' : 'none',
+                        transition: 'opacity 1s ease 0.5s, transform 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s',
+                    }}
+                    ref={containerRef}
+                >
+                    <div
+                        ref={contentRef}
+                        style={{
+                            padding: '24px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '24px',
+                            paddingBottom: '120px',
+                            width: '100%',
+                            willChange: 'transform',
+                            boxSizing: 'border-box'
+                        }}
+                    >
+                        <SceneControl />
+                    </div>
+                </div>
+            )}
 
-                width: isMobile ? '100vw' : '320px', // Full width vs Sidebar
-                height: isMobile ? 'auto' : '100vh', // Auto height vs Full height
-                maxHeight: isMobile ? '50vh' : '100vh', // Cap height on mobile
+            {/* Mobile Drawer */}
+            {isMobile && (
+                <motion.div
+                    initial="open"
+                    animate={isOpen ? 'open' : 'closed'}
+                    variants={drawerVariants}
+                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    drag="y"
+                    dragConstraints={{ top: 0, bottom: 0 }}
+                    dragElastic={0.2}
+                    onDragEnd={onDragEnd}
+                    style={{
+                        position: 'fixed',
+                        bottom: 0,
+                        left: 0,
+                        width: '100vw',
+                        height: '75vh',
+                        zIndex: 100,
+                        background: 'rgba(10, 10, 10, 0.9)',
+                        backdropFilter: 'blur(40px)',
+                        WebkitBackdropFilter: 'blur(40px)',
+                        borderTopLeftRadius: '24px',
+                        borderTopRightRadius: '24px',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.15)',
+                        boxShadow: '0 -10px 40px rgba(0,0,0,0.6)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden',
+                        opacity: isReady ? 1 : 0,
+                        pointerEvents: isReady ? 'auto' : 'none',
+                        touchAction: 'none' // Important for drag
+                    }}
+                >
+                    {/* Drag Handle Area */}
+                    <div
+                        style={{
+                            width: '100%',
+                            height: '40px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            flexShrink: 0
+                        }}
+                    >
+                        <div style={{ width: '40px', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.3)' }} />
+                    </div>
 
-                zIndex: 100,
-
-                // The "Glass" Background
-                background: 'rgba(5, 5, 5, 0.65)',
-                backdropFilter: 'blur(50px)',
-                WebkitBackdropFilter: 'blur(50px)',
-
-                // The "Fade Away" Mask (Vertical for desktop, Horizontal/None for mobile)
-                maskImage: isMobile ? 'none' : 'linear-gradient(to bottom, black 70%, transparent 100%)',
-                WebkitMaskImage: isMobile ? 'none' : 'linear-gradient(to bottom, black 70%, transparent 100%)',
-
-                display: 'flex',
-                flexDirection: isMobile ? 'row' : 'column',
-
-                // Border/Separation
-                borderLeft: isMobile ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
-                borderTop: isMobile ? '1px solid rgba(255, 255, 255, 0.08)' : 'none',
-                boxShadow: isMobile ? '0 -10px 40px rgba(0,0,0,0.5)' : '-20px 0 60px rgba(0,0,0,0.5)',
-
-                // Scroll handling
-                overflowY: isMobile ? 'hidden' : 'hidden', // Desktop handles manually, Mobile handles X
-                overflowX: isMobile ? 'auto' : 'hidden', // Mobile scrolls horizontally
-
-                // Entrance Animation
-                opacity: isReady ? 1 : 0,
-                transform: isReady
-                    ? 'translate(0,0)'
-                    : (isMobile ? 'translateY(100px)' : 'translateX(100px)'),
-                pointerEvents: isReady ? 'auto' : 'none',
-                transition: 'opacity 1s ease 0.5s, transform 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s',
-            }}
-            ref={containerRef}
-        >
-            <div
-                ref={contentRef}
-                style={{
-                    padding: '24px',
-                    display: 'flex',
-                    flexDirection: isMobile ? 'row' : 'column', // Horizontal stack on mobile
-                    gap: '24px',
-                    paddingBottom: isMobile ? '24px' : '120px',
-                    paddingRight: isMobile ? '24px' : '24px',
-
-                    width: isMobile ? 'auto' : '100%',
-                    height: isMobile ? '100%' : 'auto',
-
-                    // Kill transform on mobile (native scroll)
-                    transform: isMobile ? 'none' : undefined,
-                    willChange: isMobile ? 'auto' : 'transform',
-                    boxSizing: 'border-box'
-                }}
-            >
-                <SceneControl />
-            </div>
-        </div>
+                    {/* Content Area */}
+                    <div
+                        style={{
+                            padding: '24px',
+                            paddingTop: '0',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '24px',
+                            overflowY: 'auto',
+                            flex: 1,
+                            paddingBottom: 'safe-area-inset-bottom',
+                            // Allow scroll inside drag container by stopping propagation?
+                            // No, framer motion handles this if we use dragControls or set touchAction correctly?
+                            // Actually 'touchAction: none' on parent disables browser scroll.
+                            // We need native scroll for content.
+                            // Solution: touchAction: 'pan-y' on content?
+                        }}
+                        onPointerDown={(e) => e.stopPropagation()} // Stop drag initiation on content
+                    >
+                        <style>{`
+                            .drawer-content { touch-action: pan-y; }
+                        `}</style>
+                        <div className="drawer-content">
+                            <SceneControl />
+                        </div>
+                        {/* Spacer for bottom safe area */}
+                        <div style={{ height: '80px', flexShrink: 0 }} />
+                    </div>
+                </motion.div>
+            )}
+        </>
     )
 }

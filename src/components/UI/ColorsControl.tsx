@@ -146,7 +146,7 @@ export default function ColorsControl() {
                         }}
                         style={{
                             width: '100%',
-                            marginBottom: '8px',
+                            // marginBottom: '8px',
                             background: 'transparent',
                             border: '1px dashed rgba(255,255,255,0.2)',
                             color: 'rgba(255,255,255,0.6)',
@@ -188,7 +188,7 @@ export default function ColorsControl() {
                 onClick={useStore.getState().randomizeColors}
                 style={{
                     width: '100%',
-                    marginBottom: '16px',
+                    // marginBottom: '16px', // Removed redundant margin
                     background: 'rgba(255,255,255,0.05)',
                     border: '1px solid rgba(255,255,255,0.1)',
                     color: '#fff',

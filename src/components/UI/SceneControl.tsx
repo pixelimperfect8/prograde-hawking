@@ -83,7 +83,7 @@ export default function SceneControl() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '8px',
-                        marginTop: '16px'
+                        // marginTop: '16px' // Removed redundant margin handled by parent gap
                     }}
                     onMouseEnter={(e) => {
                         e.currentTarget.style.background = 'rgba(0, 153, 255, 0.2)'

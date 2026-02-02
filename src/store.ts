@@ -336,7 +336,7 @@ export const useStore = create<State>((set) => {
             loop: getParam('loop', false)
         },
         glass: {
-            enabled: getParam('glass', true),
+            enabled: getParam('glass', false), // Universal Off by default
             transmission: 1.0,
             thickness: 0.50,
             roughness: 0.39,
@@ -416,10 +416,10 @@ export const useStore = create<State>((set) => {
             complexity: 1.0
         },
         postfx: {
-            dither: true,
-            ditherOpacity: 0.05, // Reduced from 0.76 to 0.05 to prevent visible "dots"
-            grain: getParam('grain', 0.0), // Hydrate grain!
-            bloom: true,
+            dither: false, // Universal Off by default
+            ditherOpacity: 0.05,
+            grain: getParam('grain', 0.0),
+            bloom: false, // Universal Off by default
             bloomIntensity: 0.76,
             bloomThreshold: 0.20,
             bloomSmoothing: 0.9,

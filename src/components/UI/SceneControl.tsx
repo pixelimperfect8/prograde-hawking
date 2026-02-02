@@ -25,7 +25,7 @@ import FlowGradientControl from './FlowGradientControl'
 import IntelligenceGlowControl from './IntelligenceGlowControl'
 
 export default function SceneControl() {
-    const { scene, setScene, setGlass } = useStore()
+    const { scene, setScene } = useStore()
     const [showExport, setShowExport] = useState(false)
 
     return (
@@ -40,26 +40,6 @@ export default function SceneControl() {
                     options={['Gradient', 'Solid + Glow', 'Lava Lamp', 'Blob Stack', 'Orbs', 'Acid Trip', 'Ripples', 'Linear Gradient', 'Liquid Metal', 'Cubic', 'Flow Gradient', 'Intelligence Glow']}
                     onChange={(val) => {
                         setScene({ bgMode: val as any })
-
-                        // Auto-toggle Glass logic
-                        const disableGlassModes = ['Acid Trip', 'Liquid Metal', 'Cubic', 'Flow Gradient']
-                        const enableGlassModes = ['Solid + Glow']
-
-                        if (disableGlassModes.includes(val)) {
-                            setGlass({ enabled: false })
-                        }
-                        if (enableGlassModes.includes(val)) {
-                            setGlass({ enabled: true })
-                        }
-
-                        // Default Glass Tunings per mode
-                        if (val === 'Intelligence Glow') {
-                            setGlass({
-                                enabled: true,
-                                roughness: 0.72,
-                                rippleDensity: 3.00
-                            })
-                        }
                     }}
                 />
 

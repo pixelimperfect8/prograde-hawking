@@ -326,7 +326,7 @@ export default function LandingPage() {
         setTimeout(() => {
             // Ensure default mode if needed, or just let store persist
             setScene({ bgMode: 'Acid Trip' })
-            setGlass({ enabled: true }) // Reset to True
+            // setGlass({ enabled: true }) // Removed to respect universal persistence
             setAppState('ready')
         }, 1500)
     }

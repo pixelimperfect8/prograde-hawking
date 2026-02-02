@@ -65,6 +65,45 @@ export default function EffectsControl() {
                             <Slider label="Scale" value={postfx.halftoneScale} min={0.1} max={2.0} step={0.05} onChange={(v) => setPostFX({ halftoneScale: v })} />
                             <Slider label="Rotate" value={postfx.halftoneRotate} min={-180} max={180} step={5} onChange={(v) => setPostFX({ halftoneRotate: v })} />
                             <Switch label="Monochrome" checked={postfx.halftoneMonochrome} onChange={(v) => setPostFX({ halftoneMonochrome: v })} />
+
+                            {postfx.halftoneMonochrome && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ color: '#888', fontSize: '11px', fontFamily: 'Inter, sans-serif' }}>Color</span>
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        <input
+                                            type="color"
+                                            value={postfx.halftoneColor || '#ffffff'}
+                                            onChange={(e) => setPostFX({ halftoneColor: e.target.value })}
+                                            style={{
+                                                width: '24px',
+                                                height: '24px',
+                                                padding: 0,
+                                                border: 'none',
+                                                borderRadius: '50%',
+                                                overflow: 'hidden',
+                                                cursor: 'pointer',
+                                                background: 'none'
+                                            }}
+                                        />
+                                        <input
+                                            type="text"
+                                            value={postfx.halftoneColor || '#ffffff'}
+                                            onChange={(e) => setPostFX({ halftoneColor: e.target.value })}
+                                            style={{
+                                                background: 'transparent',
+                                                border: '1px solid rgba(255,255,255,0.1)',
+                                                borderRadius: '3px',
+                                                color: '#ccc',
+                                                fontFamily: 'monospace',
+                                                fontSize: '10px',
+                                                padding: '4px',
+                                                width: '60px',
+                                                textAlign: 'center'
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </>
                     )}
                 </div>

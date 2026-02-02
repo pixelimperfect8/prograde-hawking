@@ -1,13 +1,14 @@
 
 import { Effect } from 'postprocessing'
-import { Uniform } from 'three'
+import { Uniform, Color } from 'three'
 
 const fragmentShader = `
 uniform float uShape; // 0: Round, 1: Square, 2: Line
 uniform float uResolution;
 uniform float uScale;
-uniform float uMonochrome; // 0.0: Color, 1.0: B&W
+uniform float uMonochrome; // 0.0: Color, 1.0: B&W/Tinted
 uniform float uRotate;
+uniform vec3 uColor;
 
 float luminance(vec3 color) {
     return dot(color, vec3(0.299, 0.587, 0.114));
@@ -38,9 +39,6 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     vec2 gridUV = fract(st * uResolution); // 0-1 within cell
     vec2 cellID = floor(st * uResolution); // Integer ID of cell
     
-    // Center of cell 
-    // We sample specific points for stability if needed, but per-pixel is standard for this effect style
-    
     float luma = luminance(color);
     
     // Distance from center of this cell
@@ -70,10 +68,12 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     vec3 finalColor = vec3(0.0);
     
     if (uMonochrome > 0.5) {
-        // Monochrome: Pattern is intensity
-        finalColor = vec3(pattern); 
+        // Monochrome: Pattern is intensity, tinted by uColor
+        // If pattern is 1, we show uColor. If 0, we show Black (or void).
+        // Let's assume black background for now.
+        finalColor = uColor * pattern; 
     } else {
-        // Color: Mask original color
+        // Color: Mask original color with pattern
         finalColor = color * pattern; 
     }
 
@@ -87,6 +87,7 @@ export class HalftoneEffect extends Effect {
         resolution = 100,
         scale = 1.0,
         monochrome = false,
+        color = '#ffffff',
         rotate = 0
     }: any = {}) {
         let shapeVal = 0;
@@ -99,6 +100,7 @@ export class HalftoneEffect extends Effect {
                 ['uResolution', new Uniform(resolution)],
                 ['uScale', new Uniform(scale)],
                 ['uMonochrome', new Uniform(monochrome ? 1.0 : 0.0)],
+                ['uColor', new Uniform(new Color(color))],
                 ['uRotate', new Uniform(rotate)]
             ])
         })

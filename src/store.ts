@@ -217,6 +217,12 @@ interface State {
         filmScratches: number
         filmDirt: number
         grain: number
+        halftone: boolean
+        halftoneShape: 'Round' | 'Square' | 'Line'
+        halftoneResolution: number
+        halftoneScale: number
+        halftoneMonochrome: boolean
+        halftoneRotate: number
     }
     flowGradient: {
         color1: string
@@ -444,7 +450,13 @@ export const useStore = create<State>((set) => {
             film: false,
             filmSepia: 0.5,
             filmScratches: 0.5,
-            filmDirt: 0.5
+            filmDirt: 0.5,
+            halftone: false,
+            halftoneShape: 'Round',
+            halftoneResolution: 120,
+            halftoneScale: 1.0,
+            halftoneMonochrome: false,
+            halftoneRotate: 0.0
         },
         scene: {
             bgMode: urlMode,

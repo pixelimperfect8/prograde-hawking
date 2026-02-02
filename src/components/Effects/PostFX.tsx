@@ -5,6 +5,7 @@ import { useStore } from '../../store'
 import * as THREE from 'three'
 import { VintageFilm } from './VintageFilm'
 import { StaticGrain } from './StaticGrain'
+import { Halftone } from './Halftone'
 
 export default function PostFX() {
     const { postfx } = useStore()
@@ -76,6 +77,17 @@ export default function PostFX() {
                 />
             ) : <></>}
 
+            {/* Halftone */}
+            {postfx.halftone ? (
+                <Halftone
+                    shape={postfx.halftoneShape}
+                    resolution={postfx.halftoneResolution}
+                    scale={postfx.halftoneScale}
+                    monochrome={postfx.halftoneMonochrome}
+                    rotate={postfx.halftoneRotate}
+                />
+            ) : <></>}
+
             {/* CRT */}
             {postfx.crt ? (
                 <>
@@ -99,3 +111,4 @@ export default function PostFX() {
         </EffectComposer>
     )
 }
+

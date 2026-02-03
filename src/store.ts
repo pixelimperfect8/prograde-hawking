@@ -223,6 +223,7 @@ interface State {
         halftoneScale: number
         halftoneMonochrome: boolean
         halftoneColor: string
+        halftoneBgColor: string
         halftoneRotate: number
     }
     flowGradient: {
@@ -458,6 +459,7 @@ export const useStore = create<State>((set) => {
             halftoneScale: 1.0,
             halftoneMonochrome: false,
             halftoneColor: '#ffffff',
+            halftoneBgColor: '#000000',
             halftoneRotate: 0.0
         },
         scene: {

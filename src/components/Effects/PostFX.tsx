@@ -85,6 +85,7 @@ export default function PostFX() {
                     scale={postfx.halftoneScale}
                     monochrome={postfx.halftoneMonochrome}
                     color={postfx.halftoneColor}
+                    bgColor={postfx.halftoneBgColor}
                     rotate={postfx.halftoneRotate}
                 />
             ) : <></>}

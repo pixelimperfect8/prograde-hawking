@@ -9,6 +9,7 @@ export const Halftone = forwardRef(({
     scale = 1.0,
     monochrome = false,
     color = '#ffffff',
+    bgColor = '#000000',
     rotate = 0.0
 }: any, ref) => {
     const { size } = useThree()
@@ -20,13 +21,10 @@ export const Halftone = forwardRef(({
         scale,
         monochrome,
         color,
+        bgColor,
         rotate,
         aspect
-    }), [shape, resolution, scale, monochrome, color, rotate, aspect])
-
-    // Reactive update for aspect ratio resize without full re-construction?
-    // Actually useMemo handles re-construction if aspect changes.
-    // Ideally we update uniform, but reconstruction is safe for now.
+    }), [shape, resolution, scale, monochrome, color, bgColor, rotate, aspect])
 
     return <primitive object={effect} ref={ref} dispose={null} />
 })

@@ -1,6 +1,7 @@
 
 import { Effect } from 'postprocessing'
 import { Uniform, Color } from 'three'
+import * as THREE from 'three'
 
 const fragmentShader = `
 uniform float uShape; // 0: Round, 1: Square, 2: Line
@@ -9,7 +10,8 @@ uniform float uScale;
 uniform float uMonochrome; // 0.0: Color, 1.0: B&W/Tinted
 uniform float uRotate;
 uniform vec3 uColor;
-uniform vec2 uAspect; // Replaces implicit 'resolution'
+uniform vec3 uBgColor;
+uniform vec2 uAspect; 
 
 float luminance(vec3 color) {
     return dot(color, vec3(0.299, 0.587, 0.114));
@@ -26,12 +28,10 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     float alpha = inputColor.a;
 
     // Aspect corrected UVs
-    // uAspect.x is aspect ratio, uAspect.y is usually 1.0, or passed as { aspect, 1.0 }
     vec2 st = uv * uAspect;
     
     // Rotate UVs
     if (uRotate != 0.0) {
-        // Center rotation correction
         vec2 center = 0.5 * uAspect;
         st -= center;
         st = rotate2d(radians(uRotate)) * st;
@@ -47,7 +47,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     // Distance from center of this cell
     vec2 dist = gridUV - 0.5;
     
-    float radius = sqrt(luma) * 0.5 * uScale; // Max radius 0.5 (touching edges)
+    float radius = sqrt(luma) * 0.5 * uScale; 
     float pattern = 0.0;
 
     // SHAPE LOGIC
@@ -56,12 +56,10 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
              pattern = 1.0;
         }
     } else if (uShape < 1.5) { // SQUARE
-        // Radius acts as half-size
         if (abs(dist.x) < radius && abs(dist.y) < radius) {
             pattern = 1.0;
         }
     } else { // LINE
-        // Lines based on Rotated Y
         float lineDist = abs(gridUV.y - 0.5);
         if (lineDist < radius) {
             pattern = 1.0;
@@ -71,11 +69,11 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     vec3 finalColor = vec3(0.0);
     
     if (uMonochrome > 0.5) {
-        // Monochrome: Pattern is intensity, tinted by uColor
-        finalColor = uColor * pattern; 
+        // Monochrome: Pattern is 1 (Dot) -> uColor, 0 (Gap) -> uBgColor
+        finalColor = mix(uBgColor, uColor, pattern);
     } else {
-        // Color: Mask original color with pattern
-        finalColor = color * pattern; 
+        // Color: Pattern is 1 -> Original Color, 0 -> uBgColor
+        finalColor = mix(uBgColor, color, pattern);
     }
 
     outputColor = vec4(finalColor, alpha);
@@ -89,6 +87,7 @@ export class HalftoneEffect extends Effect {
         scale = 1.0,
         monochrome = false,
         color = '#ffffff',
+        bgColor = '#000000',
         rotate = 0,
         aspect = 1.77
     }: any = {}) {
@@ -103,11 +102,10 @@ export class HalftoneEffect extends Effect {
                 ['uScale', new Uniform(scale)],
                 ['uMonochrome', new Uniform(monochrome ? 1.0 : 0.0)],
                 ['uColor', new Uniform(new Color(color))],
+                ['uBgColor', new Uniform(new Color(bgColor))],
                 ['uRotate', new Uniform(rotate)],
-                ['uAspect', new Uniform(new THREE.Vector2(aspect, 1.0))] // Fix: Use Vector2
+                ['uAspect', new Uniform(new THREE.Vector2(aspect, 1.0))]
             ])
         })
     }
 }
-// Fix: Import THREE for Vector2 used in Map
-import * as THREE from 'three'

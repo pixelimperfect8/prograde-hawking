@@ -225,6 +225,11 @@ interface State {
         halftoneColor: string
         halftoneBgColor: string
         halftoneRotate: number
+        dataStream: boolean
+        dataStreamSpeed: number
+        dataStreamDensity: number
+        dataStreamColor: string
+        dataStreamOpacity: number
     }
     flowGradient: {
         color1: string
@@ -460,7 +465,12 @@ export const useStore = create<State>((set) => {
             halftoneMonochrome: false,
             halftoneColor: '#ffffff',
             halftoneBgColor: '#000000',
-            halftoneRotate: 0.0
+            halftoneRotate: 0.0,
+            dataStream: false,
+            dataStreamSpeed: 0.5,
+            dataStreamDensity: 1.0,
+            dataStreamColor: '#00ff00',
+            dataStreamOpacity: 0.8
         },
         scene: {
             bgMode: urlMode,

@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { VintageFilm } from './VintageFilm'
 import { StaticGrain } from './StaticGrain'
 import { Halftone } from './Halftone'
+import { DataStream } from './DataStream'
 
 export default function PostFX() {
     const { postfx } = useStore()
@@ -87,6 +88,16 @@ export default function PostFX() {
                     color={postfx.halftoneColor}
                     bgColor={postfx.halftoneBgColor}
                     rotate={postfx.halftoneRotate}
+                />
+            ) : <></>}
+
+            {/* Data Stream */}
+            {postfx.dataStream ? (
+                <DataStream
+                    speed={postfx.dataStreamSpeed}
+                    density={postfx.dataStreamDensity}
+                    color={postfx.dataStreamColor}
+                    opacity={postfx.dataStreamOpacity}
                 />
             ) : <></>}
 

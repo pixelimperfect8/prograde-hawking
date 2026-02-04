@@ -146,6 +146,41 @@ export default function EffectsControl() {
                     )}
                 </div>
             </Section>
+
+            {/* Data Stream */}
+            <Section title="Data Stream">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <Switch label="Enable" checked={postfx.dataStream} onChange={(v) => setPostFX({ dataStream: v })} />
+                    {postfx.dataStream && (
+                        <>
+                            <Slider label="Speed" value={postfx.dataStreamSpeed} min={0} max={2.0} step={0.1} onChange={(v) => setPostFX({ dataStreamSpeed: v })} />
+                            <Slider label="Density" value={postfx.dataStreamDensity} min={0.2} max={3.0} step={0.1} onChange={(v) => setPostFX({ dataStreamDensity: v })} />
+                            <Slider label="Opacity" value={postfx.dataStreamOpacity} min={0} max={1} step={0.05} onChange={(v) => setPostFX({ dataStreamOpacity: v })} />
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ color: '#888', fontSize: '11px', fontFamily: 'Inter, sans-serif' }}>Color</span>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <input
+                                        type="color"
+                                        value={postfx.dataStreamColor || '#00ff00'}
+                                        onChange={(e) => setPostFX({ dataStreamColor: e.target.value })}
+                                        style={{
+                                            width: '24px',
+                                            height: '24px',
+                                            padding: 0,
+                                            border: 'none',
+                                            borderRadius: '50%',
+                                            overflow: 'hidden',
+                                            cursor: 'pointer',
+                                            background: 'none'
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </Section>
         </>
     )
 }

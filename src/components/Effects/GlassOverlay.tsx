@@ -52,7 +52,7 @@ function generateFlutedNormalMap(
     curvature: number,
     fluidity: number
 ) {
-    const res = 1024
+    const res = 512 // Reduced from 1024 for performance
     const canvas = document.createElement('canvas')
     canvas.width = res
     canvas.height = res
@@ -71,120 +71,100 @@ function generateFlutedNormalMap(
     // Pre-calculate noise scale for fluidity
     const noiseScale = 0.005 // Control how "large" the liquid ripples are
 
-    // SSAA Loop (4 samples per pixel)
+    // Standard Loop (No SSAA for performance with Noise)
     for (let y = 0; y < res; y++) {
         for (let x = 0; x < res; x++) {
-            let totalR = 0
-            let totalG = 0
+            let sampleX = x
+            let sampleY = y
 
-            const offsets = [0.25, 0.75]
-            for (let dy of offsets) {
-                for (let dx of offsets) {
-                    let sampleX = x + dx
-                    let sampleY = y + dy
+            // --- Domain Warping (Fluid Glass Effect) ---
+            if (fluidity > 0) {
+                const warpStrength = fluidity * 30.0
+                // Optimize: simple noise sampling
+                const nX = noise2D(sampleX * noiseScale, sampleY * noiseScale)
+                const nY = noise2D(sampleX * noiseScale + 1000, sampleY * noiseScale + 1000)
 
-                    // --- Domain Warping (Fluid Glass Effect) ---
-                    if (fluidity > 0) {
-                        // Use noise to displace the coordinate lookup
-                        // We warp X by noise(x,y) and Y by noise(x+offset, y+offset)
-                        // Fluidity controls the *strength* of this displacement
-                        const warpStrength = fluidity * 50.0 // Max 50px displacement
-                        const nX = noise2D(sampleX * noiseScale, sampleY * noiseScale)
-                        const nY = noise2D(sampleX * noiseScale + 1000, sampleY * noiseScale + 1000)
-
-                        sampleX += nX * warpStrength
-                        sampleY += nY * warpStrength
-                    }
-
-                    let normalX = 0
-                    let normalY = 0
-
-                    if (patternType === 'Tiles') {
-                        // Glass Tiles Logic: Multi-directional Tilt
-                        const u = sampleX / res * density
-                        const v = sampleY / res * density
-                        const cellX = Math.floor(u)
-                        const cellY = Math.floor(v)
-
-                        // Random Seed per cell (Hash function)
-                        const seed = Math.abs(Math.sin(cellX * 12.9898 + cellY * 78.233) * 43758.5453)
-                        const rand = seed - Math.floor(seed)
-
-                        // Random Tilt Angle (0 to 2PI)
-                        const tiltDir = rand * Math.PI * 2
-
-                        // Tilt Strength (Flat hard slope)
-                        const tiltStrength = 1.0
-
-                        // Calculate vector
-                        normalX = Math.cos(tiltDir) * tiltStrength
-                        normalY = Math.sin(tiltDir) * tiltStrength
-
-                    } else {
-                        // Standard 1D Patterns (Linear, Hex, etc) - calculated as Phase
-                        let phase = 0
-
-                        if (patternType === 'Kaleidoscope') {
-                            const dxk = sampleX - cx
-                            const dyk = sampleY - cy
-                            const dist = Math.sqrt(dxk * dxk + dyk * dyk) / cx
-                            const waveOffset = Math.sin(dist * Math.PI * 2 * waveFreq) * waveAmp
-                            let angleRad = Math.atan2(dyk, dxk)
-                            const effectiveAngle = angleRad + waveOffset
-                            const sectorSize = (Math.PI * 2) / segments
-                            phase = (Math.abs((effectiveAngle % sectorSize) - sectorSize / 2)) * density * 3.0
-                        } else if (patternType === 'Chevrons') {
-                            const u = sampleX / res * density
-                            const v = sampleY / res * density
-                            const uv = { x: u % 1, y: v % 1 }
-                            const xSym = Math.abs(uv.x - 0.5)
-                            const d = Math.abs(uv.y - xSym)
-                            phase = d * 4.0
-                        } else if (patternType === 'Diagonal') {
-                            const u = sampleX / res
-                            const v = sampleY / res
-                            const rotU = (u + v) * density
-                            phase = rotU
-                        } else if (patternType === 'Hexagon') {
-                            const u = sampleX / res * density
-                            const v = sampleY / res * density
-                            const r = { x: 1, y: 1.73 }
-                            const h = { x: 0.5, y: 0.866 }
-                            const a = { x: (u % r.x) - h.x, y: (v % r.y) - h.y }
-                            const b = { x: ((u - h.x) % r.x) - h.x, y: ((v - h.y) % r.y) - h.y }
-                            const lenA = Math.sqrt(a.x * a.x + a.y * a.y)
-                            const lenB = Math.sqrt(b.x * b.x + b.y * b.y)
-                            const dist = lenA < lenB ? lenA : lenB
-                            phase = dist * 2.0
-                        } else {
-                            // Linear
-                            const v = sampleY / res
-                            const safeFreq = Math.round(waveFreq)
-                            const waveOffset = Math.sin(v * Math.PI * 2 * safeFreq) * waveAmp
-                            const bell = (1 - Math.cos(v * Math.PI * 2)) * 0.5
-                            const curveOffset = bell * curvature
-                            const xNorm = sampleX / res
-                            phase = (xNorm + waveOffset + curveOffset) * density
-                        }
-
-                        // Apply Profile to get 1D scalar
-                        const val = applyRidgeProfile(phase, ridgeProfile)
-                        normalX = val
-                        normalY = 0 // Flat in Y for standard patterns
-                    }
-
-                    // Accumulate (Map -1..1 to 0..1 for storage)
-                    totalR += (normalX * 0.5 + 0.5)
-                    totalG += (normalY * 0.5 + 0.5)
-                }
+                sampleX += nX * warpStrength
+                sampleY += nY * warpStrength
             }
 
-            const avgR = (totalR / 4) * 255
-            const avgG = (totalG / 4) * 255
+            let normalX = 0
+            let normalY = 0
+
+            if (patternType === 'Tiles') {
+                const u = sampleX / res * density
+                const v = sampleY / res * density
+                const cellX = Math.floor(u)
+                const cellY = Math.floor(v)
+
+                // Fast pseudo-random hash
+                const seed = Math.abs(Math.sin(cellX * 12.9898 + cellY * 78.233) * 43758.5453)
+                const rand = seed - Math.floor(seed)
+
+                const tiltDir = rand * Math.PI * 2
+                const tiltStrength = 1.0
+
+                normalX = Math.cos(tiltDir) * tiltStrength
+                normalY = Math.sin(tiltDir) * tiltStrength
+
+            } else {
+                let phase = 0
+
+                if (patternType === 'Kaleidoscope') {
+                    const dxk = sampleX - cx
+                    const dyk = sampleY - cy
+                    const dist = Math.sqrt(dxk * dxk + dyk * dyk) / cx
+                    const waveOffset = Math.sin(dist * Math.PI * 2 * waveFreq) * waveAmp
+                    let angleRad = Math.atan2(dyk, dxk)
+                    const effectiveAngle = angleRad + waveOffset
+                    const sectorSize = (Math.PI * 2) / segments
+                    phase = (Math.abs((effectiveAngle % sectorSize) - sectorSize / 2)) * density * 3.0
+                } else if (patternType === 'Chevrons') {
+                    const u = sampleX / res * density
+                    const v = sampleY / res * density
+                    const uv = { x: u % 1, y: v % 1 }
+                    const xSym = Math.abs(uv.x - 0.5)
+                    const d = Math.abs(uv.y - xSym)
+                    phase = d * 4.0
+                } else if (patternType === 'Diagonal') {
+                    const u = sampleX / res
+                    const v = sampleY / res
+                    const rotU = (u + v) * density
+                    phase = rotU
+                } else if (patternType === 'Hexagon') {
+                    const u = sampleX / res * density
+                    const v = sampleY / res * density
+                    const r = { x: 1, y: 1.73 }
+                    const h = { x: 0.5, y: 0.866 }
+                    const a = { x: (u % r.x) - h.x, y: (v % r.y) - h.y }
+                    const b = { x: ((u - h.x) % r.x) - h.x, y: ((v - h.y) % r.y) - h.y }
+                    const lenA = Math.sqrt(a.x * a.x + a.y * a.y)
+                    const lenB = Math.sqrt(b.x * b.x + b.y * b.y)
+                    const dist = lenA < lenB ? lenA : lenB
+                    phase = dist * 2.0
+                } else {
+                    // Linear
+                    const v = sampleY / res
+                    const safeFreq = Math.round(waveFreq)
+                    const waveOffset = Math.sin(v * Math.PI * 2 * safeFreq) * waveAmp
+                    const bell = (1 - Math.cos(v * Math.PI * 2)) * 0.5
+                    const curveOffset = bell * curvature
+                    const xNorm = sampleX / res
+                    phase = (xNorm + waveOffset + curveOffset) * density
+                }
+
+                const val = applyRidgeProfile(phase, ridgeProfile)
+                normalX = val
+                normalY = 0
+            }
+
+            // Map -1..1 to 0..1 directly
+            const r = (normalX * 0.5 + 0.5) * 255
+            const g = (normalY * 0.5 + 0.5) * 255
 
             const idx = (y * res + x) * 4
-            data[idx] = avgR
-            data[idx + 1] = avgG
+            data[idx] = r
+            data[idx + 1] = g
             data[idx + 2] = 255
             data[idx + 3] = 255
         }

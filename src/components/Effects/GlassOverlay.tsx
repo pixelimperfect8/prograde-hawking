@@ -10,16 +10,7 @@ function applyRidgeProfile(
     profile: 'Round' | 'Sharp' | 'Square' | 'Bezel' | 'Sawtooth' | 'Double'
 ): number {
     let normal = 0
-    // Normalize input to 0-1 cycle for some profiles
-    // But most patterns output cosine (-1 to 1)
-
-    // Map cosine (-1 to 1) to angle (0 to 2PI) approximation if needed
-    // Or just treat signal as the "height" directly.
-
-    // NOTE: The previous logic used 'angle' (Linear) or 'finalAngleSignal' (Kaleidoscope).
-    // Let's standardise: signal is an Angle (radians) or a normalized phase (0-1).
-    // Let's assume SIGNAL is raw phase (0 to 1).
-
+    // Normalize input
     const t = signal % 1
 
     if (profile === 'Round') {
@@ -28,17 +19,13 @@ function applyRidgeProfile(
     else if (profile === 'Sharp') {
         // Triangle wave
         normal = 2 * Math.abs(2 * (t - Math.floor(t + 0.5))) - 1
-        // Invert to match previous look if needed
         normal *= -1
     }
     else if (profile === 'Square') {
         normal = Math.cos(t * Math.PI * 2) > 0 ? 0.8 : -0.8
     }
     else if (profile === 'Bezel') {
-        // Flat top, sharp sides
-        // Triangle 0-1
         const tri = Math.abs(t - 0.5) * 2
-        // Thresholds
         normal = tri > 0.8 ? (tri - 0.8) * 5.0 : (tri < 0.2 ? (0.2 - tri) * 5.0 : 0.0)
         if (Math.cos(t * Math.PI * 2) < 0) normal *= -1
     }
@@ -56,7 +43,7 @@ function generateFlutedNormalMap(
     density: number,
     waveFreq: number,
     waveAmp: number,
-    patternType: 'Linear' | 'Kaleidoscope' | 'Chevrons' | 'Diagonal' | 'Hexagon',
+    patternType: 'Linear' | 'Kaleidoscope' | 'Chevrons' | 'Diagonal' | 'Hexagon' | 'Tiles',
     segments: number,
     ridgeProfile: 'Round' | 'Sharp' | 'Square' | 'Bezel' | 'Sawtooth' | 'Double',
     curvature: number
@@ -81,6 +68,7 @@ function generateFlutedNormalMap(
     for (let y = 0; y < res; y++) {
         for (let x = 0; x < res; x++) {
             let totalR = 0
+            let totalG = 0
 
             const offsets = [0.25, 0.75]
             for (let dy of offsets) {
@@ -88,68 +76,95 @@ function generateFlutedNormalMap(
                     const sampleX = x + dx
                     const sampleY = y + dy
 
-                    let phase = 0 // 0 to 1
+                    let normalX = 0
+                    let normalY = 0
 
-                    if (patternType === 'Kaleidoscope') {
-                        const dxk = sampleX - cx
-                        const dyk = sampleY - cy
-                        const dist = Math.sqrt(dxk * dxk + dyk * dyk) / cx
-
-                        const waveOffset = Math.sin(dist * Math.PI * 2 * waveFreq) * waveAmp
-                        let angleRad = Math.atan2(dyk, dxk)
-
-                        const effectiveAngle = angleRad + waveOffset
-                        const sectorSize = (Math.PI * 2) / segments
-
-                        // Normalized phase within sector
-                        phase = (Math.abs((effectiveAngle % sectorSize) - sectorSize / 2)) * density * 3.0 // scale adjust
-
-                    } else if (patternType === 'Chevrons') {
+                    if (patternType === 'Tiles') {
+                        // Glass Tiles Logic: Multi-directional Tilt
                         const u = sampleX / res * density
                         const v = sampleY / res * density
-                        const uv = { x: u % 1, y: v % 1 }
-                        const xSym = Math.abs(uv.x - 0.5)
-                        const d = Math.abs(uv.y - xSym)
-                        phase = d * 4.0 // Scale up frequency
+                        const cellX = Math.floor(u)
+                        const cellY = Math.floor(v)
 
-                    } else if (patternType === 'Diagonal') {
-                        const u = sampleX / res
-                        const v = sampleY / res
-                        const rotU = (u + v) * density
-                        phase = rotU
+                        // Random Seed per cell (Hash function)
+                        const seed = Math.abs(Math.sin(cellX * 12.9898 + cellY * 78.233) * 43758.5453)
+                        const rand = seed - Math.floor(seed)
 
-                    } else if (patternType === 'Hexagon') {
-                        const u = sampleX / res * density
-                        const v = sampleY / res * density
-                        // Hex Math
-                        const r = { x: 1, y: 1.73 }
-                        const h = { x: 0.5, y: 0.866 }
-                        const a = { x: (u % r.x) - h.x, y: (v % r.y) - h.y }
-                        const b = { x: ((u - h.x) % r.x) - h.x, y: ((v - h.y) % r.y) - h.y }
-                        const lenA = Math.sqrt(a.x * a.x + a.y * a.y)
-                        const lenB = Math.sqrt(b.x * b.x + b.y * b.y)
-                        const dist = lenA < lenB ? lenA : lenB
-                        phase = dist * 2.0
+                        // Random Tilt Angle (0 to 2PI)
+                        const tiltDir = rand * Math.PI * 2
 
-                    } else { // Linear
-                        const v = sampleY / res
-                        const safeFreq = Math.round(waveFreq)
-                        const waveOffset = Math.sin(v * Math.PI * 2 * safeFreq) * waveAmp
-                        const bell = (1 - Math.cos(v * Math.PI * 2)) * 0.5
-                        const curveOffset = bell * curvature
-                        const xNorm = sampleX / res
-                        phase = (xNorm + waveOffset + curveOffset) * density
+                        // Tilt Strength (Flat hard slope)
+                        const tiltStrength = 1.0
+
+                        // Calculate vector
+                        normalX = Math.cos(tiltDir) * tiltStrength
+                        normalY = Math.sin(tiltDir) * tiltStrength
+
+                    } else {
+                        // Standard 1D Patterns (Linear, Hex, etc) - calculated as Phase
+                        let phase = 0
+
+                        if (patternType === 'Kaleidoscope') {
+                            const dxk = sampleX - cx
+                            const dyk = sampleY - cy
+                            const dist = Math.sqrt(dxk * dxk + dyk * dyk) / cx
+                            const waveOffset = Math.sin(dist * Math.PI * 2 * waveFreq) * waveAmp
+                            let angleRad = Math.atan2(dyk, dxk)
+                            const effectiveAngle = angleRad + waveOffset
+                            const sectorSize = (Math.PI * 2) / segments
+                            phase = (Math.abs((effectiveAngle % sectorSize) - sectorSize / 2)) * density * 3.0
+                        } else if (patternType === 'Chevrons') {
+                            const u = sampleX / res * density
+                            const v = sampleY / res * density
+                            const uv = { x: u % 1, y: v % 1 }
+                            const xSym = Math.abs(uv.x - 0.5)
+                            const d = Math.abs(uv.y - xSym)
+                            phase = d * 4.0
+                        } else if (patternType === 'Diagonal') {
+                            const u = sampleX / res
+                            const v = sampleY / res
+                            const rotU = (u + v) * density
+                            phase = rotU
+                        } else if (patternType === 'Hexagon') {
+                            const u = sampleX / res * density
+                            const v = sampleY / res * density
+                            const r = { x: 1, y: 1.73 }
+                            const h = { x: 0.5, y: 0.866 }
+                            const a = { x: (u % r.x) - h.x, y: (v % r.y) - h.y }
+                            const b = { x: ((u - h.x) % r.x) - h.x, y: ((v - h.y) % r.y) - h.y }
+                            const lenA = Math.sqrt(a.x * a.x + a.y * a.y)
+                            const lenB = Math.sqrt(b.x * b.x + b.y * b.y)
+                            const dist = lenA < lenB ? lenA : lenB
+                            phase = dist * 2.0
+                        } else {
+                            // Linear
+                            const v = sampleY / res
+                            const safeFreq = Math.round(waveFreq)
+                            const waveOffset = Math.sin(v * Math.PI * 2 * safeFreq) * waveAmp
+                            const bell = (1 - Math.cos(v * Math.PI * 2)) * 0.5
+                            const curveOffset = bell * curvature
+                            const xNorm = sampleX / res
+                            phase = (xNorm + waveOffset + curveOffset) * density
+                        }
+
+                        // Apply Profile to get 1D scalar
+                        const val = applyRidgeProfile(phase, ridgeProfile)
+                        normalX = val
+                        normalY = 0 // Flat in Y for standard patterns
                     }
 
-                    const normal = applyRidgeProfile(phase, ridgeProfile)
-                    totalR += (normal * 0.5 + 0.5)
+                    // Accumulate (Map -1..1 to 0..1 for storage)
+                    totalR += (normalX * 0.5 + 0.5)
+                    totalG += (normalY * 0.5 + 0.5)
                 }
             }
 
             const avgR = (totalR / 4) * 255
+            const avgG = (totalG / 4) * 255
+
             const idx = (y * res + x) * 4
             data[idx] = avgR
-            data[idx + 1] = 128
+            data[idx + 1] = avgG
             data[idx + 2] = 255
             data[idx + 3] = 255
         }
@@ -213,7 +228,7 @@ export default function GlassOverlay() {
             debouncedConfig.rippleDensity,
             debouncedConfig.waveFreq,
             debouncedConfig.waviness,
-            debouncedConfig.patternType as 'Linear' | 'Kaleidoscope' | 'Chevrons' | 'Diagonal' | 'Hexagon',
+            debouncedConfig.patternType as 'Linear' | 'Kaleidoscope' | 'Chevrons' | 'Diagonal' | 'Hexagon' | 'Tiles',
             debouncedConfig.segments,
             debouncedConfig.ridgeProfile as 'Round' | 'Sharp' | 'Square' | 'Bezel' | 'Sawtooth' | 'Double',
             debouncedConfig.curvature || 0

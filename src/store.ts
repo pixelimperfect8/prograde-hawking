@@ -255,7 +255,7 @@ interface State {
     }
     overlay: {
         enabled: boolean
-        type: 'Grid' | 'Grid + Dot' | 'Cross' | 'Hexagon' | 'Tech'
+        type: 'Grid' | 'Grid + Dot' | 'Cross' | 'Hexagon' | 'Chevrons' | 'Diagonal' | 'Tiles' | 'Tech'
         color: string
         opacity: number
         scale: number

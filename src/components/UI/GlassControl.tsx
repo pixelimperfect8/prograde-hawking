@@ -17,7 +17,7 @@ export default function GlassControl() {
                     <Select
                         label="Pattern"
                         value={glass.patternType}
-                        options={['Linear', 'Kaleidoscope', 'Chevrons', 'Diagonal', 'Hexagon']}
+                        options={['Linear', 'Kaleidoscope', 'Chevrons', 'Diagonal', 'Hexagon', 'Tiles']}
                         onChange={(v) => setGlass({ patternType: v as any })}
                     />
                     <Select

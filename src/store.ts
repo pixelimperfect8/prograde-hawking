@@ -103,6 +103,8 @@ interface State {
     glass: {
         enabled: boolean
         transmission: number
+        ior: number
+        fluidity: number
         thickness: number
         roughness: number
         chromaticAberration: number
@@ -365,6 +367,8 @@ export const useStore = create<State>((set) => {
         glass: {
             enabled: getParam('glass', false), // Universal Off by default
             transmission: 1.0,
+            ior: 1.2,
+            fluidity: 0.0,
             thickness: 0.50,
             roughness: 0.39,
             chromaticAberration: 0.05,
@@ -527,6 +531,9 @@ export const useStore = create<State>((set) => {
             color: '#ffffff',
             opacity: 0.1,
             scale: 1.0,
+            transmission: 1.0,
+            ior: 1.2,
+            fluidity: 0.0, // Clean glass by default
             thickness: 0.05,
             speed: 0.5,
             spotlight: false

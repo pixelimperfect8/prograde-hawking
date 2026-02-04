@@ -33,6 +33,8 @@ export default function GlassControl() {
                     <Slider label="Aberration" value={glass.chromaticAberration} min={0} max={0.2} onChange={(v) => setGlass({ chromaticAberration: v })} />
                     <Slider label="Scale" value={glass.fluteScale} min={0.1} max={5} onChange={(v) => setGlass({ fluteScale: v })} />
                     <Slider label="Ripple Density" value={glass.rippleDensity} min={1} max={50} step={1} onChange={(v) => setGlass({ rippleDensity: v })} />
+                    <Slider label="Fluidity" value={glass.fluidity || 0} min={0} max={1} step={0.01} onChange={(v) => setGlass({ fluidity: v })} />
+                    <Slider label="Refraction" value={glass.ior || 1.1} min={1} max={2.5} step={0.01} onChange={(v) => setGlass({ ior: v })} />
                     <Slider label="Curvature" value={glass.curvature || 0} min={-1} max={1} step={0.01} onChange={(v) => setGlass({ curvature: v })} />
 
                     <div style={{ marginTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '24px' }}>

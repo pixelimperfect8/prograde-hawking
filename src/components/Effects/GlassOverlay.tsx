@@ -4,6 +4,9 @@ import { MeshTransmissionMaterial } from '@react-three/drei'
 
 import { useStore } from '../../store'
 import * as THREE from 'three'
+import { createNoise2D } from 'simplex-noise'
+
+const noise2D = createNoise2D()
 
 function applyRidgeProfile(
     signal: number, // expecting input roughly -1 to 1 or cyclic
@@ -46,7 +49,8 @@ function generateFlutedNormalMap(
     patternType: 'Linear' | 'Kaleidoscope' | 'Chevrons' | 'Diagonal' | 'Hexagon' | 'Tiles',
     segments: number,
     ridgeProfile: 'Round' | 'Sharp' | 'Square' | 'Bezel' | 'Sawtooth' | 'Double',
-    curvature: number
+    curvature: number,
+    fluidity: number
 ) {
     const res = 1024
     const canvas = document.createElement('canvas')
@@ -64,6 +68,9 @@ function generateFlutedNormalMap(
     const cx = res / 2
     const cy = res / 2
 
+    // Pre-calculate noise scale for fluidity
+    const noiseScale = 0.005 // Control how "large" the liquid ripples are
+
     // SSAA Loop (4 samples per pixel)
     for (let y = 0; y < res; y++) {
         for (let x = 0; x < res; x++) {
@@ -73,8 +80,21 @@ function generateFlutedNormalMap(
             const offsets = [0.25, 0.75]
             for (let dy of offsets) {
                 for (let dx of offsets) {
-                    const sampleX = x + dx
-                    const sampleY = y + dy
+                    let sampleX = x + dx
+                    let sampleY = y + dy
+
+                    // --- Domain Warping (Fluid Glass Effect) ---
+                    if (fluidity > 0) {
+                        // Use noise to displace the coordinate lookup
+                        // We warp X by noise(x,y) and Y by noise(x+offset, y+offset)
+                        // Fluidity controls the *strength* of this displacement
+                        const warpStrength = fluidity * 50.0 // Max 50px displacement
+                        const nX = noise2D(sampleX * noiseScale, sampleY * noiseScale)
+                        const nY = noise2D(sampleX * noiseScale + 1000, sampleY * noiseScale + 1000)
+
+                        sampleX += nX * warpStrength
+                        sampleY += nY * warpStrength
+                    }
 
                     let normalX = 0
                     let normalY = 0
@@ -194,7 +214,8 @@ export default function GlassOverlay() {
         patternType: config.patternType,
         segments: config.segments,
         ridgeProfile: config.ridgeProfile,
-        curvature: config.curvature
+        curvature: config.curvature,
+        fluidity: config.fluidity
     })
 
     useEffect(() => {
@@ -206,7 +227,8 @@ export default function GlassOverlay() {
                 patternType: config.patternType,
                 segments: config.segments,
                 ridgeProfile: config.ridgeProfile,
-                curvature: config.curvature
+                curvature: config.curvature,
+                fluidity: config.fluidity
             })
         }, 200)
 
@@ -220,7 +242,8 @@ export default function GlassOverlay() {
         config.patternType,
         config.segments,
         config.ridgeProfile,
-        config.curvature
+        config.curvature,
+        config.fluidity
     ])
 
     const flutedNormalMap = useMemo(() => {
@@ -228,10 +251,11 @@ export default function GlassOverlay() {
             debouncedConfig.rippleDensity,
             debouncedConfig.waveFreq,
             debouncedConfig.waviness,
-            debouncedConfig.patternType as 'Linear' | 'Kaleidoscope' | 'Chevrons' | 'Diagonal' | 'Hexagon' | 'Tiles',
+            debouncedConfig.patternType as any,
             debouncedConfig.segments,
-            debouncedConfig.ridgeProfile as 'Round' | 'Sharp' | 'Square' | 'Bezel' | 'Sawtooth' | 'Double',
-            debouncedConfig.curvature || 0
+            debouncedConfig.ridgeProfile as any,
+            debouncedConfig.curvature || 0,
+            debouncedConfig.fluidity || 0
         )
         if (tex) {
             tex.center.set(0.5, 0.5)
@@ -244,7 +268,8 @@ export default function GlassOverlay() {
         debouncedConfig.patternType,
         debouncedConfig.segments,
         debouncedConfig.ridgeProfile,
-        debouncedConfig.curvature
+        debouncedConfig.curvature,
+        debouncedConfig.fluidity
     ])
 
     useFrame((_state, delta) => {
@@ -273,6 +298,7 @@ export default function GlassOverlay() {
                 normalMap={flutedNormalMap}
                 normalScale={new THREE.Vector2(config.fluteScale, config.fluteScale)}
                 resolution={1024}
+                ior={config.ior || 1.2}
             />
         </mesh>
     )
